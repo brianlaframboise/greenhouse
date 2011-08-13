@@ -1,4 +1,4 @@
-package execute;
+package kappamaki.execute;
 
 import gherkin.formatter.PrettyFormatter;
 import gherkin.formatter.model.Scenario;

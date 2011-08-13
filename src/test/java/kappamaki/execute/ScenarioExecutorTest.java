@@ -1,4 +1,4 @@
-package execute;
+package kappamaki.execute;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import kappamaki.execute.ScenarioExecutor;
 import kappamaki.index.Index;
 import kappamaki.index.IndexedScenario;
 import kappamaki.index.Indexer;
