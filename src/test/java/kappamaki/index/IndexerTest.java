@@ -14,8 +14,8 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        String projectRoot = System.getProperty("user.dir");
-        String uri = projectRoot + "\\example\\features";
+        String featuresRoot = System.getProperty("user.dir");
+        String uri = featuresRoot + "\\example\\features";
         index = new Indexer(uri).index();
     }
 

@@ -29,6 +29,8 @@ public class Indexer {
     private final Set<IndexedScenario> scenarios = new HashSet<IndexedScenario>();
     private final Multimap<String, IndexedScenario> tagged = ArrayListMultimap
             .create();
+    private final Multimap<String, IndexedScenario> byUri = ArrayListMultimap
+            .create();
 
     private String uri;
 
@@ -39,7 +41,7 @@ public class Indexer {
     public Index index() {
         File root = new File(featuresRoot);
         walk(root);
-        return new Index(ImmutableSet.copyOf(scenarios), tagged);
+        return new Index(root, ImmutableSet.copyOf(scenarios), tagged, byUri);
     }
 
     private void walk(File file) {
@@ -88,5 +90,6 @@ public class Indexer {
         for (Tag tag : indexed.getTags()) {
             tagged.put(tag.getName(), indexed);
         }
+        byUri.put(indexed.getUri(), indexed);
     }
 }

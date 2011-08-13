@@ -10,6 +10,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<tagsArg>--tags=~@ignore</tagsArg>
 	</properties>
 
 	<build>
@@ -27,7 +28,6 @@
 					</jvmArgs>
 					<cucumberArgs>
 						<cucumberArg>--backtrace</cucumberArg>
-						<cucumberArg>--color</cucumberArg>
 						<cucumberArg>--format</cucumberArg>
 						<cucumberArg>pretty</cucumberArg>
 						<cucumberArg>--format</cucumberArg>
@@ -36,6 +36,7 @@
 						<cucumberArg>${project.build.directory}/cucumber-reports</cucumberArg>
 						<cucumberArg>--require</cucumberArg>
 						<cucumberArg>${basedir}/target/test-classes</cucumberArg>
+						<cucumberArg>${cucumber.tagsArg}</cucumberArg>
 					</cucumberArgs>
 					<gems>
 						<gem>install cuke4duke --version 0.4.4</gem>
