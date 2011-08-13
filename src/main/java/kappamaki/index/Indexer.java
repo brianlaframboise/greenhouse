@@ -38,10 +38,10 @@ public class Indexer {
         this.featuresRoot = featuresRoot;
     }
 
-    public Index index() {
+    public InMemoryIndex index() {
         File root = new File(featuresRoot);
         walk(root);
-        return new Index(root, ImmutableSet.copyOf(scenarios), tagged, byUri);
+        return new InMemoryIndex(root, ImmutableSet.copyOf(scenarios), tagged, byUri);
     }
 
     private void walk(File file) {

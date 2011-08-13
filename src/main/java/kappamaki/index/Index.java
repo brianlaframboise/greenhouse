@@ -4,34 +4,19 @@ import java.io.File;
 import java.util.Collection;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
-public class Index {
+public interface Index {
 
-    private final File featuresRoot;
-    private final ImmutableSet<IndexedScenario> all;
-    private final Multimap<String, IndexedScenario> tagged;
-    private final Multimap<String, IndexedScenario> byUri;
+    ImmutableSet<IndexedScenario> all();
 
-    public Index(File featuresRoot, ImmutableSet<IndexedScenario> all,
-            Multimap<String, IndexedScenario> tagged,
-            Multimap<String, IndexedScenario> byUri) {
-        this.featuresRoot = featuresRoot;
-        this.all = all;
-        this.tagged = tagged;
-        this.byUri = byUri;
-    }
+    ImmutableSet<IndexedScenario> findByTag(String tag);
 
-    public File getFeaturesRoot() {
-        return featuresRoot;
-    }
+    Collection<IndexedScenario> findByUri(String uri);
 
-    public ImmutableSet<IndexedScenario> findByTag(String tag) {
-        return ImmutableSet.copyOf(tagged.get(tag));
-    }
+    IndexedScenario findByName(String name);
 
-    public Collection<IndexedScenario> findByUri(String uri) {
-        return byUri.get(uri);
-    }
+    Multiset<String> tags();
 
+    File getFeaturesRoot();
 }

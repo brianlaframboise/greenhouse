@@ -1,18 +1,16 @@
 package kappamaki.execute;
 
+import static kappamaki.util.Utils.joinPaths;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import gherkin.util.FixJava;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
-import kappamaki.execute.ScenarioExecutor;
-import kappamaki.index.Index;
+import kappamaki.index.InMemoryIndex;
 import kappamaki.index.IndexedScenario;
 import kappamaki.index.Indexer;
+import kappamaki.util.Utils;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,13 +19,13 @@ import com.google.common.collect.ImmutableSet;
 
 public class ScenarioExecutorTest {
 
-    private static Index index;
+    private static InMemoryIndex index;
+    private static final String PROJECT_ROOT = Utils.USER_DIR;
 
     @BeforeClass
     public static void build_index() {
-        String projectRoot = System.getProperty("user.dir");
-        String uri = projectRoot + "\\example\\features";
-        index = new Indexer(uri).index();
+        String features = joinPaths(PROJECT_ROOT, "example", "features");
+        index = new Indexer(features).index();
     }
 
     @Test
@@ -36,16 +34,11 @@ public class ScenarioExecutorTest {
         assertThat(scenarios.size(), is(1));
 
         IndexedScenario scenario = scenarios.iterator().next();
-        String root = System.getProperty("user.dir") + "\\example";
-        ScenarioExecutor executor = new ScenarioExecutor(index, scenario, root);
 
-        File output = executor.makeOutputFile();
-        executor.setOutput(output);
-        executor.execute();
+        String project = joinPaths(PROJECT_ROOT, "example");
+        ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        FileReader outputReader = new FileReader(output);
-        String outputString = FixJava.readReader(outputReader);
-        outputReader.close();
+        String outputString = executor.execute(scenario);
 
         assertTrue(outputString.contains("@hello @world @kappamaki"));
         assertTrue(outputString.contains("BUILD SUCCESS"));

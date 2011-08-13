@@ -10,7 +10,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<tagsArg>--tags=~@ignore</tagsArg>
+		<cucumber.tagsArg>--tags=~@ignore</cucumber.tagsArg>
 	</properties>
 
 	<build>
@@ -85,6 +85,12 @@
 			<version>3.0.5.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
