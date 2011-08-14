@@ -40,7 +40,6 @@ public class ProcessExecutorTest {
 
         String output = executor.execute(feature);
 
-        System.out.println(output);
         assertTrue(output.contains("3 scenarios (3 passed)"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
