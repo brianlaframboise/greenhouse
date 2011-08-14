@@ -1,64 +1,100 @@
 package kappamaki.index;
 
 import java.io.File;
-import java.util.Collection;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 public class InMemoryIndex implements Index {
 
     private final File featuresRoot;
-    private final ImmutableSet<IndexedScenario> all;
-    private final Multimap<String, IndexedScenario> tagged;
-    private final Multimap<String, IndexedScenario> byUri;
+    private final ImmutableList<IndexedFeature> features;
+    private final ImmutableMap<IndexedScenario, IndexedFeature> featuresByScenario;
+    private final ImmutableMultimap<String, IndexedScenario> scenariosByTag;
 
-    public InMemoryIndex() {
-        this(null, null, null, null);
-    }
-
-    public InMemoryIndex(File featuresRoot, ImmutableSet<IndexedScenario> all,
-            Multimap<String, IndexedScenario> tagged,
-            Multimap<String, IndexedScenario> byUri) {
+    public InMemoryIndex(File featuresRoot, ImmutableList<IndexedFeature> features, ImmutableMultimap<String, IndexedScenario> scenariosByTag) {
         this.featuresRoot = featuresRoot;
-        this.all = all;
-        this.tagged = tagged;
-        this.byUri = byUri;
+        this.features = features;
+        this.scenariosByTag = scenariosByTag;
+
+        Builder<IndexedScenario, IndexedFeature> builder = ImmutableMap.<IndexedScenario, IndexedFeature> builder();
+        for (IndexedFeature feature : features) {
+            for (IndexedScenario scenario : feature.getScenarios()) {
+                builder.put(scenario, feature);
+            }
+        }
+        featuresByScenario = builder.build();
     }
 
+    // Features
+
+    @Override
     public File getFeaturesRoot() {
         return featuresRoot;
     }
 
-    public Multiset<String> tags() {
-        return tagged.keys();
+    @Override
+    public ImmutableList<IndexedFeature> features() {
+        return features;
+    }
+
+    @Override
+    public IndexedFeature featureByName(String name) {
+        for (IndexedFeature feature : features) {
+            if (feature.getName().equals(name)) {
+                return feature;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public IndexedFeature findByScenario(IndexedScenario scenario) {
+        return featuresByScenario.get(scenario);
+    }
+
+    // Scenarios
+
+    @Override
+    public IndexedScenario scenarioByName(String name) {
+        for (IndexedFeature feature : features) {
+            for (IndexedScenario scenario : feature.getScenarios()) {
+                if (scenario.getName().equals(name)) {
+                    return scenario;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public IndexedScenario scenarioByLine(IndexedFeature feature, int line) {
+        int nearest = -1;
+        IndexedScenario preceeding = null;
+        for (IndexedScenario scenario : feature.getScenarios()) {
+            int scenarioLine = scenario.getLine();
+            if (scenarioLine < line && scenarioLine > nearest) {
+                nearest = scenarioLine;
+                preceeding = scenario;
+            }
+        }
+        return preceeding;
     }
 
     @Override
     public ImmutableSet<IndexedScenario> findByTag(String tag) {
-        return ImmutableSet.copyOf(tagged.get(tag));
+        return ImmutableSet.copyOf(scenariosByTag.get(tag));
     }
 
-    @Override
-    public Collection<IndexedScenario> findByUri(String uri) {
-        return byUri.get(uri);
-    }
+    // Tags
 
     @Override
-    public ImmutableSet<IndexedScenario> all() {
-        return all;
-    }
-
-    @Override
-    public IndexedScenario findByName(String name) {
-        for (IndexedScenario scenario : all) {
-            if (scenario.getName().equals(name)) {
-                return scenario;
-            }
-        }
-        return null;
-
+    public Multiset<String> tags() {
+        return scenariosByTag.keys();
     }
 
 }

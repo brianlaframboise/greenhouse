@@ -1,6 +1,8 @@
 package kappamaki.execute;
 
 import static kappamaki.util.Utils.joinPaths;
+import gherkin.formatter.Formatter;
+import gherkin.formatter.PrettyFormatter;
 import gherkin.parser.Parser;
 
 import java.io.File;
@@ -8,6 +10,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 
 import kappamaki.index.Index;
+import kappamaki.index.IndexedFeature;
 import kappamaki.index.IndexedScenario;
 import kappamaki.util.Utils;
 
@@ -38,6 +41,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
     private String phase = "integration-test";
+    private String tagExpression = "@kappamaki";
 
     /**
      * Creates a new ScenarioExecutor. By default output is inherited from the
@@ -49,6 +53,50 @@ public class ProcessExecutor implements ScenarioExecutor {
     public ProcessExecutor(Index index, File projectRoot) {
         this.index = index;
         this.projectRoot = projectRoot;
+    }
+
+    @Override
+    public String execute(IndexedFeature feature) {
+        // TODO: Fix threading issue
+        String exp = tagExpression;
+        tagExpression = "~@ignore";
+        String output = null;
+        File tempDir = null;
+        try {
+            long time = System.currentTimeMillis();
+            tempDir = makeTempDir(time);
+            copyFeature(tempDir, feature);
+            output = executeScenarios(tempDir, time);
+        } finally {
+            tagExpression = exp;
+            if (tempDir != null) {
+                delete(tempDir);
+            }
+        }
+        return output;
+    }
+
+    private void copyFeature(File tempDir, IndexedFeature feature) {
+        try {
+            // Setup tagged destination file
+            String root = index.getFeaturesRoot().getAbsolutePath();
+            String subPath = feature.getUri().substring(root.length() + 1);
+            File tempScenario = joinPaths(tempDir.getPath(), subPath);
+            Writer tempFile = new FileWriter(tempScenario);
+
+            // Load source file
+            String gherkin = Utils.readGherkin(feature.getUri());
+
+            // Parse to copy source into destination
+            Parser parser = new Parser(new PrettyFormatter(tempFile, true, false));
+            System.out.println("Copying " + feature.getUri() + " into " + tempScenario.getPath());
+            parser.parse(gherkin, tempScenario.getAbsolutePath(), 0);
+
+            tempFile.flush();
+            tempFile.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not copy scenarios");
+        }
     }
 
     @Override
@@ -80,19 +128,19 @@ public class ProcessExecutor implements ScenarioExecutor {
     private void copyScenarios(File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
+            IndexedFeature feature = index.findByScenario(scenario);
             String root = index.getFeaturesRoot().getAbsolutePath();
-            String subPath = scenario.getUri().substring(root.length() + 1);
+            String subPath = feature.getUri().substring(root.length() + 1);
             File tempScenario = joinPaths(tempDir.getPath(), subPath);
             Writer tempFile = new FileWriter(tempScenario);
 
             // Load source file
-            String gherkin = Utils.readGherkin(scenario.getUri());
+            String gherkin = Utils.readGherkin(feature.getUri());
 
-            // Parse and tage source into destination
-            Tagger tagger = new Tagger(scenario, tempFile);
-            tagger.setLine(line);
-            Parser parser = new Parser(tagger);
-            System.out.println("Tagging " + scenario.getUri() + " into " + tempScenario.getPath());
+            // Parse and tag source into destination
+            Formatter formatter = new ExampleFilterer(new Tagger(scenario, tempFile), line);
+            Parser parser = new Parser(formatter);
+            System.out.println("Tagging " + feature.getUri() + " into " + tempScenario.getPath());
             parser.parse(gherkin, tempScenario.getAbsolutePath(), 0);
 
             tempFile.flush();
@@ -104,7 +152,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private String executeScenarios(File tempDir, long time) {
         String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
-        String tags = "-Dcucumber.tagsArg=\"--tags=@kappamaki\"";
+        String tags = "-Dcucumber.tagsArg=\"--tags=" + tagExpression + "\"";
         System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags));
         try {
             ProcessBuilder builder = new ProcessBuilder();
@@ -161,6 +209,10 @@ public class ProcessExecutor implements ScenarioExecutor {
      */
     public void setPhase(String phase) {
         this.phase = phase;
+    }
+
+    public void setTagExpression(String tagExpression) {
+        this.tagExpression = tagExpression;
     }
 
 }

@@ -24,22 +24,27 @@
   </tr>
 </table>
 
-<h3>Scenarios</h3>
+<h3>Features</h3>
 
 <ol>
-    <wicket:container wicket:id='scenarios'>
-        <li><a wicket:id='link'><span wicket:id='name'>Hello World</span></a></li>
-    </wicket:container>
+    <li wicket:id='features'><a wicket:id='link'><span wicket:id='name'>Hello World Feature</span></a></li>
 </ol>
 
-<h3>Scenario</h3>
+<h3>Feature</h3>
 
-<div wicket:id='scenario'>
-    <h2 wicket:id='name'>Scenario</h2> (<a wicket:id='execute'>Execute</a>)
-    <wicket:container wicket:id='lines'><pre wicket:id='line'><wicket:container wicket:id='context'></wicket:container></pre></wicket:container>
+<div wicket:id='feature'>
+    <h2><a wicket:id='execute'><span wicket:id='name'>Feature</span></a></h2>
+    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'></wicket:container></pre></wicket:container>
 </div>
-<wicket:fragment wicket:id='plain'><span wicket:id='text'></span></wicket:fragment>
-<wicket:fragment wicket:id='example'><a wicket:id='execute'><span wicket:id='text'></span></a></wicket:fragment>
+<wicket:fragment wicket:id='plain'>
+    <span wicket:id='text'></span>
+</wicket:fragment>
+<wicket:fragment wicket:id='scenario'>
+    <span wicket:id='pretext'>Scenario:    </span><a wicket:id='execute'><span wicket:id='name'>Scenario</span></a>
+</wicket:fragment>
+<wicket:fragment wicket:id='example'>
+    <span wicket:id='pretext'>[white space]</span><a wicket:id='execute'><span wicket:id='text'>| foo | bar |</span></a>
+</wicket:fragment>
 
 <h3>Output</h3>
 

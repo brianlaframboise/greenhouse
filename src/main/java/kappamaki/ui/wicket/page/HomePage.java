@@ -6,6 +6,7 @@ import java.util.List;
 
 import kappamaki.execute.ScenarioExecutor;
 import kappamaki.index.Index;
+import kappamaki.index.IndexedFeature;
 import kappamaki.index.IndexedScenario;
 import kappamaki.util.Utils;
 
@@ -23,16 +24,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 
 public class HomePage extends WebPage {
 
     @SpringBean
     private Index index;
-
-    @SpringBean
-    private ScenarioExecutor executor;
 
     public HomePage() {
         final Multiset<String> tags = index.tags();
@@ -49,77 +46,78 @@ public class HomePage extends WebPage {
             }
         });
 
-        ImmutableSet<IndexedScenario> all = index.all();
+        ImmutableList<IndexedFeature> features = index.features();
         ArrayList<String> names = new ArrayList<String>();
-        for (IndexedScenario scenario : all) {
-            names.add(scenario.getName());
+        for (IndexedFeature feature : features) {
+            names.add(feature.getName());
         }
-        Collections.sort(names);
 
-        final Label output = new Label("output", "");
+        final Label output = new Label("output", new FilteringModel());
         add(output.setOutputMarkupId(true));
 
-        final WebMarkupContainer scenario = new WebMarkupContainer("scenario");
-        scenario.add(new Label("name", ""));
-        scenario.add(new WebMarkupContainer("execute"));
-        scenario.add(new WebMarkupContainer("lines"));
-        add(scenario.setVisible(false).setOutputMarkupPlaceholderTag(true));
+        final WebMarkupContainer feature = new WebMarkupContainer("feature");
+        feature.add(new WebMarkupContainer("execute").add(new Label("name", "")));
+        feature.add(new WebMarkupContainer("lines"));
+        add(feature.setVisible(false).setOutputMarkupPlaceholderTag(true));
 
-        add(new ListView<String>("scenarios", names) {
+        add(new ListView<String>("features", names) {
             @Override
             protected void populateItem(ListItem<String> item) {
                 final String name = item.getModelObject();
                 AjaxFallbackLink<Void> link = new IndicatingAjaxFallbackLink<Void>("link") {
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-                        scenario.replace(new Label("name", name));
-                        scenario.replace(new IndicatingAjaxFallbackLink<Void>("execute") {
-                            @Override
-                            public void onClick(AjaxRequestTarget target) {
-                                IndexedScenario scenario = index.findByName(name);
-                                String result = filter(executor.execute(scenario));
-                                output.setDefaultModelObject(result);
-                                if (target != null) {
-                                    target.addComponent(output);
-                                }
-                            }
-                        });
-                        IndexedScenario indexedScenario = index.findByName(name);
-                        String gherkin = Utils.readGherkin(indexedScenario.getUri());
+                        ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", output, name);
+                        executeFeatureLink.add(new Label("name", name));
+                        feature.replace(executeFeatureLink);
+
+                        IndexedFeature indexedFeature = index.featureByName(name);
+                        String gherkin = Utils.readGherkin(indexedFeature.getUri());
                         Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
-                        scenario.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
+
+                        feature.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
                             @Override
                             protected void populateItem(ListItem<String> item) {
+                                String line = item.getModelObject();
                                 final int lineNumber = item.getIndex() + 1;
                                 Label text = new Label("text", item.getModelObject());
                                 text.setRenderBodyOnly(true);
 
                                 Fragment context;
-                                boolean isExample = item.getModelObject().contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples");
-                                if (isExample) {
+                                if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
+                                    // Example
                                     context = new Fragment("context", "example", this);
-                                    context.add(new IndicatingAjaxFallbackLink<Void>("execute") {
-                                        @Override
-                                        public void onClick(AjaxRequestTarget target) {
-                                            IndexedScenario scenario = index.findByName(name);
-                                            String result = filter(executor.executeExample(scenario, lineNumber));
-                                            output.setDefaultModelObject(result);
-                                            if (target != null) {
-                                                target.addComponent(output);
-                                            }
-                                        }
-                                    }.add(text));
+
+                                    int pipeIndex = line.indexOf('|');
+                                    Label pretext = new Label("pretext", line.substring(0, pipeIndex));
+
+                                    IndexedFeature feature = index.featureByName(name);
+                                    IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
+                                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", output, indexedScenario.getName(), lineNumber);
+                                    executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
+
+                                    context.add(pretext, executeExampleLink);
+                                } else if (line.contains("Scenario")) {
+                                    // Scenario or Scenario Outline
+                                    context = new Fragment("context", "scenario", this);
+
+                                    int colonIndex = line.indexOf(": ");
+                                    Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
+                                    String scenarioName = line.substring(colonIndex + 2).trim();
+
+                                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", output, scenarioName);
+                                    executeScenarioLink.add(new Label("name", scenarioName));
+
+                                    context.add(pretext, executeScenarioLink);
                                 } else {
                                     context = new Fragment("context", "plain", this);
                                     context.add(text);
                                 }
-                                WebMarkupContainer line = new WebMarkupContainer("line");
-                                line.add(context);
-                                item.add(line);
+                                item.add(new WebMarkupContainer("pre").add(context));
                             }
                         });
                         if (target != null) {
-                            target.addComponent(scenario.setVisible(true));
+                            target.addComponent(feature.setVisible(true));
                         }
                     }
                 };
@@ -129,12 +127,101 @@ public class HomePage extends WebPage {
         });
     }
 
-    private String filter(String output) {
-        String remove = "kappamaki-example ---";
-        String filtered = output;
-        int index = output.lastIndexOf(remove);
-        filtered = filtered.substring(index + remove.length() + 1);
-        filtered = filtered.replaceAll("\\[INFO\\] ", "");
-        return filtered;
+    private static class FilteringModel extends Model<String> {
+        private String text = "";
+
+        @Override
+        public void setObject(String object) {
+            String filtered = object;
+            String remove = "kappamaki-example ---";
+            int index = object.lastIndexOf(remove);
+            filtered = filtered.substring(index + remove.length() + 1);
+            filtered = filtered.replaceAll("\\[INFO\\] ", "");
+            text = filtered;
+        }
+
+        @Override
+        public String getObject() {
+            return text;
+        }
     }
+
+    private abstract static class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
+        @SpringBean
+        protected Index index;
+
+        @SpringBean
+        protected ScenarioExecutor executor;
+
+        private final Label output;
+
+        public ExecutingLink(String id, Label output) {
+            super(id);
+            this.output = output;
+        }
+
+        @Override
+        public void onClick(AjaxRequestTarget target) {
+            String result = execute();
+            output.setDefaultModelObject(result);
+            if (target != null) {
+                target.addComponent(output);
+            }
+        }
+
+        protected abstract String execute();
+
+    }
+
+    private static class ExecuteFeatureLink extends ExecutingLink {
+
+        private final String name;
+
+        public ExecuteFeatureLink(String id, Label output, String name) {
+            super(id, output);
+            this.name = name;
+        }
+
+        @Override
+        protected String execute() {
+            IndexedFeature feature = index.featureByName(name);
+            return executor.execute(feature);
+        }
+    }
+
+    private static class ExecuteScenarioLink extends ExecutingLink {
+
+        private final String name;
+
+        public ExecuteScenarioLink(String id, Label output, String name) {
+            super(id, output);
+            this.name = name;
+        }
+
+        @Override
+        protected String execute() {
+            IndexedScenario scenario = index.scenarioByName(name);
+            return executor.execute(scenario);
+        }
+    }
+
+    private static class ExecuteExampleLink extends ExecutingLink {
+
+        private final String name;
+        private final int line;
+
+        public ExecuteExampleLink(String id, Label output, String name, int line) {
+            super(id, output);
+            this.name = name;
+            this.line = line;
+        }
+
+        @Override
+        protected String execute() {
+            IndexedScenario scenario = index.scenarioByName(name);
+            return executor.executeExample(scenario, line);
+        }
+
+    }
+
 }

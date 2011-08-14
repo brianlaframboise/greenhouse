@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 
 import kappamaki.index.InMemoryIndex;
+import kappamaki.index.IndexedFeature;
 import kappamaki.index.IndexedScenario;
 import kappamaki.index.Indexer;
 import kappamaki.util.Utils;
@@ -31,6 +32,20 @@ public class ProcessExecutorTest {
     }
 
     @Test
+    public void executes_feature() {
+        IndexedFeature feature = index.featureByName("Hello World Feature");
+
+        File project = joinPaths(PROJECT_ROOT, "example");
+        ProcessExecutor executor = new ProcessExecutor(index, project);
+
+        String output = executor.execute(feature);
+
+        System.out.println(output);
+        assertTrue(output.contains("3 scenarios (3 passed)"));
+        assertTrue(output.contains("BUILD SUCCESS"));
+    }
+
+    @Test
     public void executes_tagged_scenario() throws IOException {
         ImmutableSet<IndexedScenario> scenarios = index.findByTag("@hello");
         assertThat(scenarios.size(), is(1));
@@ -40,10 +55,10 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String outputString = executor.execute(scenario);
+        String output = executor.execute(scenario);
 
-        assertTrue(outputString.contains("@hello @world @kappamaki"));
-        assertTrue(outputString.contains("BUILD SUCCESS"));
+        assertTrue(output.contains("@hello @world @kappamaki"));
+        assertTrue(output.contains("BUILD SUCCESS"));
     }
 
     @Test
@@ -56,11 +71,10 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String outputString = executor.execute(scenario);
+        String output = executor.execute(scenario);
 
-        System.out.println(outputString);
-        assertTrue(outputString.contains("@goodbye @world @kappamaki"));
-        assertTrue(outputString.contains("BUILD SUCCESS"));
+        assertTrue(output.contains("@goodbye @world @kappamaki"));
+        assertTrue(output.contains("BUILD SUCCESS"));
     }
 
     @Test
@@ -73,14 +87,12 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String outputString = executor.executeExample(scenario, 21);
+        String output = executor.executeExample(scenario, 21);
 
-        System.out.println(outputString);
-
-        assertTrue(outputString.contains("@goodbye @world @kappamaki"));
-        assertFalse(outputString.contains("| Goodbye  | World   |"));
-        assertTrue(outputString.contains("| Aurevoir | Monde   |"));
-        assertTrue(outputString.contains("1 scenario (1 passed)"));
-        assertTrue(outputString.contains("BUILD SUCCESS"));
+        assertTrue(output.contains("@goodbye @world @kappamaki"));
+        assertFalse(output.contains("| Goodbye  | World   |"));
+        assertTrue(output.contains("| Aurevoir | Monde   |"));
+        assertTrue(output.contains("1 scenario (1 passed)"));
+        assertTrue(output.contains("BUILD SUCCESS"));
     }
 }
