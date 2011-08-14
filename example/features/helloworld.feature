@@ -16,5 +16,7 @@ Feature: Hello World Feature
 		Then the Greeting is <action>, <subject>
 		
 		Examples:
-		| action  | subject |
-		| Goodbye | World   |
+		| action   | subject |
+		| Goodbye  | World   |
+		| Aurevoir | Monde   |
+		

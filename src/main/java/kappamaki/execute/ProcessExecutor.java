@@ -2,10 +2,8 @@ package kappamaki.execute;
 
 import static kappamaki.util.Utils.joinPaths;
 import gherkin.parser.Parser;
-import gherkin.util.FixJava;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Writer;
 
@@ -36,10 +34,9 @@ import com.google.common.base.Joiner;
 public class ProcessExecutor implements ScenarioExecutor {
 
     private final Index index;
-    private final String projectRoot;
+    private final File projectRoot;
 
-    private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat"
-            : "mvn";
+    private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
     private String phase = "integration-test";
 
     /**
@@ -49,19 +46,23 @@ public class ProcessExecutor implements ScenarioExecutor {
      * @param index An Index containing the scenario to run
      * @param projectRoot The root directory of a cuke4duke project
      */
-    public ProcessExecutor(Index index, String projectRoot) {
+    public ProcessExecutor(Index index, File projectRoot) {
         this.index = index;
         this.projectRoot = projectRoot;
     }
 
     @Override
     public String execute(IndexedScenario scenario) {
+        return executeWithLine(scenario, -1);
+    }
+
+    private String executeWithLine(IndexedScenario scenario, int line) {
         String output = null;
         File tempDir = null;
         try {
             long time = System.currentTimeMillis();
             tempDir = makeTempDir(time);
-            copyScenarios(tempDir, scenario);
+            copyScenarios(tempDir, scenario, line);
             output = executeScenarios(tempDir, time);
         } finally {
             if (tempDir != null) {
@@ -71,24 +72,27 @@ public class ProcessExecutor implements ScenarioExecutor {
         return output;
     }
 
-    private void copyScenarios(File tempDir, IndexedScenario scenario) {
+    @Override
+    public String executeExample(IndexedScenario outline, int line) {
+        return executeWithLine(outline, line);
+    }
+
+    private void copyScenarios(File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
             String root = index.getFeaturesRoot().getAbsolutePath();
             String subPath = scenario.getUri().substring(root.length() + 1);
-            File tempScenario = new File(joinPaths(tempDir.getPath(), subPath));
+            File tempScenario = joinPaths(tempDir.getPath(), subPath);
             Writer tempFile = new FileWriter(tempScenario);
 
             // Load source file
-            FileReader reader = new FileReader(scenario.getUri());
-            String gherkin = FixJava.readReader(reader);
-            reader.close();
+            String gherkin = Utils.readGherkin(scenario.getUri());
 
             // Parse and tage source into destination
             Tagger tagger = new Tagger(scenario, tempFile);
+            tagger.setLine(line);
             Parser parser = new Parser(tagger);
-            System.out.println("Tagging " + scenario.getUri() + " into "
-                    + tempScenario.getPath());
+            System.out.println("Tagging " + scenario.getUri() + " into " + tempScenario.getPath());
             parser.parse(gherkin, tempScenario.getAbsolutePath(), 0);
 
             tempFile.flush();
@@ -99,27 +103,21 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     private String executeScenarios(File tempDir, long time) {
-        String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath()
-                + "\"";
+        String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@kappamaki\"";
-        System.out.println("Executing: "
-                + Joiner.on(' ').join(projectRoot, mvn, features, tags));
+        System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags));
         try {
             ProcessBuilder builder = new ProcessBuilder();
-            builder.directory(new File(projectRoot));
+            builder.directory(projectRoot);
             builder.command(mvn, phase, features, tags);
 
-            File output = new File(joinPaths(Utils.TEMP_DIR, "kappamaki-"
-                    + time + ".output"));
+            File output = joinPaths(Utils.TEMP_DIR, "kappamaki-" + time + ".output");
             builder.redirectOutput(output);
 
             Process process = builder.start();
             process.waitFor();
 
-            FileReader outputReader = new FileReader(output);
-            String result = FixJava.readReader(outputReader);
-            outputReader.close();
-            return result;
+            return Utils.readGherkin(output.getPath());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -128,8 +126,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     private File makeTempDir(long time) {
         File tempScenarioDir = Utils.tempFile("kappamaki-" + time);
         if (!tempScenarioDir.mkdir()) {
-            throw new RuntimeException("Could not create temp directory: "
-                    + tempScenarioDir.getAbsolutePath());
+            throw new RuntimeException("Could not create temp directory: " + tempScenarioDir.getAbsolutePath());
         }
         return tempScenarioDir;
     }

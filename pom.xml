@@ -24,7 +24,7 @@
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>7.4.5.v20110725</version>
 				<configuration>
-				    <scanIntervalSeconds>3</scanIntervalSeconds>
+				    <scanIntervalSeconds>0</scanIntervalSeconds>
 					<webAppSourceDirectory>${basedir}/src/main/webapp</webAppSourceDirectory>
 					<webXml>${basedir}/src/main/webapp/WEB-INF/web.xml</webXml>
 					<connectors>

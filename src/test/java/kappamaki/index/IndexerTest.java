@@ -5,6 +5,8 @@ import static kappamaki.util.Utils.joinPaths;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.File;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        String features = joinPaths(USER_DIR, "example", "features");
+        File features = joinPaths(USER_DIR, "example", "features");
         index = new Indexer(features).index();
     }
 

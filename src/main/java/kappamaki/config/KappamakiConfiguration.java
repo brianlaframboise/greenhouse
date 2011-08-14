@@ -1,6 +1,9 @@
 package kappamaki.config;
 
 import static kappamaki.util.Utils.USER_DIR;
+
+import java.io.File;
+
 import kappamaki.execute.ProcessExecutor;
 import kappamaki.execute.ScenarioExecutor;
 import kappamaki.index.Index;
@@ -15,13 +18,13 @@ public class KappamakiConfiguration {
 
     @Bean
     public Index index() {
-        String features = Utils.joinPaths(USER_DIR, "example", "features");
+        File features = Utils.joinPaths(USER_DIR, "example", "features");
         return new Indexer(features).index();
     }
 
     @Bean
     public ScenarioExecutor scenarioExecutor() {
-        String project = Utils.joinPaths(USER_DIR, "example");
+        File project = Utils.joinPaths(USER_DIR, "example");
         return new ProcessExecutor(index(), project);
     }
 }

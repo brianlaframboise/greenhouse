@@ -5,13 +5,13 @@ import gherkin.formatter.model.ScenarioOutline;
 import gherkin.formatter.model.Tag;
 import gherkin.formatter.model.TagStatement;
 import gherkin.parser.Parser;
-import gherkin.util.FixJava;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
 import java.util.HashSet;
 import java.util.Set;
+
+import kappamaki.util.Utils;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -25,23 +25,20 @@ public class Indexer {
         }
     };
 
-    private final String featuresRoot;
+    private final File featuresRoot;
     private final Set<IndexedScenario> scenarios = new HashSet<IndexedScenario>();
-    private final Multimap<String, IndexedScenario> tagged = ArrayListMultimap
-            .create();
-    private final Multimap<String, IndexedScenario> byUri = ArrayListMultimap
-            .create();
+    private final Multimap<String, IndexedScenario> tagged = ArrayListMultimap.create();
+    private final Multimap<String, IndexedScenario> byUri = ArrayListMultimap.create();
 
     private String uri;
 
-    public Indexer(String featuresRoot) {
+    public Indexer(File featuresRoot) {
         this.featuresRoot = featuresRoot;
     }
 
     public InMemoryIndex index() {
-        File root = new File(featuresRoot);
-        walk(root);
-        return new InMemoryIndex(root, ImmutableSet.copyOf(scenarios), tagged, byUri);
+        walk(featuresRoot);
+        return new InMemoryIndex(featuresRoot, ImmutableSet.copyOf(scenarios), tagged, byUri);
     }
 
     private void walk(File file) {
@@ -56,11 +53,11 @@ public class Indexer {
 
     private void index(File file) {
         try {
-            String input = FixJava.readReader(new FileReader(file));
             uri = file.getPath();
             IndexingFormatter formatter = new IndexingFormatter(this);
             Parser parser = new Parser(formatter);
-            parser.parse(input, file.getPath(), 0);
+            String gherkin = Utils.readGherkin(file.getPath());
+            parser.parse(gherkin, file.getPath(), 0);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -80,8 +77,7 @@ public class Indexer {
         String description = statement.getDescription();
         ImmutableSet<Tag> tags = ImmutableSet.copyOf(statement.getTags());
 
-        IndexedScenario indexed = new IndexedScenario(uri, line, type, name,
-                description, tags);
+        IndexedScenario indexed = new IndexedScenario(uri, line, type, name, description, tags);
         add(indexed);
     }
 
