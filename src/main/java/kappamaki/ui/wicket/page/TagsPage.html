@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+<wicket:extend>
+
+<h3>Tags</h3>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>#</th>
+  </tr>
+  <tr wicket:id='tags'>
+    <td><a wicket:id='link'><span wicket:id='tag'>@tag</span></a></td>
+    <td wicket:id='count'>123</td>
+  </tr>
+</table>
+
+<div wicket:id='matches'>
+    <ol>
+        <li wicket:id='scenarios'>
+            <a wicket:id='view'>
+                <span wicket:id='featureScenario'>Feature &gt; Scenario</span>
+            </a>
+        </li>
+    </ol>
+</div>
+
+
+</wicket:extend>
+</body>
+</html>

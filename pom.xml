@@ -63,6 +63,12 @@
 		<repository>
 			<id>cukes</id>
 			<url>http://cukes.info/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 
@@ -102,6 +108,11 @@
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-spring</artifactId>
+			<version>${wicket.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.wicketstuff</groupId>
+			<artifactId>annotation</artifactId>
 			<version>${wicket.version}</version>
 		</dependency>
 		<dependency>

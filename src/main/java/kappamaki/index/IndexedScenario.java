@@ -2,9 +2,11 @@ package kappamaki.index;
 
 import gherkin.formatter.model.Tag;
 
+import java.io.Serializable;
+
 import com.google.common.collect.ImmutableSet;
 
-public class IndexedScenario {
+public class IndexedScenario implements Serializable {
 
     private final int line;
     /** One of "scenario" or "scenario_outline" */

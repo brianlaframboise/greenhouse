@@ -1,29 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Kappamaki</title>
-    <style type="text/css">
-    pre {
-        padding: 0px;
-        margin: 0px;
-    }
-    </style>
-</head>
 <body>
-
-<h3>Tags</h3>
-<table>
-  <tr>
-    <th>Name</th>
-    <th>#</th>
-  </tr>
-  <tr wicket:id='tags'>
-    <td wicket:id='tag'>@tag</td>
-    <td wicket:id='count'>123</td>
-  </tr>
-</table>
-
+<wicket:extend>
 <h3>Features</h3>
 
 <ol>
@@ -49,5 +27,6 @@
 <h3>Output</h3>
 
 <pre wicket:id='output'></pre>
+</wicket:extend>
 </body>
 </html>

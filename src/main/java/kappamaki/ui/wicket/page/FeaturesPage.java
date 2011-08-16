@@ -1,8 +1,6 @@
 package kappamaki.ui.wicket.page;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import kappamaki.execute.ScenarioExecutor;
 import kappamaki.index.Index;
@@ -10,55 +8,56 @@ import kappamaki.index.IndexedFeature;
 import kappamaki.index.IndexedScenario;
 import kappamaki.util.Utils;
 
+import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxFallbackLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multiset;
 
-public class HomePage extends WebPage {
+/**
+ * Displays and executes Features, Scenarios, and Examples.
+ */
+@MountPath(path = "/features")
+@MountIndexedParam
+public class FeaturesPage extends KappamakiPage {
 
     @SpringBean
     private Index index;
 
-    public HomePage() {
-        final Multiset<String> tags = index.tags();
+    private final Label output;
 
-        List<String> sortedTags = new ArrayList<String>(tags.elementSet());
-        Collections.sort(sortedTags);
+    private final WebMarkupContainer feature;
 
-        add(new ListView<String>("tags", sortedTags) {
-            @Override
-            protected void populateItem(ListItem<String> item) {
-                String tag = item.getModelObject();
-                item.add(new Label("tag", tag));
-                item.add(new Label("count", Model.of(tags.count(tag))));
-            }
-        });
-
+    public FeaturesPage(PageParameters params) {
         ImmutableList<IndexedFeature> features = index.features();
         ArrayList<String> names = new ArrayList<String>();
         for (IndexedFeature feature : features) {
             names.add(feature.getName());
         }
 
-        final Label output = new Label("output", new FilteringModel());
+        output = new Label("output", new FilteringModel());
         add(output.setOutputMarkupId(true));
 
-        final WebMarkupContainer feature = new WebMarkupContainer("feature");
+        feature = new WebMarkupContainer("feature");
         feature.add(new WebMarkupContainer("execute").add(new Label("name", "")));
         feature.add(new WebMarkupContainer("lines"));
         add(feature.setVisible(false).setOutputMarkupPlaceholderTag(true));
+
+        String featureNameArg = params.getString("0", "");
+        if (names.contains(featureNameArg)) {
+            showFeature(featureNameArg, null);
+        }
 
         add(new ListView<String>("features", names) {
             @Override
@@ -67,64 +66,69 @@ public class HomePage extends WebPage {
                 AjaxFallbackLink<Void> link = new IndicatingAjaxFallbackLink<Void>("link") {
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-                        ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", output, name);
-                        executeFeatureLink.add(new Label("name", name));
-                        feature.replace(executeFeatureLink);
-
-                        IndexedFeature indexedFeature = index.featureByName(name);
-                        String gherkin = Utils.readGherkin(indexedFeature.getUri());
-                        Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
-
-                        feature.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
-                            @Override
-                            protected void populateItem(ListItem<String> item) {
-                                String line = item.getModelObject();
-                                final int lineNumber = item.getIndex() + 1;
-                                Label text = new Label("text", item.getModelObject());
-                                text.setRenderBodyOnly(true);
-
-                                Fragment context;
-                                if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
-                                    // Example
-                                    context = new Fragment("context", "example", this);
-
-                                    int pipeIndex = line.indexOf('|');
-                                    Label pretext = new Label("pretext", line.substring(0, pipeIndex));
-
-                                    IndexedFeature feature = index.featureByName(name);
-                                    IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
-                                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", output, indexedScenario.getName(), lineNumber);
-                                    executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
-
-                                    context.add(pretext, executeExampleLink);
-                                } else if (line.contains("Scenario")) {
-                                    // Scenario or Scenario Outline
-                                    context = new Fragment("context", "scenario", this);
-
-                                    int colonIndex = line.indexOf(": ");
-                                    Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
-                                    String scenarioName = line.substring(colonIndex + 2).trim();
-
-                                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", output, scenarioName);
-                                    executeScenarioLink.add(new Label("name", scenarioName));
-
-                                    context.add(pretext, executeScenarioLink);
-                                } else {
-                                    context = new Fragment("context", "plain", this);
-                                    context.add(text);
-                                }
-                                item.add(new WebMarkupContainer("pre").add(context));
-                            }
-                        });
-                        if (target != null) {
-                            target.addComponent(feature.setVisible(true));
-                        }
+                        showFeature(name, target);
                     }
                 };
                 item.add(link);
                 link.add(new Label("name", name));
             }
         });
+    }
+
+    private void showFeature(final String name, AjaxRequestTarget target) {
+        ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", output, name);
+        executeFeatureLink.add(new Label("name", name));
+        feature.replace(executeFeatureLink);
+
+        IndexedFeature indexedFeature = index.featureByName(name);
+        String gherkin = Utils.readGherkin(indexedFeature.getUri());
+        Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
+
+        feature.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
+            @Override
+            protected void populateItem(ListItem<String> item) {
+                String line = item.getModelObject();
+                final int lineNumber = item.getIndex() + 1;
+                Label text = new Label("text", item.getModelObject());
+                text.setRenderBodyOnly(true);
+
+                Fragment context;
+                if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
+                    // Example
+                    context = new Fragment("context", "example", this);
+
+                    int pipeIndex = line.indexOf('|');
+                    Label pretext = new Label("pretext", line.substring(0, pipeIndex));
+
+                    IndexedFeature feature = index.featureByName(name);
+                    IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
+                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", output, indexedScenario.getName(), lineNumber);
+                    executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
+
+                    context.add(pretext, executeExampleLink);
+                } else if (line.contains("Scenario")) {
+                    // Scenario or Scenario Outline
+                    context = new Fragment("context", "scenario", this);
+
+                    int colonIndex = line.indexOf(": ");
+                    Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
+                    String scenarioName = line.substring(colonIndex + 2).trim();
+
+                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", output, scenarioName);
+                    executeScenarioLink.add(new Label("name", scenarioName));
+
+                    context.add(pretext, executeScenarioLink);
+                } else {
+                    context = new Fragment("context", "plain", this);
+                    context.add(text);
+                }
+                item.add(new WebMarkupContainer("pre").add(context));
+            }
+        }.setRenderBodyOnly(true));
+        feature.setVisible(true);
+        if (target != null) {
+            target.addComponent(feature);
+        }
     }
 
     private static class FilteringModel extends Model<String> {
