@@ -36,6 +36,16 @@
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>7.4.5.v20110725</version>
 				<configuration>
+					<systemProperties>
+						<systemProperty>
+							<name>kappamaki.project</name>
+							<value>${basedir}/example</value>
+						</systemProperty>
+						<systemProperty>
+							<name>kappamaki.features</name>
+							<value>${basedir}/example/features</value>
+						</systemProperty>
+					</systemProperties>
 					<scanIntervalSeconds>0</scanIntervalSeconds>
 					<webAppSourceDirectory>${basedir}/src/main/webapp</webAppSourceDirectory>
 					<webXml>${basedir}/src/main/webapp/WEB-INF/web.xml</webXml>
