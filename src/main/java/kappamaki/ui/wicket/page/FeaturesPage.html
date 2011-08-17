@@ -1,32 +1,49 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
+<wicket:head>
+    <style type="text/css">
+	    .column {
+	        position: relative;
+	        float: left;
+	    }
+	    #features {
+	        width: 10%;
+	    }
+	    #feature {
+	        width: 30%
+	    }
+	    #output {
+	        width: 60%
+	    }
+    </style>
+</wicket:head>
 <wicket:extend>
-<h3>Features</h3>
-
-<ol>
-    <li wicket:id='features'><a wicket:id='link'><span wicket:id='name'>Hello World Feature</span></a></li>
-</ol>
-
-<h3>Feature</h3>
-
-<div wicket:id='feature'>
-    <h2><a wicket:id='execute'><span wicket:id='name'>Feature</span></a></h2>
-    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'></wicket:container></pre></wicket:container>
+<div id='body'>
+	<div id='features' class='column'>
+		<h3>Features</h3>
+		<ol>
+		    <li wicket:id='features'><a wicket:id='link'><span wicket:id='name'>Hello World Feature</span></a></li>
+		</ol>
+	</div>
+	
+	<div id='feature' class='column'>
+	    <h3>Feature</h3>
+		<div wicket:id='feature'>
+		    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'>plain | scenario | example</wicket:container></pre></wicket:container>
+		</div>
+	</div>
+	
+	<div id='output' class='column'>
+	    <h3>Output</h3>
+	    <pre wicket:id='output'></pre>
+	</div>
+	
+	<wicket:fragment wicket:id='plain'><span wicket:id='text'></span></wicket:fragment>
+    <wicket:fragment wicket:id='featureFragment'><span wicket:id='pretext'>Feature: </span><a wicket:id='execute'><span wicket:id='name'>Feature Name</span></a></wicket:fragment>
+	<wicket:fragment wicket:id='scenario'><span wicket:id='pretext'>Scenario: </span><a wicket:id='execute'><span wicket:id='name'>Scenario Name</span></a></wicket:fragment>
+	<wicket:fragment wicket:id='example'><span wicket:id='pretext'>[white space]</span><a wicket:id='execute'><span wicket:id='text'>| foo | bar |</span></a></wicket:fragment>
 </div>
-<wicket:fragment wicket:id='plain'>
-    <span wicket:id='text'></span>
-</wicket:fragment>
-<wicket:fragment wicket:id='scenario'>
-    <span wicket:id='pretext'>Scenario:    </span><a wicket:id='execute'><span wicket:id='name'>Scenario</span></a>
-</wicket:fragment>
-<wicket:fragment wicket:id='example'>
-    <span wicket:id='pretext'>[white space]</span><a wicket:id='execute'><span wicket:id='text'>| foo | bar |</span></a>
-</wicket:fragment>
-
-<h3>Output</h3>
-
-<pre wicket:id='output'></pre>
 </wicket:extend>
 </body>
 </html>

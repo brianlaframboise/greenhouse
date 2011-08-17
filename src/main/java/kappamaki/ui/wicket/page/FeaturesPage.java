@@ -50,7 +50,6 @@ public class FeaturesPage extends KappamakiPage {
         add(output.setOutputMarkupId(true));
 
         feature = new WebMarkupContainer("feature");
-        feature.add(new WebMarkupContainer("execute").add(new Label("name", "")));
         feature.add(new WebMarkupContainer("lines"));
         add(feature.setVisible(false).setOutputMarkupPlaceholderTag(true));
 
@@ -76,10 +75,6 @@ public class FeaturesPage extends KappamakiPage {
     }
 
     private void showFeature(final String name, AjaxRequestTarget target) {
-        ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", output, name);
-        executeFeatureLink.add(new Label("name", name));
-        feature.replace(executeFeatureLink);
-
         IndexedFeature indexedFeature = index.featureByName(name);
         String gherkin = Utils.readGherkin(indexedFeature.getUri());
         Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
@@ -93,19 +88,17 @@ public class FeaturesPage extends KappamakiPage {
                 text.setRenderBodyOnly(true);
 
                 Fragment context;
-                if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
-                    // Example
-                    context = new Fragment("context", "example", this);
+                if (line.startsWith("Feature")) {
+                    context = new Fragment("context", "featureFragment", this);
 
-                    int pipeIndex = line.indexOf('|');
-                    Label pretext = new Label("pretext", line.substring(0, pipeIndex));
+                    int colonIndex = line.indexOf(": ");
+                    Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
+                    String featureName = line.substring(colonIndex + 2).trim();
 
-                    IndexedFeature feature = index.featureByName(name);
-                    IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
-                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", output, indexedScenario.getName(), lineNumber);
-                    executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
+                    ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", output, featureName);
+                    executeFeatureLink.add(new Label("name", featureName));
 
-                    context.add(pretext, executeExampleLink);
+                    context.add(pretext, executeFeatureLink);
                 } else if (line.contains("Scenario")) {
                     // Scenario or Scenario Outline
                     context = new Fragment("context", "scenario", this);
@@ -118,6 +111,19 @@ public class FeaturesPage extends KappamakiPage {
                     executeScenarioLink.add(new Label("name", scenarioName));
 
                     context.add(pretext, executeScenarioLink);
+                } else if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
+                    // Example
+                    context = new Fragment("context", "example", this);
+
+                    int pipeIndex = line.indexOf('|');
+                    Label pretext = new Label("pretext", line.substring(0, pipeIndex));
+
+                    IndexedFeature feature = index.featureByName(name);
+                    IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
+                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", output, indexedScenario.getName(), lineNumber);
+                    executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
+
+                    context.add(pretext, executeExampleLink);
                 } else {
                     context = new Fragment("context", "plain", this);
                     context.add(text);

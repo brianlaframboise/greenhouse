@@ -13,6 +13,7 @@ public class KappamakiApplication extends WebApplication {
     protected void init() {
         addComponentInstantiationListener(new SpringComponentInjector(this));
         new AnnotatedMountScanner().scanPackage(FeaturesPage.class.getPackage().getName()).mount(this);
+        getMarkupSettings().setStripWicketTags(true);
     }
 
     @Override
