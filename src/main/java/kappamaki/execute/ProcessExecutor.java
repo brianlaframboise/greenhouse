@@ -148,12 +148,12 @@ public class ProcessExecutor implements ScenarioExecutor {
         String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@kappamaki\"";
         File output = joinPaths(Utils.TEMP_DIR, "kappamaki-" + time + ".output");
-        System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags, ">", output.getAbsolutePath()));
+        System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags, phase, ">", output.getAbsolutePath()));
         try {
             ProcessBuilder builder = new ProcessBuilder();
             builder.directory(projectRoot);
-            builder.command(mvn, phase, features, tags, ">", output.getAbsolutePath());
-
+            builder.command(mvn, features, tags, phase, ">", output.getAbsolutePath());
+            
             builder.start().waitFor();
 
             return Utils.readGherkin(output.getPath());
