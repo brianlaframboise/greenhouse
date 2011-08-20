@@ -5,9 +5,15 @@ import kappamaki.index.IndexedScenario;
 
 public interface ScenarioExecutor {
 
-    String execute(IndexedFeature feature);
+    int execute(IndexedFeature feature);
 
-    String execute(IndexedScenario scenario);
+    int execute(IndexedScenario scenario);
 
-    String executeExample(IndexedScenario outline, int line);
+    int executeExample(IndexedScenario outline, int line);
+
+    String getOutput(int taskId);
+
+    String getPartialOutput(int taskId);
+
+    boolean isComplete(int taskId);
 }

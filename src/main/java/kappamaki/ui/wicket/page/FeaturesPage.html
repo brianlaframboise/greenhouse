@@ -8,13 +8,10 @@
 	        float: left;
 	    }
 	    #features {
-	        width: 10%;
+	        width: 20%;
 	    }
 	    #feature {
-	        width: 30%
-	    }
-	    #output {
-	        width: 60%
+	        width: 80%
 	    }
     </style>
 </wicket:head>
@@ -34,9 +31,12 @@
 		</div>
 	</div>
 	
-	<div id='output' class='column'>
-	    <h3>Output</h3>
-	    <pre wicket:id='output'></pre>
+	<div wicket:id='dialog'>
+        <div style="background-color: white; border: 1px solid black; display: block; text-align: left; padding: 30px; width: 90%; position: fixed; top: 20px; left: 20px; overflow: scroll; max-height: 700px">
+            <span wicket:id='progress'>Running for X seconds... | Complete!</span>
+            <div align="right"><a wicket:id='close'>Close</a></div>
+            <pre wicket:id='output'></pre>
+	    </div>
 	</div>
 	
 	<wicket:fragment wicket:id='plain'><span wicket:id='text'></span></wicket:fragment>
