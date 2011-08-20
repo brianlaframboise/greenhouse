@@ -79,6 +79,16 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>visural-common</id>
+			<name>visural-common</name>
+			<url>http://visural-common.googlecode.com/svn/trunk/visural-common/maven/</url>
+		</repository>
+		<repository>
+			<id>visural-wicket</id>
+			<name>visural-wicket</name>
+			<url>http://visural-wicket.googlecode.com/svn/trunk/visural-wicket/maven/</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -134,6 +144,18 @@
 			<artifactId>log4j</artifactId>
 			<version>${log4j.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.visural</groupId>
+			<artifactId>visural-common</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.visural</groupId>
+			<artifactId>visural-wicket</artifactId>
+			<version>0.6.5</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>junit</groupId>

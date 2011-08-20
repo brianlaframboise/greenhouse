@@ -187,9 +187,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     public String getPartialOutput(int taskId) {
         CucumberTask task = tasks.get(taskId);
         File outputFile = task.getOutput();
-        String output = Utils.readContents(outputFile.getAbsolutePath());
-        System.out.println("Partial output: " + output);
-        return output;
+        return Utils.readContents(outputFile.getAbsolutePath());
     }
 
     @Override
