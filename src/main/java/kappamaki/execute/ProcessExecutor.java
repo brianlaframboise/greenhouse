@@ -7,6 +7,13 @@ import gherkin.parser.Parser;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import kappamaki.index.Index;
 import kappamaki.index.IndexedFeature;
@@ -16,15 +23,17 @@ import kappamaki.util.Utils;
 import com.google.common.base.Joiner;
 
 /**
- * Executes an IndexedScenario by:
+ * Executes Features, Scenarios, Scenario Outlines, and individul Scenario
+ * Outline Examples by:
  * 
  * <ol>
- * <li>Creating a kappamaki-TIMESTAMP directory in the temp directory</li>
+ * <li>Creating a new task id for the cucumber execution</li>
+ * <li>Creating a kappamaki/TASK_ID directory in the temp directory</li>
  * <li>Copying the scenario's feature file to that directory while tagging the
  * specific scenario with @kappamaki</li>
- * <li>Executing a Maven Process against a cuke4duke project to run only
- * scenarios tagged @kappamaki</li>
- * <li>Deleting the temp directory</li>
+ * <li>Scheduling a Callable task to execute a Maven Process against a cuke4duke
+ * project to run the (possibly filtered) feature file, executing only scenarios
+ * tagged @kappamaki</li>
  * </ol>
  * 
  * The output of the process execution may be redirected to a provided file.
@@ -41,6 +50,10 @@ public class ProcessExecutor implements ScenarioExecutor {
     private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
     private String phase = "integration-test";
 
+    private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
+    private final AtomicInteger taskIds = new AtomicInteger(0);
+    private final Map<Integer, CucumberTask> tasks = new ConcurrentHashMap<Integer, CucumberTask>();
+
     /**
      * Creates a new ScenarioExecutor. By default output is inherited from the
      * current Process, which probably means output is directed to standard out.
@@ -54,37 +67,27 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public String execute(IndexedFeature feature) {
-        String output = null;
-        File tempDir = null;
-        try {
-            long time = System.currentTimeMillis();
-            tempDir = makeTempDir(time);
-            copyFeature(tempDir, feature);
-            output = executeScenarios(tempDir, time);
-        } finally {
-            if (tempDir != null) {
-                delete(tempDir);
-            }
-        }
-        return output;
+    public int execute(IndexedFeature feature) {
+        int taskId = taskIds.getAndIncrement();
+        File tempDir = makeTempDir(taskId);
+        copyFeature(tempDir, feature);
+        taskId = executeScenarios(tempDir, taskId);
+        return taskId;
     }
 
     private void copyFeature(File tempDir, IndexedFeature feature) {
         try {
             // Setup tagged destination file
-            String root = index.getFeaturesRoot().getAbsolutePath();
-            String subPath = feature.getUri().substring(root.length() + 1);
-            File tempScenario = joinPaths(tempDir.getPath(), subPath);
-            Writer tempFile = new FileWriter(tempScenario);
+            File featureFile = tempFeatureFile(tempDir, feature);
+            Writer tempFile = new FileWriter(featureFile);
 
             // Load source file
-            String gherkin = Utils.readGherkin(feature.getUri());
+            String gherkin = Utils.readContents(feature.getUri());
 
             // Parse to copy source into destination
             Parser parser = new Parser(new KappamakiTagger(tempFile));
-            System.out.println("Copying " + feature.getUri() + " into " + tempScenario.getPath());
-            parser.parse(gherkin, tempScenario.getAbsolutePath(), 0);
+            System.out.println("Copying " + feature.getUri() + " into " + featureFile.getPath());
+            parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
 
             tempFile.flush();
             tempFile.close();
@@ -93,49 +96,44 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
+    private File tempFeatureFile(File tempDir, IndexedFeature feature) {
+        String root = index.getFeaturesRoot().getAbsolutePath();
+        String subPath = feature.getUri().substring(root.length() + 1);
+        return joinPaths(tempDir.getPath(), subPath);
+    }
+
     @Override
-    public String execute(IndexedScenario scenario) {
+    public int execute(IndexedScenario scenario) {
         return executeWithLine(scenario, -1);
     }
 
-    private String executeWithLine(IndexedScenario scenario, int line) {
-        String output = null;
-        File tempDir = null;
-        try {
-            long time = System.currentTimeMillis();
-            tempDir = makeTempDir(time);
-            copyScenarios(tempDir, scenario, line);
-            output = executeScenarios(tempDir, time);
-        } finally {
-            if (tempDir != null) {
-                delete(tempDir);
-            }
-        }
-        return output;
+    @Override
+    public int executeExample(IndexedScenario outline, int line) {
+        return executeWithLine(outline, line);
     }
 
-    @Override
-    public String executeExample(IndexedScenario outline, int line) {
-        return executeWithLine(outline, line);
+    private int executeWithLine(IndexedScenario scenario, int line) {
+        int taskId = taskIds.getAndIncrement();
+        File tempDir = makeTempDir(taskId);
+        copyScenarios(tempDir, scenario, line);
+        return executeScenarios(tempDir, taskId);
     }
 
     private void copyScenarios(File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
             IndexedFeature feature = index.findByScenario(scenario);
-            String root = index.getFeaturesRoot().getAbsolutePath();
-            String subPath = feature.getUri().substring(root.length() + 1);
-            File tempScenario = joinPaths(tempDir.getPath(), subPath);
-            Writer tempFile = new FileWriter(tempScenario);
+            File featureFile = tempFeatureFile(tempDir, feature);
+            Writer tempFile = new FileWriter(featureFile);
 
             // Load source file
-            String gherkin = Utils.readGherkin(feature.getUri());
+            String gherkin = Utils.readContents(feature.getUri());
 
             // Parse and tag source into destination
             Formatter formatter = new ExampleFilterer(new ScenarioTagger(scenario, tempFile), line);
             Parser parser = new Parser(formatter);
-            System.out.println("Tagging " + feature.getUri() + " into " + tempScenario.getPath());
-            parser.parse(gherkin, tempScenario.getAbsolutePath(), 0);
+            System.out.println("Tagging " + feature.getUri() + " into " + featureFile.getPath());
+            parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
 
             tempFile.flush();
             tempFile.close();
@@ -144,26 +142,63 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private String executeScenarios(File tempDir, long time) {
+    private int executeScenarios(File tempDir, final int taskId) {
         String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@kappamaki\"";
-        File output = joinPaths(Utils.TEMP_DIR, "kappamaki-" + time + ".output");
+        final File output = joinPaths(Utils.TEMP_DIR, "kappamaki", Integer.toString(taskId), "output");
         System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags, ">", output.getAbsolutePath()));
         try {
-            ProcessBuilder builder = new ProcessBuilder();
+            final ProcessBuilder builder = new ProcessBuilder();
             builder.directory(projectRoot);
             builder.command(mvn, phase, features, tags, ">", output.getAbsolutePath());
 
-            builder.start().waitFor();
-
-            return Utils.readGherkin(output.getPath());
+            Future<String> submittedTask = executorService.submit(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    System.out.println("Task " + taskId + " running...");
+                    builder.start().waitFor();
+                    String gherkin = Utils.readContents(output.getAbsolutePath());
+                    System.out.println("Task " + taskId + " complete");
+                    return gherkin;
+                }
+            });
+            tasks.put(taskId, new CucumberTask(output, submittedTask));
+            return taskId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private File makeTempDir(long time) {
-        File tempScenarioDir = Utils.tempFile("kappamaki-" + time);
+    @Override
+    public String getOutput(int taskId) {
+        try {
+            Future<String> gherkinFuture = tasks.get(taskId).getResult();
+            String gherkin = gherkinFuture.get();
+            File output = tasks.get(taskId).getOutput();
+            delete(output.getParentFile());
+            tasks.remove(taskId);
+            return gherkin;
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to get resulting gherkin string", e);
+        }
+    }
+
+    @Override
+    public String getPartialOutput(int taskId) {
+        CucumberTask task = tasks.get(taskId);
+        File outputFile = task.getOutput();
+        String output = Utils.readContents(outputFile.getAbsolutePath());
+        System.out.println("Partial output: " + output);
+        return output;
+    }
+
+    @Override
+    public boolean isComplete(int taskId) {
+        return tasks.get(taskId).getResult().isDone();
+    }
+
+    private File makeTempDir(int taskId) {
+        File tempScenarioDir = Utils.tempFile("kappamaki", Integer.toString(taskId));
         if (!tempScenarioDir.mkdir()) {
             throw new RuntimeException("Could not create temp directory: " + tempScenarioDir.getAbsolutePath());
         }
@@ -176,6 +211,7 @@ public class ProcessExecutor implements ScenarioExecutor {
                 delete(c);
             }
         }
+        System.out.println("Deleting: " + f);
         if (!f.delete()) {
             throw new RuntimeException("Could not delete " + f.getPath());
         }

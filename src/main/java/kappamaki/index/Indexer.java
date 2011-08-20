@@ -74,7 +74,7 @@ public class Indexer {
             uri = file.getPath();
             IndexingFormatter formatter = new IndexingFormatter(this);
             Parser parser = new Parser(formatter);
-            String gherkin = Utils.readGherkin(file.getPath());
+            String gherkin = Utils.readContents(file.getPath());
             parser.parse(gherkin, file.getPath(), 0);
         } catch (Exception e) {
             throw new RuntimeException(e);

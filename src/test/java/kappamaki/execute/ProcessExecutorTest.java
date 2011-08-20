@@ -38,7 +38,8 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String output = executor.execute(feature);
+        int taskId = executor.execute(feature);
+        String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("3 scenarios (3 passed)"));
         assertTrue(output.contains("BUILD SUCCESS"));
@@ -54,7 +55,8 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String output = executor.execute(scenario);
+        int taskId = executor.execute(scenario);
+        String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@hello @world @kappamaki"));
         assertTrue(output.contains("BUILD SUCCESS"));
@@ -70,7 +72,8 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String output = executor.execute(scenario);
+        int taskId = executor.execute(scenario);
+        String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @kappamaki"));
         assertTrue(output.contains("BUILD SUCCESS"));
@@ -86,7 +89,8 @@ public class ProcessExecutorTest {
         File project = joinPaths(PROJECT_ROOT, "example");
         ProcessExecutor executor = new ProcessExecutor(index, project);
 
-        String output = executor.executeExample(scenario, 21);
+        int taskId = executor.executeExample(scenario, 21);
+        String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @kappamaki"));
         assertFalse(output.contains("| Goodbye  | World   |"));

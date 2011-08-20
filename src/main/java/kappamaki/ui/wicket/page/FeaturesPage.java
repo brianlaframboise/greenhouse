@@ -9,6 +9,7 @@ import kappamaki.index.IndexedScenario;
 import kappamaki.util.Utils;
 
 import org.apache.wicket.PageParameters;
+import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxFallbackLink;
@@ -19,6 +20,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.time.Duration;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
@@ -46,7 +48,7 @@ public class FeaturesPage extends KappamakiPage {
             names.add(feature.getName());
         }
 
-        output = new Label("output", new FilteringModel());
+        output = new Label("output", new Model<String>(""));// new FilteringModel());
         add(output.setOutputMarkupId(true));
 
         feature = new WebMarkupContainer("feature");
@@ -76,7 +78,7 @@ public class FeaturesPage extends KappamakiPage {
 
     private void showFeature(final String name, AjaxRequestTarget target) {
         IndexedFeature indexedFeature = index.featureByName(name);
-        String gherkin = Utils.readGherkin(indexedFeature.getUri());
+        String gherkin = Utils.readContents(indexedFeature.getUri());
         Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
 
         feature.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
@@ -172,14 +174,30 @@ public class FeaturesPage extends KappamakiPage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            String result = execute();
-            output.setDefaultModelObject(result);
+            final int taskId = execute();
+            output.add(new AbstractAjaxTimerBehavior(Duration.seconds(1)) {
+
+                @Override
+                protected void onTimer(AjaxRequestTarget target) {
+                    String outputText = "";
+                    if (executor.isComplete(taskId)) {
+                        outputText = executor.getOutput(taskId);
+                        stop();
+                    } else {
+                        outputText = executor.getPartialOutput(taskId);
+                    }
+                    output.setDefaultModelObject(outputText);
+                    if (target != null) {
+                        target.addComponent(output);
+                    }
+                }
+            });
             if (target != null) {
                 target.addComponent(output);
             }
         }
 
-        protected abstract String execute();
+        protected abstract int execute();
 
     }
 
@@ -193,7 +211,7 @@ public class FeaturesPage extends KappamakiPage {
         }
 
         @Override
-        protected String execute() {
+        protected int execute() {
             IndexedFeature feature = index.featureByName(name);
             return executor.execute(feature);
         }
@@ -209,7 +227,7 @@ public class FeaturesPage extends KappamakiPage {
         }
 
         @Override
-        protected String execute() {
+        protected int execute() {
             IndexedScenario scenario = index.scenarioByName(name);
             return executor.execute(scenario);
         }
@@ -227,7 +245,7 @@ public class FeaturesPage extends KappamakiPage {
         }
 
         @Override
-        protected String execute() {
+        protected int execute() {
             IndexedScenario scenario = index.scenarioByName(name);
             return executor.executeExample(scenario, line);
         }

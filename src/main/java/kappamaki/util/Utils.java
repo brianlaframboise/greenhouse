@@ -26,15 +26,15 @@ public class Utils {
         return new File(Joiner.on(SEPARATOR).join(pieces));
     }
 
-    public static String readGherkin(String uri) {
+    public static String readContents(String uri) {
         try {
             File file = new File(uri);
             FileReader reader = new FileReader(file);
-            String gherkin = FixJava.readReader(reader);
+            String contents = FixJava.readReader(reader);
             reader.close();
-            return gherkin;
+            return contents;
         } catch (Exception e) {
-            throw new RuntimeException("Could not load feature file: " + uri, e);
+            throw new RuntimeException("Could not load file: " + uri, e);
         }
     }
 
