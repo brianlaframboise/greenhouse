@@ -161,8 +161,15 @@ public class ProcessExecutor implements ScenarioExecutor {
 		try {
 			final ProcessBuilder builder = new ProcessBuilder();
 			builder.directory(projectRoot);
-			builder.command(mvn, features, tags, phase, ">",
-					output.getAbsolutePath());
+
+			// if we're in a unix like system, shell out to bash.
+			if (projectRoot.getAbsolutePath().startsWith("/")) {
+				builder.command("bash", "-c", Joiner.on(' ').join(mvn, features, tags, phase,
+						">", output.getAbsolutePath()));
+			} else {
+				builder.command(mvn, features, tags, phase, ">",
+						output.getAbsolutePath());
+			}
 
 			Future<String> submittedTask = executorService
 					.submit(new Callable<String>() {
@@ -214,7 +221,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 	private File makeTempDir(int taskId) {
 		File tempScenarioDir = Utils.tempFile("kappamaki",
 				Integer.toString(taskId));
-		if (!tempScenarioDir.mkdir()) {
+		if (!tempScenarioDir.mkdirs()) {
 			throw new RuntimeException("Could not create temp directory: "
 					+ tempScenarioDir.getAbsolutePath());
 		}
