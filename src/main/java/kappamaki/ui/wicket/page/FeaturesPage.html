@@ -3,14 +3,14 @@
 <body>
 <wicket:extend>
 <div id='body'>
-	<div id='features' class='column'>
+	<div id='features' class='grid_3'>
 		<h3>Features</h3>
 		<ol>
 		    <li wicket:id='features'><a wicket:id='link'><span wicket:id='name'>Hello World Feature</span></a></li>
 		</ol>
 	</div>
 	
-	<div id='feature' class='column'>
+	<div id='feature' class='grid_9'>
 	    <h3>Feature</h3>
 		<div wicket:id='feature'>
 		    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'>plain | scenario | example</wicket:container></pre></wicket:container>
@@ -24,6 +24,7 @@
             <pre wicket:id='output'></pre>
 	    </div>
 	</div>
+	<div class='clear'></div>
 	
 	<wicket:fragment wicket:id='plain'><span wicket:id='text'></span></wicket:fragment>
     <wicket:fragment wicket:id='featureFragment'><span wicket:id='pretext'>Feature: </span><a wicket:id='execute'><span wicket:id='name'>Feature Name</span></a></wicket:fragment>

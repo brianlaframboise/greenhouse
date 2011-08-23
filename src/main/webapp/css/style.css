@@ -237,18 +237,6 @@ a:hover {
 	color: rgb(255,170,0);
 }
 
-.column {
-	position: relative;
-	float: left;
-}
-
-#features {
-	width: 20%;
-}
-
-#feature {
-	width: 80%
-}
 
 /* =============================================================================
    Non-semantic helper classes

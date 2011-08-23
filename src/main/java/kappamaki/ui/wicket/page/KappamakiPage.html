@@ -6,18 +6,25 @@
 <title>Kappamaki</title>
 
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/960.css">
 <link href='http://fonts.googleapis.com/css?family=Sigmar+One'
 	rel='stylesheet' type='text/css'>
 </head>
 <body>
-	<header>
-		<h1>Kappamaki</h1>
-		<h2>Bite sized Cucumber</h2>
-	</header>
-	<wicket:link>
-		<a href="FeaturesPage.html">Features</a>
-		<a href="TagsPage.html">Tags</a>
-	</wicket:link>
-	<wicket:child />
+	<div id='wrapper' class='container_12'>
+		<header class="grid_12">
+			<h1>Kappamaki</h1>
+			<h2>Bite sized Cucumber</h2>
+		</header>
+		<div class='clear'></div>
+		<div class="grid_12">
+			<wicket:link>
+				<a href="FeaturesPage.html">Features</a>
+				<a href="TagsPage.html">Tags</a>
+			</wicket:link>
+		</div>
+		<div class='clear'></div>
+		<wicket:child />
+	</div>
 </body>
 </html>
