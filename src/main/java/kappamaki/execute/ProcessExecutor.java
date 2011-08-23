@@ -75,6 +75,33 @@ public class ProcessExecutor implements ScenarioExecutor {
         return taskId;
     }
 
+    @Override
+    public int execute(String gherkin) {
+        int taskId = taskIds.getAndIncrement();
+        File tempDir = makeTempDir(taskId);
+        copyGherkin(tempDir, gherkin);
+        taskId = executeScenarios(tempDir, taskId);
+        return taskId;
+    }
+
+    private void copyGherkin(File tempDir, String gherkin) {
+        try {
+            // Setup tagged destination file
+            File featureFile = joinPaths(tempDir.getPath(), "gherkin.feature");
+            Writer tempFile = new FileWriter(featureFile);
+
+            // Parse to copy source into destination
+            Parser parser = new Parser(new KappamakiTagger(tempFile));
+            System.out.println("Copying raw gherkin into " + featureFile.getPath());
+            parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
+
+            tempFile.flush();
+            tempFile.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not copy gherkin", e);
+        }
+    }
+
     private void copyFeature(File tempDir, IndexedFeature feature) {
         try {
             // Setup tagged destination file
@@ -92,7 +119,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             tempFile.flush();
             tempFile.close();
         } catch (Exception e) {
-            throw new RuntimeException("Could not copy scenarios");
+            throw new RuntimeException("Could not copy scenarios", e);
         }
     }
 
@@ -138,7 +165,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             tempFile.flush();
             tempFile.close();
         } catch (Exception e) {
-            throw new RuntimeException("Could not copy scenarios");
+            throw new RuntimeException("Could not copy scenarios", e);
         }
     }
 
@@ -197,7 +224,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private File makeTempDir(int taskId) {
         File tempScenarioDir = Utils.tempFile("kappamaki", Integer.toString(taskId));
-        if (!tempScenarioDir.mkdir()) {
+        if (!tempScenarioDir.mkdirs()) {
             throw new RuntimeException("Could not create temp directory: " + tempScenarioDir.getAbsolutePath());
         }
         return tempScenarioDir;

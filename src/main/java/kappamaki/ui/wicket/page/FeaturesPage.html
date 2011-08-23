@@ -27,8 +27,16 @@
 	<div id='feature' class='column'>
 	    <h3>Feature</h3>
 		<div wicket:id='feature'>
+            <a wicket:id='edit'>Edit</a>
 		    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'>plain | scenario | example</wicket:container></pre></wicket:container>
 		</div>
+		<form wicket:id='editForm'>
+		  <div>
+            <a wicket:id='run'>Run</a>
+            <a wicket:id='cancel'>Cancel</a>
+          </div>
+		  <textarea wicket:id='gherkin' rows="25" cols="80"></textarea>
+		</form>
 	</div>
 	
 	<div wicket:id='dialog'>

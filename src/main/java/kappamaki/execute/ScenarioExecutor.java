@@ -11,6 +11,8 @@ public interface ScenarioExecutor {
 
     int executeExample(IndexedScenario outline, int line);
 
+    int execute(String gherkin);
+
     String getOutput(int taskId);
 
     String getPartialOutput(int taskId);
