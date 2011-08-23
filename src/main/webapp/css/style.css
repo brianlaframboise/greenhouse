@@ -201,12 +201,54 @@ table { border-collapse: collapse; border-spacing: 0; }
    Author: 
    ========================================================================== */
 
+/*
+  Color pallet: http://kuler.adobe.com/#themeID/1466800
+  
+  rgb(255,170,0), rgb(194,185,62), rgb(128, 143, 93), rgb(87,97,87), rgb(48,47,48)
+*/
 
 
+h1 {
+	font-family: 'Sigmar One';
+	font-size: 3em;
+}
+
+h1, h2 {
+	color: rgb(48,47,48);
+}
 
 
+pre {
+	padding: 0px;
+	margin: 0px;
+}
 
+body {
+	background-color: rgb(87,97,87);
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	color: rgb(194,185,62);
+}
 
+a:link,a:visited {
+	color: rgb(194,185,62);
+}
+
+a:hover {
+	color: rgb(255,170,0);
+}
+
+.column {
+	position: relative;
+	float: left;
+}
+
+#features {
+	width: 20%;
+}
+
+#feature {
+	width: 80%
+}
 
 /* =============================================================================
    Non-semantic helper classes
