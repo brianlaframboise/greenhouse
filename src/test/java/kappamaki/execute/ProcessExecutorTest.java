@@ -15,6 +15,7 @@ import kappamaki.index.IndexedScenario;
 import kappamaki.index.Indexer;
 import kappamaki.util.Utils;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -25,18 +26,23 @@ public class ProcessExecutorTest {
     private static InMemoryIndex index;
     private static final String PROJECT_ROOT = Utils.USER_DIR;
 
+    private ProcessExecutor executor;
+
     @BeforeClass
     public static void build_index() {
         File features = joinPaths(PROJECT_ROOT, "example", "features");
         index = new Indexer(features).index();
     }
 
+    @Before
+    public void create_executor() {
+        File project = joinPaths(PROJECT_ROOT, "example");
+        executor = new ProcessExecutor(index, project);
+    }
+
     @Test
     public void executes_feature() {
         IndexedFeature feature = index.featureByName("Hello World Feature");
-
-        File project = joinPaths(PROJECT_ROOT, "example");
-        ProcessExecutor executor = new ProcessExecutor(index, project);
 
         int taskId = executor.execute(feature);
         String output = executor.getOutput(taskId);
@@ -52,9 +58,6 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        File project = joinPaths(PROJECT_ROOT, "example");
-        ProcessExecutor executor = new ProcessExecutor(index, project);
-
         int taskId = executor.execute(scenario);
         String output = executor.getOutput(taskId);
 
@@ -68,9 +71,6 @@ public class ProcessExecutorTest {
         assertThat(scenarios.size(), is(1));
 
         IndexedScenario scenario = scenarios.iterator().next();
-
-        File project = joinPaths(PROJECT_ROOT, "example");
-        ProcessExecutor executor = new ProcessExecutor(index, project);
 
         int taskId = executor.execute(scenario);
         String output = executor.getOutput(taskId);
@@ -86,15 +86,22 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        File project = joinPaths(PROJECT_ROOT, "example");
-        ProcessExecutor executor = new ProcessExecutor(index, project);
-
         int taskId = executor.executeExample(scenario, 21);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @kappamaki"));
         assertFalse(output.contains("| Goodbye  | World   |"));
         assertTrue(output.contains("| Aurevoir | Monde   |"));
+        assertTrue(output.contains("1 scenario (1 passed)"));
+        assertTrue(output.contains("BUILD SUCCESS"));
+    }
+
+    @Test
+    public void executes_gherkin() {
+        int taskId = executor.execute("Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
+                + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
+        String output = executor.getOutput(taskId);
+
         assertTrue(output.contains("1 scenario (1 passed)"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }

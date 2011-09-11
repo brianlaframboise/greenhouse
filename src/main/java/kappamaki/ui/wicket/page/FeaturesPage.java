@@ -11,10 +11,13 @@ import kappamaki.util.Utils;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxFallbackLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
@@ -43,6 +46,9 @@ public class FeaturesPage extends KappamakiPage {
 
     private final WebMarkupContainer feature;
 
+    private final Form<Void> editForm;
+    private final TextArea<String> gherkinArea;
+
     public FeaturesPage(PageParameters params) {
         ImmutableList<IndexedFeature> features = index.features();
         ArrayList<String> names = new ArrayList<String>();
@@ -62,9 +68,30 @@ public class FeaturesPage extends KappamakiPage {
             }
         });
 
+        editForm = new Form<Void>("editForm");
+        add(editForm.setVisible(false).setOutputMarkupPlaceholderTag(true));
+        gherkinArea = new TextArea<String>("gherkin", Model.of(""));
+        gherkinArea.setEscapeModelStrings(false);
+        gherkinArea.add(new AjaxFormComponentUpdatingBehavior("onchange") {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target) {
+            }
+        });
+
         feature = new WebMarkupContainer("feature");
         feature.add(new WebMarkupContainer("lines"));
         add(feature.setVisible(false).setOutputMarkupPlaceholderTag(true));
+        feature.add(new WebMarkupContainer("edit"));
+
+        editForm.add(gherkinArea);
+        editForm.add(new ExecuteGherkinLink("run", dialog, output, gherkinArea));
+        editForm.add(new AjaxFallbackLink<Void>("cancel") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                target.addComponent(editForm.setVisible(false));
+                target.addComponent(feature.setVisible(true));
+            }
+        });
 
         String featureNameArg = params.getString("0", "");
         if (names.contains(featureNameArg)) {
@@ -89,7 +116,17 @@ public class FeaturesPage extends KappamakiPage {
 
     private void showFeature(final String name, AjaxRequestTarget target) {
         IndexedFeature indexedFeature = index.featureByName(name);
-        String gherkin = Utils.readContents(indexedFeature.getUri());
+        final String gherkin = Utils.readContents(indexedFeature.getUri());
+
+        feature.replace(new AjaxFallbackLink<Void>("edit") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                target.addComponent(feature.setVisible(false));
+                target.addComponent(editForm.setVisible(true));
+                gherkinArea.setDefaultModelObject(gherkin);
+            }
+        });
+
         Iterable<String> gherkinLines = Splitter.on('\n').split(gherkin);
 
         feature.replace(new ListView<String>(("lines"), ImmutableList.copyOf(gherkinLines)) {
@@ -145,8 +182,10 @@ public class FeaturesPage extends KappamakiPage {
             }
         }.setRenderBodyOnly(true));
         feature.setVisible(true);
+        editForm.setVisible(false);
         if (target != null) {
             target.addComponent(feature);
+            target.addComponent(editForm);
         }
     }
 
@@ -215,6 +254,8 @@ public class FeaturesPage extends KappamakiPage {
             if (target != null) {
                 dialog.open(target);
                 target.addComponent(dialog);
+                target.addComponent(progress.setDefaultModelObject("Preparing..."));
+                target.addComponent(output.setDefaultModelObject(""));
             }
         }
 
@@ -269,6 +310,21 @@ public class FeaturesPage extends KappamakiPage {
         protected int execute() {
             IndexedScenario scenario = index.scenarioByName(name);
             return executor.executeExample(scenario, line);
+        }
+
+    }
+
+    private static class ExecuteGherkinLink extends ExecutingLink {
+        private final TextArea<String> textarea;
+
+        public ExecuteGherkinLink(String id, Dialog dialog, Label output, TextArea<String> textarea) {
+            super(id, dialog, output);
+            this.textarea = textarea;
+        }
+
+        @Override
+        protected int execute() {
+            return executor.execute(textarea.getDefaultModelObjectAsString());
         }
 
     }
