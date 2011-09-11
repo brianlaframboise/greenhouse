@@ -202,21 +202,23 @@ table { border-collapse: collapse; border-spacing: 0; }
    ========================================================================== */
 
 /*
-  Color pallet: http://kuler.adobe.com/#themeID/1466800
-  
-  rgb(255,170,0), rgb(194,185,62), rgb(128, 143, 93), rgb(87,97,87), rgb(48,47,48)
+  Color pallet: http://kuler.adobe.com/#themeID/1490158
 */
 
 
 h1 {
 	font-family: 'Sigmar One';
-	font-size: 3em;
+	font-size: 2.5em;
 }
 
 h1, h2 {
-	color: rgb(48,47,48);
+	color: #DB9E36;
 }
 
+header {
+	text-align: center;
+	padding-bottom: 3em;
+}
 
 pre {
 	padding: 0px;
@@ -224,17 +226,17 @@ pre {
 }
 
 body {
-	background-color: rgb(87,97,87);
+	background-color: #FFFAD5;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	color: rgb(194,185,62);
+	color: #105B63;
 }
 
 a:link,a:visited {
-	color: rgb(194,185,62);
+	color: #105B63;
 }
 
 a:hover {
-	color: rgb(255,170,0);
+	color: #FFD34E;
 }
 
 
