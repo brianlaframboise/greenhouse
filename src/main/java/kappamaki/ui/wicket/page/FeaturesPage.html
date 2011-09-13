@@ -1,30 +1,16 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-<wicket:head>
-    <style type="text/css">
-	    .column {
-	        position: relative;
-	        float: left;
-	    }
-	    #features {
-	        width: 20%;
-	    }
-	    #feature {
-	        width: 80%
-	    }
-    </style>
-</wicket:head>
 <wicket:extend>
 <div id='body'>
-	<div id='features' class='column'>
+	<div id='features' class='grid_3'>
 		<h3>Features</h3>
 		<ol>
 		    <li wicket:id='features'><a wicket:id='link'><span wicket:id='name'>Hello World Feature</span></a></li>
 		</ol>
 	</div>
 	
-	<div id='feature' class='column'>
+	<div id='feature' class='grid_9'>
 	    <h3>Feature</h3>
 		<div wicket:id='feature'>
             <a wicket:id='edit'>Edit</a>
@@ -46,6 +32,7 @@
             <pre wicket:id='output'></pre>
 	    </div>
 	</div>
+	<div class='clear'></div>
 	
 	<wicket:fragment wicket:id='plain'><span wicket:id='text'></span></wicket:fragment>
     <wicket:fragment wicket:id='featureFragment'><span wicket:id='pretext'>Feature: </span><a wicket:id='execute'><span wicket:id='name'>Feature Name</span></a></wicket:fragment>
