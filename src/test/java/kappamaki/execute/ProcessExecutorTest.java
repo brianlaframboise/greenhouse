@@ -61,7 +61,7 @@ public class ProcessExecutorTest {
         int taskId = executor.execute(scenario);
         String output = executor.getOutput(taskId);
 
-        assertTrue(output.contains("@hello @world @kappamaki"));
+        assertTrue(output.contains("@hello @world"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 
@@ -75,7 +75,7 @@ public class ProcessExecutorTest {
         int taskId = executor.execute(scenario);
         String output = executor.getOutput(taskId);
 
-        assertTrue(output.contains("@goodbye @world @kappamaki"));
+        assertTrue(output.contains("@goodbye @world"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 
@@ -89,7 +89,7 @@ public class ProcessExecutorTest {
         int taskId = executor.executeExample(scenario, 21);
         String output = executor.getOutput(taskId);
 
-        assertTrue(output.contains("@goodbye @world @kappamaki"));
+        assertTrue(output.contains("@goodbye @world"));
         assertFalse(output.contains("| Goodbye  | World   |"));
         assertTrue(output.contains("| Aurevoir | Monde   |"));
         assertTrue(output.contains("1 scenario (1 passed)"));

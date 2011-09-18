@@ -10,7 +10,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<cucumber.tagsArg>--tags=~@ignore</cucumber.tagsArg>
+		<tags>~@ignore</tags>
+		<cucumber.tagsArg>--tags="${tags}"</cucumber.tagsArg>
 	</properties>
 
 	<build>

@@ -7,7 +7,9 @@ import gherkin.formatter.model.Row;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExampleFilterer extends DelegatingFormatter {
+import kappamaki.extract.DelegatingFilter;
+
+public class ExampleFilterer extends DelegatingFilter {
 
     private final int line;
 
