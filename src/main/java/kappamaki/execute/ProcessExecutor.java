@@ -177,7 +177,14 @@ public class ProcessExecutor implements ScenarioExecutor {
         try {
             final ProcessBuilder builder = new ProcessBuilder();
             builder.directory(projectRoot);
-            builder.command(mvn, phase, features, tags, ">", output.getAbsolutePath());
+            
+            String osName = System.getProperty("os.name");
+            if (osName.startsWith("Windows")) {
+                builder.command(mvn, phase, features, tags, ">", output.getAbsolutePath());
+            } else {
+            	builder.command("bash", "-c", Joiner.on(' ').join(mvn, features, tags, phase,
+            		           ">", output.getAbsolutePath()));
+            }
 
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
