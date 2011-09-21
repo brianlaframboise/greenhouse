@@ -18,9 +18,10 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 
@@ -28,12 +29,12 @@ import com.google.common.collect.Multiset;
  * Displays tags and their associated Features and Scenarios.
  */
 @MountPath(path = "/tags")
+@MountIndexedParam
 public class TagsPage extends KappamakiPage {
 
-    @SpringBean
-    private Index index;
-
-    public TagsPage() {
+    public TagsPage(PageParameters params) {
+        super(params);
+        Index index = index();
         final Multiset<String> tags = index.tags();
 
         List<CountedTag> countedTags = new ArrayList<CountedTag>();
@@ -58,8 +59,9 @@ public class TagsPage extends KappamakiPage {
             @Override
             protected void populateItem(ListItem<IndexedScenario> item) {
                 IndexedScenario scenario = item.getModelObject();
-                IndexedFeature feature = index.findByScenario(scenario);
-                BookmarkablePageLink<Void> view = new BookmarkablePageLink<Void>("view", FeaturesPage.class, new PageParameters("0=" + feature.getName()));
+                IndexedFeature feature = index().findByScenario(scenario);
+                BookmarkablePageLink<Void> view = new BookmarkablePageLink<Void>("view", FeaturesPage.class, new PageParameters(
+                        ImmutableMap.<String, Object> of("0", getProjectKey(), "1", feature.getName())));
                 view.add(new Label("featureScenario", feature.getName() + " > " + scenario.getName()));
                 item.add(view);
             }
@@ -74,7 +76,7 @@ public class TagsPage extends KappamakiPage {
                 AjaxFallbackLink<Void> link = new AjaxFallbackLink<Void>("link") {
                     @Override
                     public void onClick(AjaxRequestTarget target) {
-                        ImmutableSet<IndexedScenario> taggedScenarios = index.findByTag(tagName);
+                        ImmutableSet<IndexedScenario> taggedScenarios = TagsPage.this.index().findByTag(tagName);
                         scenarios.setModelObject(taggedScenarios.asList());
                         if (target != null) {
                             target.addComponent(matches);

@@ -47,12 +47,8 @@
 				<configuration>
 					<systemProperties>
 						<systemProperty>
-							<name>kappamaki.project</name>
-							<value>${basedir}/example</value>
-						</systemProperty>
-						<systemProperty>
-							<name>kappamaki.features</name>
-							<value>${basedir}/example/features</value>
+							<name>kappamaki.repo</name>
+							<value>${basedir}/repo.properties</value>
 						</systemProperty>
 					</systemProperties>
 					<scanIntervalSeconds>0</scanIntervalSeconds>

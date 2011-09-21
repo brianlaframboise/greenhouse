@@ -1,6 +1,7 @@
 package kappamaki.ui.wicket;
 
 import kappamaki.ui.wicket.page.FeaturesPage;
+import kappamaki.ui.wicket.page.ProjectsPage;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.JavascriptPackageResource;
@@ -22,7 +23,7 @@ public class KappamakiApplication extends WebApplication {
 
     @Override
     public Class<? extends Page> getHomePage() {
-        return FeaturesPage.class;
+        return ProjectsPage.class;
     }
 
 }

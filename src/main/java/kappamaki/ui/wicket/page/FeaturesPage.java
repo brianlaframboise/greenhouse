@@ -6,6 +6,7 @@ import kappamaki.execute.ScenarioExecutor;
 import kappamaki.index.Index;
 import kappamaki.index.IndexedFeature;
 import kappamaki.index.IndexedScenario;
+import kappamaki.project.ProjectRepository;
 import kappamaki.util.Utils;
 
 import org.apache.wicket.PageParameters;
@@ -38,8 +39,7 @@ import com.visural.wicket.component.dialog.Dialog;
 @MountIndexedParam
 public class FeaturesPage extends KappamakiPage {
 
-    @SpringBean
-    private Index index;
+    private final String projectKey;
 
     private final Dialog dialog;
     private final Label output;
@@ -50,7 +50,9 @@ public class FeaturesPage extends KappamakiPage {
     private final TextArea<String> gherkinArea;
 
     public FeaturesPage(PageParameters params) {
-        ImmutableList<IndexedFeature> features = index.features();
+        super(params);
+        projectKey = getProjectKey();
+        ImmutableList<IndexedFeature> features = index().features();
         ArrayList<String> names = new ArrayList<String>();
         for (IndexedFeature feature : features) {
             names.add(feature.getName());
@@ -84,7 +86,7 @@ public class FeaturesPage extends KappamakiPage {
         feature.add(new WebMarkupContainer("edit"));
 
         editForm.add(gherkinArea);
-        editForm.add(new ExecuteGherkinLink("run", dialog, output, gherkinArea));
+        editForm.add(new ExecuteGherkinLink("run", projectKey, dialog, output, gherkinArea));
         editForm.add(new AjaxFallbackLink<Void>("cancel") {
             @Override
             public void onClick(AjaxRequestTarget target) {
@@ -93,7 +95,7 @@ public class FeaturesPage extends KappamakiPage {
             }
         });
 
-        String featureNameArg = params.getString("0", "");
+        String featureNameArg = params.getString("1", "");
         if (names.contains(featureNameArg)) {
             showFeature(featureNameArg, null);
         }
@@ -115,7 +117,7 @@ public class FeaturesPage extends KappamakiPage {
     }
 
     private void showFeature(final String name, AjaxRequestTarget target) {
-        IndexedFeature indexedFeature = index.featureByName(name);
+        IndexedFeature indexedFeature = index().featureByName(name);
         final String gherkin = Utils.readContents(indexedFeature.getUri());
 
         feature.replace(new AjaxFallbackLink<Void>("edit") {
@@ -145,7 +147,7 @@ public class FeaturesPage extends KappamakiPage {
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
                     String featureName = line.substring(colonIndex + 2).trim();
 
-                    ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", dialog, output, featureName);
+                    ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", projectKey, dialog, output, featureName);
                     executeFeatureLink.add(new Label("name", featureName));
 
                     context.add(pretext, executeFeatureLink);
@@ -157,7 +159,7 @@ public class FeaturesPage extends KappamakiPage {
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
                     String scenarioName = line.substring(colonIndex + 2).trim();
 
-                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", dialog, output, scenarioName);
+                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", projectKey, dialog, output, scenarioName);
                     executeScenarioLink.add(new Label("name", scenarioName));
 
                     context.add(pretext, executeScenarioLink);
@@ -168,9 +170,10 @@ public class FeaturesPage extends KappamakiPage {
                     int pipeIndex = line.indexOf('|');
                     Label pretext = new Label("pretext", line.substring(0, pipeIndex));
 
+                    Index index = index();
                     IndexedFeature feature = index.featureByName(name);
                     IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
-                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", dialog, output, indexedScenario.getName(), lineNumber);
+                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", projectKey, dialog, output, indexedScenario.getName(), lineNumber);
                     executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
 
                     context.add(pretext, executeExampleLink);
@@ -189,6 +192,7 @@ public class FeaturesPage extends KappamakiPage {
         }
     }
 
+    @SuppressWarnings("unused")
     private static class FilteringModel extends Model<String> {
         private String text = "";
 
@@ -209,19 +213,19 @@ public class FeaturesPage extends KappamakiPage {
     }
 
     private abstract static class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
-        @SpringBean
-        protected Index index;
 
         @SpringBean
-        protected ScenarioExecutor executor;
+        protected ProjectRepository repo;
 
+        private final String projectKey;
         private final Dialog dialog;
         private final Label output;
 
-        public ExecutingLink(String id, Dialog dialog, Label output) {
+        public ExecutingLink(String id, String projectKey, Dialog dialog, Label output) {
             super(id);
             this.dialog = dialog;
             this.output = output;
+            this.projectKey = projectKey;
         }
 
         @Override
@@ -236,6 +240,7 @@ public class FeaturesPage extends KappamakiPage {
                     String outputText = "";
                     long runtime = (System.currentTimeMillis() - startTime) / 1000;
                     String prefix = "Running...";
+                    ScenarioExecutor executor = executor();
                     if (executor.isComplete(taskId)) {
                         outputText = executor.getOutput(taskId);
                         prefix = "Complete!";
@@ -259,6 +264,14 @@ public class FeaturesPage extends KappamakiPage {
             }
         }
 
+        protected ScenarioExecutor executor() {
+            return repo.getProjects().get(projectKey).executor();
+        }
+
+        protected Index index() {
+            return repo.getProjects().get(projectKey).index();
+        }
+
         protected abstract int execute();
 
     }
@@ -267,15 +280,15 @@ public class FeaturesPage extends KappamakiPage {
 
         private final String name;
 
-        public ExecuteFeatureLink(String id, Dialog dialog, Label output, String name) {
-            super(id, dialog, output);
+        public ExecuteFeatureLink(String id, String projectKey, Dialog dialog, Label output, String name) {
+            super(id, projectKey, dialog, output);
             this.name = name;
         }
 
         @Override
         protected int execute() {
-            IndexedFeature feature = index.featureByName(name);
-            return executor.execute(feature);
+            IndexedFeature feature = index().featureByName(name);
+            return executor().execute(feature);
         }
     }
 
@@ -283,15 +296,15 @@ public class FeaturesPage extends KappamakiPage {
 
         private final String name;
 
-        public ExecuteScenarioLink(String id, Dialog dialog, Label output, String name) {
-            super(id, dialog, output);
+        public ExecuteScenarioLink(String id, String projectKey, Dialog dialog, Label output, String name) {
+            super(id, projectKey, dialog, output);
             this.name = name;
         }
 
         @Override
         protected int execute() {
-            IndexedScenario scenario = index.scenarioByName(name);
-            return executor.execute(scenario);
+            IndexedScenario scenario = index().scenarioByName(name);
+            return executor().execute(scenario);
         }
     }
 
@@ -300,16 +313,16 @@ public class FeaturesPage extends KappamakiPage {
         private final String name;
         private final int line;
 
-        public ExecuteExampleLink(String id, Dialog dialog, Label output, String name, int line) {
-            super(id, dialog, output);
+        public ExecuteExampleLink(String id, String projectKey, Dialog dialog, Label output, String name, int line) {
+            super(id, projectKey, dialog, output);
             this.name = name;
             this.line = line;
         }
 
         @Override
         protected int execute() {
-            IndexedScenario scenario = index.scenarioByName(name);
-            return executor.executeExample(scenario, line);
+            IndexedScenario scenario = index().scenarioByName(name);
+            return executor().executeExample(scenario, line);
         }
 
     }
@@ -317,14 +330,14 @@ public class FeaturesPage extends KappamakiPage {
     private static class ExecuteGherkinLink extends ExecutingLink {
         private final TextArea<String> textarea;
 
-        public ExecuteGherkinLink(String id, Dialog dialog, Label output, TextArea<String> textarea) {
-            super(id, dialog, output);
+        public ExecuteGherkinLink(String id, String projectKey, Dialog dialog, Label output, TextArea<String> textarea) {
+            super(id, projectKey, dialog, output);
             this.textarea = textarea;
         }
 
         @Override
         protected int execute() {
-            return executor.execute(textarea.getDefaultModelObjectAsString());
+            return executor().execute(textarea.getDefaultModelObjectAsString());
         }
 
     }
