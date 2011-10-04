@@ -11,7 +11,6 @@ import java.util.Set;
 
 import kappamaki.index.InMemoryIndex;
 import kappamaki.index.Indexer;
-import kappamaki.util.Utils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -37,7 +36,7 @@ public class PropsProjectRepository implements ProjectRepository {
         for (String key : keys) {
             String name = properties.getProperty(key + ".name");
             String path = properties.getProperty(key + ".path");
-            Indexer indexer = new Indexer(Utils.joinPaths(path, "features"));
+            Indexer indexer = new Indexer(path);
             InMemoryIndex index = indexer.index();
             Project project = new Project(key, name, new File(path), index);
             projects.put(key, project);

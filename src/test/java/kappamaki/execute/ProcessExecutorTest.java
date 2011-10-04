@@ -30,8 +30,8 @@ public class ProcessExecutorTest {
 
     @BeforeClass
     public static void build_index() {
-        File features = joinPaths(PROJECT_ROOT, "example", "features");
-        index = new Indexer(features).index();
+        File root = joinPaths(PROJECT_ROOT, "example");
+        index = new Indexer(root.getAbsolutePath()).index();
     }
 
     @Before

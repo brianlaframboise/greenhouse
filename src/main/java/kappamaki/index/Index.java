@@ -35,4 +35,8 @@ public interface Index {
 
     Multiset<String> tags();
 
+    // Steps
+
+    ImmutableSet<StepMethod> steps();
+
 }

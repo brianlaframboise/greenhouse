@@ -16,8 +16,8 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        File features = joinPaths(USER_DIR, "example", "features");
-        index = new Indexer(features).index();
+        File root = joinPaths(USER_DIR, "example");
+        index = new Indexer(root.getAbsolutePath()).index();
     }
 
     @Test
@@ -25,5 +25,10 @@ public class IndexerTest {
         assertThat(index.findByTag("@hello").size(), is(1));
         assertThat(index.findByTag("@goodbye").size(), is(1));
         assertThat(index.findByTag("@world").size(), is(2));
+    }
+
+    @Test
+    public void correct_number_of_steps_indexed() {
+        assertThat(index.steps().size(), is(3));
     }
 }

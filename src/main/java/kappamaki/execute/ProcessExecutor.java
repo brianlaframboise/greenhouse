@@ -173,19 +173,9 @@ public class ProcessExecutor implements ScenarioExecutor {
         String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@kappamaki\"";
         final File output = joinPaths(Utils.TEMP_DIR, "kappamaki", Integer.toString(taskId), "output");
-        System.out.println("Executing: " + Joiner.on(' ').join(projectRoot, mvn, features, tags, ">", output.getAbsolutePath()));
         try {
-            final ProcessBuilder builder = new ProcessBuilder();
-            builder.directory(projectRoot);
-            
-            String osName = System.getProperty("os.name");
-            if (osName.startsWith("Windows")) {
-                builder.command(mvn, phase, features, tags, ">", output.getAbsolutePath());
-            } else {
-            	builder.command("bash", "-c", Joiner.on(' ').join(mvn, features, tags, phase,
-            		           ">", output.getAbsolutePath()));
-            }
-
+            final ProcessBuilder builder = Utils.mavenProcess(projectRoot, phase, features, tags, ">", output.getAbsolutePath());
+            System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
