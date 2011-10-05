@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+<wicket:extend>
+	<section class='grid_2'>
+	   <span>Enter a step</span>
+	   <form wicket:id='form'>
+           <input wicket:id='step' type="text">
+           <input wicket:id='submit' type="submit" value="Add">
+	   </form>
+	</section>
+	<section class='grid_10'>
+	   <span>My scenario</span>
+	   <textarea wicket:id='scenario' rows="20" cols="80" style="font-family: monospace;"></textarea>
+	</section>
+	<div class='clear'></div>
+</wicket:extend>
+</body>
+</html>

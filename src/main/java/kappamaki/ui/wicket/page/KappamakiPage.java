@@ -5,6 +5,7 @@ import kappamaki.project.Project;
 import kappamaki.project.ProjectRepository;
 
 import org.apache.wicket.PageParameters;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -23,7 +24,11 @@ public class KappamakiPage extends WebPage {
     }
 
     protected String getProjectKey() {
-        return getPageParameters().getString("0");
+        String key = getPageParameters().getString("0", "");
+        if ("".equals(key)) {
+            throw new RestartResponseException(ProjectsPage.class);
+        }
+        return key;
     }
 
     protected Index index() {

@@ -37,6 +37,7 @@ public class ProjectsPage extends KappamakiPage {
                 item.add(new Label("name", project.getName()));
                 item.add(new BookmarkablePageLink<Void>("features", FeaturesPage.class, new PageParameters("0=" + project.getKey())));
                 item.add(new BookmarkablePageLink<Void>("tags", TagsPage.class, new PageParameters("0=" + project.getKey())));
+                item.add(new BookmarkablePageLink<Void>("steps", StepsPage.class, new PageParameters("0=" + project.getKey())));
             }
         });
     }
