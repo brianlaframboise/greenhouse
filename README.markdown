@@ -1,4 +1,4 @@
-# kappamaki
+# Greenhouse
 
 A web UI for searching and executing scenarios in maven-powered cuke4duke projects.
 
