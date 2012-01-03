@@ -13,14 +13,14 @@ public class PropsProjectRepositoryTest {
 
     @Test
     public void load() {
-        File repo = new File("D:\\workspaces\\default\\greenhouse\\src\\main\\resources\\greenhouse\\project\\test.properties");
+        File repo = new File("D:\\git-repos\\greenhouse\\src\\test\\resources\\greenhouse\\project\\test.properties");
         PropsProjectRepository repository = new PropsProjectRepository(repo);
         ImmutableMap<String, Project> projects = repository.getProjects();
         assertEquals(1, projects.size());
 
-        Project project = projects.get("foo");
+        Project project = projects.get("example");
         assertNotNull(project);
-        assertEquals("Foo", project.getName());
-        assertEquals("C:\\foo", project.getRoot().getAbsolutePath());
+        assertEquals("Example", project.getName());
+        assertEquals("D:\\git-repos\\greenhouse\\example", project.getRoot().getAbsolutePath());
     }
 }

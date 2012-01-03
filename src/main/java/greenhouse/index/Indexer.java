@@ -74,7 +74,7 @@ public class Indexer {
 
     private ImmutableSet<StepMethod> indexSteps() {
         System.out.println("Indexing steps...");
-        final ProcessBuilder builder = Utils.mavenProcess(projectRoot, "greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index");
+        final ProcessBuilder builder = Utils.mavenProcess(projectRoot, ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
         builder.redirectErrorStream(true);
         Set<StepMethod> stepMethods = new HashSet<StepMethod>();
         try {

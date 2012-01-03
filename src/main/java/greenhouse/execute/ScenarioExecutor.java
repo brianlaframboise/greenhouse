@@ -18,4 +18,6 @@ public interface ScenarioExecutor {
     String getPartialOutput(int taskId);
 
     boolean isComplete(int taskId);
+
+    void setPhase(String command);
 }

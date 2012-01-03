@@ -12,9 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 
 public class PropsProjectRepository implements ProjectRepository {
@@ -32,14 +30,19 @@ public class PropsProjectRepository implements ProjectRepository {
             throw new RuntimeException("Unable to load properties file: " + repo.getAbsolutePath(), e);
         }
 
-        String keyProp = properties.getProperty("keys");
-        Iterable<String> keys = Splitter.on(',').split(keyProp);
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Set<String> propKeys = (Set) properties.keySet();
+        Set<String> keys = new HashSet<String>();
+        for (String propKey : propKeys) {
+            keys.add(propKey.substring(0, propKey.indexOf('.')));
+        }
         for (String key : keys) {
             String name = properties.getProperty(key + ".name");
             String path = properties.getProperty(key + ".path");
+            String command = properties.getProperty(key + ".command");
             Indexer indexer = new Indexer(path);
             InMemoryIndex index = indexer.index();
-            Project project = new Project(key, name, new File(path), index);
+            Project project = new Project(key, name, new File(path), index, command);
             projects.put(key, project);
         }
     }

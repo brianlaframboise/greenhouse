@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ public class Utils {
         }
     }
 
-    public static ProcessBuilder mavenProcess(File directory, String... args) {
+    public static ProcessBuilder mavenProcess(File directory, List<String> args) {
         ProcessBuilder builder = new ProcessBuilder();
         builder.directory(directory);
         ArrayList<String> argList = new ArrayList<String>();

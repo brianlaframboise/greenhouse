@@ -11,6 +11,7 @@ import greenhouse.util.Utils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +21,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 /**
  * Executes Features, Scenarios, Scenario Outlines, and individul Scenario
@@ -43,15 +47,14 @@ import com.google.common.base.Joiner;
  */
 public class ProcessExecutor implements ScenarioExecutor {
 
-    private final Index index;
-    private final File projectRoot;
-
-    private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
-    private String phase = "integration-test";
-
     private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
     private final AtomicInteger taskIds = new AtomicInteger(0);
     private final Map<Integer, CucumberTask> tasks = new ConcurrentHashMap<Integer, CucumberTask>();
+
+    private final Index index;
+    private final File projectRoot;
+
+    private String phase = "integration-test";
 
     /**
      * Creates a new ScenarioExecutor. By default output is inherited from the
@@ -150,6 +153,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             // Setup tagged destination file
             IndexedFeature feature = index.findByScenario(scenario);
             File featureFile = tempFeatureFile(tempDir, feature);
+            Files.createParentDirs(featureFile);
             Writer tempFile = new FileWriter(featureFile);
 
             // Load source file
@@ -173,7 +177,9 @@ public class ProcessExecutor implements ScenarioExecutor {
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
         final File output = joinPaths(Utils.TEMP_DIR, "greenhouse", Integer.toString(taskId), "output");
         try {
-            final ProcessBuilder builder = Utils.mavenProcess(projectRoot, phase, features, tags, ">", output.getAbsolutePath());
+            ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(phase));
+            argsList.addAll(Lists.newArrayList(features, tags, ">", output.getAbsolutePath()));
+            final ProcessBuilder builder = Utils.mavenProcess(projectRoot, argsList);
             System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
@@ -198,7 +204,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             Future<String> gherkinFuture = tasks.get(taskId).getResult();
             String gherkin = gherkinFuture.get();
             File output = tasks.get(taskId).getOutput();
-            delete(output.getParentFile());
+            // delete( output.getParentFile() );
             tasks.remove(taskId);
             return gherkin;
         } catch (Exception e) {
@@ -220,9 +226,10 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private File makeTempDir(int taskId) {
         File tempScenarioDir = Utils.tempFile("greenhouse", Integer.toString(taskId));
-        if (!tempScenarioDir.mkdirs()) {
+        if (!tempScenarioDir.exists() && !tempScenarioDir.mkdirs()) {
             throw new RuntimeException("Could not create temp directory: " + tempScenarioDir.getAbsolutePath());
         }
+
         return tempScenarioDir;
     }
 
@@ -239,22 +246,11 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     /**
-     * Sets the Maven executable name to use. By default this is "mvn.bat" on
-     * Windows and "mvn" on all other platforms, which therefore assumes Maven
-     * is in the path. If that is not the case, the absolute path to the Maven
-     * executable can be provided here.
-     * 
-     * @param mvn The maven executable path/name
-     */
-    public void setMvn(String mvn) {
-        this.mvn = mvn;
-    }
-
-    /**
      * Sets the Maven phase to execute. This is "integration-test" by default.
      * 
      * @param phase the new Maven phase to execute
      */
+    @Override
     public void setPhase(String phase) {
         this.phase = phase;
     }
