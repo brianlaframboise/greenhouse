@@ -14,12 +14,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GreenhouseConfiguration {
 
-    @Value("#{systemProperties['greenhouse.repo']}")
-    private File repo;
+    @Value("#{systemProperties['greenhouse.projects']}")
+    private File projects;
 
     @Bean
     public ProjectRepository projectRepository() {
-        return new PropsProjectRepository(repo);
+        return new PropsProjectRepository(projects);
     }
 
     @Bean
