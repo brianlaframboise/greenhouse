@@ -11,8 +11,6 @@ import com.google.common.base.Joiner;
 
 public class Utils {
 
-    public static final String USER_DIR = System.getProperty("user.dir");
-
     public static final String SEPARATOR = System.getProperty("file.separator");
 
     public static final String MVN = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
