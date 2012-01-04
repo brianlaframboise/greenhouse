@@ -24,7 +24,7 @@ public class PropsProjectRepository implements ProjectRepository {
             Project project = Project.load(root);
             projectsMap.put(project.getKey(), project);
         }
-        projectsMap = ImmutableMap.copyOf(projectsMap);
+        projects = ImmutableMap.copyOf(projectsMap);
     }
 
     @Override
