@@ -1,6 +1,5 @@
 package greenhouse.project;
 
-import greenhouse.index.InMemoryIndex;
 import greenhouse.index.Index;
 import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
@@ -17,35 +16,65 @@ public class Project {
     private final File root;
     private final File files;
     private final Index index;
+    private final FileSource fileSource;
     private final String command;
     private int executions;
 
-    public Project(String key, String name, File root, File files, Index index, String command, int executions) {
+    public Project(String key, String name, File root, String command, FileSource fileSource, int executions) {
         this.key = key;
         this.name = name;
         this.root = root;
-        this.files = files;
-        this.index = index;
+        files = Utils.file(root.getAbsolutePath(), "files");
+        index = new Indexer(files.getAbsolutePath()).index();
         this.command = command;
+        this.fileSource = fileSource;
         this.executions = executions;
     }
 
+    /**
+     * Loads and fully initializes a Project from its root directory. The root
+     * directory must contain a "project.properties" file from which the Project
+     * can be bootstrapped.
+     * 
+     * @param root The project root directory
+     * @return a new Project
+     */
     public static Project load(File root) {
         Properties project = Utils.load(root, "project.properties");
 
         String name = project.getProperty("name");
-        String files = project.getProperty("files");
         String command = project.getProperty("command");
-        if (files == null) {
-            files = Utils.file(root.getAbsolutePath(), "files").getAbsolutePath();
-        }
-        InMemoryIndex index = new Indexer(files).index();
+
+        FileSource fileSource = loadFileSource(root, project);
 
         Properties state = Utils.load(root, "state.properties");
         int executions = Integer.valueOf(state.getProperty("executions", "1"));
 
         String key = root.getName().toLowerCase(Locale.ENGLISH);
-        return new Project(key, name, root, new File(files), index, command, executions);
+        return new Project(key, name, root, command, fileSource, executions);
+    }
+
+    private static FileSource loadFileSource(File root, Properties project) {
+        String protocol = project.getProperty("src.protocol", "file");
+        String url = project.getProperty("src.url");
+        File filesDirectory = Utils.file(root.getAbsolutePath(), "files");
+        FileSource fileSource;
+
+        if (protocol.equals("file")) {
+            if (url == null) {
+                url = filesDirectory.getAbsolutePath();
+            }
+            fileSource = new LocalFileSource(url);
+        } else if (protocol.equals("svn")) {
+            String username = project.getProperty("src.username");
+            String password = project.getProperty("src.password");
+            fileSource = new SvnFileSource(root, filesDirectory, url, username, password);
+            fileSource.getDirectory();
+            fileSource.initialize();
+        } else {
+            throw new RuntimeException("Unrecoginized protocol: " + protocol);
+        }
+        return fileSource;
     }
 
     public void save() {
@@ -69,6 +98,10 @@ public class Project {
         }
         save();
         return new Execution(taskId, results);
+    }
+
+    public void update() {
+        fileSource.update();
     }
 
     public void clearHistory() {
@@ -127,7 +160,7 @@ public class Project {
     }
 
     public File getFiles() {
-        return files;
+        return fileSource.getDirectory();
     }
 
     public String getCommand() {

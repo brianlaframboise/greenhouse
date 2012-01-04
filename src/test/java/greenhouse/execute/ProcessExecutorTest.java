@@ -10,7 +10,6 @@ import greenhouse.project.Project;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -25,8 +24,7 @@ public class ProcessExecutorTest {
 
     @BeforeClass
     public static void build_index() {
-        URL resource = ProcessExecutorTest.class.getResource(".");
-        project = Project.load(new File(resource.getPath().toString() + "../../../../demo/example"));
+        project = Project.load(new File(ProcessExecutorTest.class.getResource(".").getPath().toString() + "../../../../demo/example"));
         executor = new ProcessExecutor();
     }
 
