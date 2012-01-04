@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
@@ -19,7 +18,6 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.Model;
-import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +27,6 @@ import com.google.common.collect.Multiset;
 /**
  * Displays tags and their associated Features and Scenarios.
  */
-@MountPath(path = "/tags")
 @MountIndexedParam
 public class TagsPage extends GreenhousePage {
 

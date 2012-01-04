@@ -26,7 +26,6 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
-import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Splitter;
@@ -36,7 +35,6 @@ import com.visural.wicket.component.dialog.Dialog;
 /**
  * Displays and executes Features, Scenarios, and Examples.
  */
-@MountPath(path = "/features")
 @MountIndexedParam
 public class FeaturesPage extends GreenhousePage {
 

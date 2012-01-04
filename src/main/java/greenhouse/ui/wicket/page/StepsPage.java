@@ -14,13 +14,13 @@ import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTe
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.Model;
-import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-@MountPath(path = "/steps")
+@MountIndexedParam
 public class StepsPage extends GreenhousePage {
 
     public StepsPage(PageParameters params) {
