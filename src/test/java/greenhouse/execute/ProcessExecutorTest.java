@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -27,6 +28,11 @@ public class ProcessExecutorTest {
         URL resource = ProcessExecutorTest.class.getResource(".");
         project = Project.load(new File(resource.getPath().toString() + "../../../../demo/example"));
         executor = new ProcessExecutor();
+    }
+
+    @After
+    public void clearHistory() {
+        project.clearHistory();
     }
 
     @Test

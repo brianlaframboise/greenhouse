@@ -1,6 +1,6 @@
 package greenhouse.execute;
 
-import static greenhouse.util.Utils.joinPaths;
+import static greenhouse.util.Utils.file;
 import gherkin.formatter.Formatter;
 import gherkin.parser.Parser;
 import greenhouse.index.IndexedFeature;
@@ -81,7 +81,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     private void copyGherkin(Project project, File tempDir, String gherkin) {
         try {
             // Setup tagged destination file
-            File featureFile = joinPaths(tempDir.getPath(), "gherkin.feature");
+            File featureFile = file(tempDir.getPath(), "gherkin.feature");
             Writer tempFile = new FileWriter(featureFile);
 
             // Parse to copy source into destination
@@ -120,7 +120,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     private File tempFeatureFile(Project project, File tempDir, IndexedFeature feature) {
         String root = project.index().getFeaturesRoot().getAbsolutePath();
         String subPath = feature.getUri().substring(root.length() + 1);
-        return joinPaths(tempDir.getPath(), subPath);
+        return file(tempDir.getPath(), subPath);
     }
 
     @Override
@@ -166,7 +166,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     private int executeScenarios(Project project, Execution execution) {
         String features = "-Dcucumber.features=\"" + execution.getDirectory().getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
-        final File output = joinPaths(execution.getDirectory().getAbsolutePath(), "output.txt");
+        final File output = file(execution.getDirectory().getAbsolutePath(), "output.txt");
         try {
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
             argsList.addAll(Lists.newArrayList(features, tags, ">", output.getAbsolutePath()));
@@ -212,18 +212,6 @@ public class ProcessExecutor implements ScenarioExecutor {
     @Override
     public boolean isComplete(int taskId) {
         return tasks.get(taskId).getResult().isDone();
-    }
-
-    private void delete(File f) {
-        if (f.isDirectory()) {
-            for (File c : f.listFiles()) {
-                delete(c);
-            }
-        }
-        System.out.println("Deleting: " + f);
-        if (!f.delete()) {
-            throw new RuntimeException("Could not delete " + f.getPath());
-        }
     }
 
 }

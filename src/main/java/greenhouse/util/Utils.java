@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import com.google.common.base.Joiner;
 
@@ -15,7 +16,7 @@ public class Utils {
 
     public static final String MVN = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
 
-    public static File joinPaths(String... parts) {
+    public static File file(String... parts) {
         return new File(Joiner.on(SEPARATOR).join(parts));
     }
 
@@ -47,6 +48,21 @@ public class Utils {
         }
         builder.command(argList);
         return builder;
+    }
+
+    public static Properties load(File directory, String filename) {
+        File props = Utils.file(directory.getAbsolutePath(), filename);
+        Properties properties = new Properties();
+        if (props.exists()) {
+            try {
+                FileReader reader = new FileReader(props);
+                properties.load(reader);
+                reader.close();
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to load properties file: " + props.getAbsolutePath(), e);
+            }
+        }
+        return properties;
     }
 
 }

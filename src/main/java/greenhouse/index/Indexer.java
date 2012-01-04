@@ -56,7 +56,7 @@ public class Indexer {
 
     public Indexer(String projectRoot) {
         this.projectRoot = new File(projectRoot);
-        featuresRoot = Utils.joinPaths(projectRoot, "features");
+        featuresRoot = Utils.file(projectRoot, "features");
     }
 
     public InMemoryIndex index() {
@@ -95,7 +95,7 @@ public class Indexer {
                 }
             }.start();
             process.waitFor();
-            File stepIndex = Utils.joinPaths(projectRoot.getAbsolutePath(), "target", "greenhouse-step-index.properties");
+            File stepIndex = Utils.file(projectRoot.getAbsolutePath(), "target", "greenhouse-step-index.properties");
             System.out.println("Steps indexed. Loading: " + stepIndex.getAbsolutePath());
             Properties props = new Properties();
             FileReader reader = new FileReader(stepIndex);

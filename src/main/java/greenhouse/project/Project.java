@@ -6,7 +6,6 @@ import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Locale;
 import java.util.Properties;
@@ -32,50 +31,68 @@ public class Project {
     }
 
     public static Project load(File root) {
-        File props = Utils.joinPaths(root.getAbsolutePath(), "project.properties");
-        Properties properties = new Properties();
-        try {
-            properties.load(new FileReader(props));
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to load properties file: " + props.getAbsolutePath(), e);
-        }
+        Properties project = Utils.load(root, "project.properties");
 
-        String name = properties.getProperty("name");
-        String files = properties.getProperty("files");
-        int executions = Integer.valueOf(properties.getProperty("executions", "1"));
+        String name = project.getProperty("name");
+        String files = project.getProperty("files");
+        String command = project.getProperty("command");
         if (files == null) {
-            files = Utils.joinPaths(root.getAbsolutePath(), "files").getAbsolutePath();
+            files = Utils.file(root.getAbsolutePath(), "files").getAbsolutePath();
         }
         InMemoryIndex index = new Indexer(files).index();
 
+        Properties state = Utils.load(root, "state.properties");
+        int executions = Integer.valueOf(state.getProperty("executions", "1"));
+
         String key = root.getName().toLowerCase(Locale.ENGLISH);
-        String command = properties.getProperty("command");
         return new Project(key, name, root, new File(files), index, command, executions);
     }
 
     public void save() {
         Properties props = new Properties();
-        props.setProperty("name", name);
-        props.setProperty("files", files.getAbsolutePath());
-        props.setProperty("command", command);
         props.setProperty("executions", Integer.toString(executions));
 
         try {
-            FileWriter writer = new FileWriter(Utils.joinPaths(root.getAbsolutePath(), "project.properties"));
+            FileWriter writer = new FileWriter(Utils.file(root.getAbsolutePath(), "state.properties"));
             props.store(writer, null);
+            writer.close();
         } catch (Exception e) {
-            throw new RuntimeException("Unable to write Project properties file", e);
+            throw new RuntimeException("Unable to write " + name + " state properties file", e);
         }
     }
 
     public synchronized Execution nextExecution() {
         int taskId = executions++;
-        File tempDir = Utils.joinPaths(root.getAbsolutePath(), "results", Integer.toString(taskId));
-        if (!tempDir.mkdirs()) {
-            throw new RuntimeException("Could not create temp directory: " + tempDir.getAbsolutePath());
+        File results = Utils.file(root.getAbsolutePath(), "results", Integer.toString(taskId));
+        if (!results.mkdirs()) {
+            throw new RuntimeException("Could not create execution results directory: " + results.getAbsolutePath());
         }
         save();
-        return new Execution(taskId, tempDir);
+        return new Execution(taskId, results);
+    }
+
+    public void clearHistory() {
+        File results = Utils.file(root.getAbsolutePath(), "results");
+        if (results.exists()) {
+            delete(results);
+        }
+        File state = Utils.file(root.getAbsolutePath(), "state.properties");
+        if (state.exists()) {
+            delete(state);
+        }
+        executions = 1;
+    }
+
+    private void delete(File f) {
+        if (f.isDirectory()) {
+            for (File c : f.listFiles()) {
+                delete(c);
+            }
+        }
+        System.out.println("Deleting: " + f);
+        if (!f.delete()) {
+            throw new RuntimeException("Could not delete " + f.getPath());
+        }
     }
 
     public static class Execution {
