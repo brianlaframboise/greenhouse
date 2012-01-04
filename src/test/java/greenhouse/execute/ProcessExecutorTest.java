@@ -9,12 +9,12 @@ import greenhouse.index.InMemoryIndex;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.index.Indexer;
+import greenhouse.project.Project;
 import greenhouse.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -22,28 +22,25 @@ import com.google.common.collect.ImmutableSet;
 
 public class ProcessExecutorTest {
 
-    private static InMemoryIndex index;
     private static final String PROJECT_ROOT = Utils.USER_DIR;
 
-    private ProcessExecutor executor;
+    private static InMemoryIndex index;
+    private static Project project;
+    private static ScenarioExecutor executor;
 
     @BeforeClass
     public static void build_index() {
         File root = joinPaths(PROJECT_ROOT, "example");
         index = new Indexer(root.getAbsolutePath()).index();
-    }
-
-    @Before
-    public void create_executor() {
-        File project = joinPaths(PROJECT_ROOT, "example");
-        executor = new ProcessExecutor(index, project);
+        project = Project.load(new File("D:\\git-repos\\greenhouse\\demo\\example"));
+        executor = new ProcessExecutor();
     }
 
     @Test
     public void executes_feature() {
         IndexedFeature feature = index.featureByName("Hello World Feature");
 
-        int taskId = executor.execute(feature);
+        int taskId = executor.execute(project, feature);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("3 scenarios (3 passed)"));
@@ -57,7 +54,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.execute(scenario);
+        int taskId = executor.execute(project, scenario);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@hello @world @greenhouse"));
@@ -71,7 +68,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.execute(scenario);
+        int taskId = executor.execute(project, scenario);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -85,7 +82,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.executeExample(scenario, 21);
+        int taskId = executor.executeExample(project, scenario, 21);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -97,7 +94,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_gherkin() {
-        int taskId = executor.execute("Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
+        int taskId = executor.execute(project, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
                 + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
         String output = executor.getOutput(taskId);
 

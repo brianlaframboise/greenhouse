@@ -4,6 +4,7 @@ import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
+import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.util.Utils;
 
@@ -59,7 +60,8 @@ public class FeaturesPage extends GreenhousePage {
         }
 
         dialog = new Dialog("dialog");
-        output = new Label("output", new Model<String>(""));// new FilteringModel());
+        output = new Label("output", new Model<String>(""));// new
+                                                            // FilteringModel());
         add(dialog);
         dialog.add(new Label("progress", "").setOutputMarkupId(true));
         dialog.add(output.setOutputMarkupId(true));
@@ -217,6 +219,9 @@ public class FeaturesPage extends GreenhousePage {
         @SpringBean
         protected ProjectRepository repo;
 
+        @SpringBean
+        protected ScenarioExecutor executor;
+
         private final String projectKey;
         private final Dialog dialog;
         private final Label output;
@@ -234,13 +239,11 @@ public class FeaturesPage extends GreenhousePage {
             final long startTime = System.currentTimeMillis();
             final Label progress = (Label) output.getParent().get("progress");
             output.add(new AbstractAjaxTimerBehavior(Duration.seconds(1)) {
-
                 @Override
                 protected void onTimer(AjaxRequestTarget target) {
                     String outputText = "";
                     long runtime = (System.currentTimeMillis() - startTime) / 1000;
                     String prefix = "Running...";
-                    ScenarioExecutor executor = executor();
                     if (executor.isComplete(taskId)) {
                         outputText = executor.getOutput(taskId);
                         prefix = "Complete!";
@@ -264,16 +267,15 @@ public class FeaturesPage extends GreenhousePage {
             }
         }
 
-        protected ScenarioExecutor executor() {
-            return repo.getProjects().get(projectKey).executor();
+        protected Index index() {
+            return project().index();
         }
 
-        protected Index index() {
-            return repo.getProjects().get(projectKey).index();
+        protected Project project() {
+            return repo.getProjects().get(projectKey);
         }
 
         protected abstract int execute();
-
     }
 
     private static class ExecuteFeatureLink extends ExecutingLink {
@@ -288,7 +290,7 @@ public class FeaturesPage extends GreenhousePage {
         @Override
         protected int execute() {
             IndexedFeature feature = index().featureByName(name);
-            return executor().execute(feature);
+            return executor.execute(project(), feature);
         }
     }
 
@@ -304,7 +306,7 @@ public class FeaturesPage extends GreenhousePage {
         @Override
         protected int execute() {
             IndexedScenario scenario = index().scenarioByName(name);
-            return executor().execute(scenario);
+            return executor.execute(project(), scenario);
         }
     }
 
@@ -322,9 +324,8 @@ public class FeaturesPage extends GreenhousePage {
         @Override
         protected int execute() {
             IndexedScenario scenario = index().scenarioByName(name);
-            return executor().executeExample(scenario, line);
+            return executor.executeExample(project(), scenario, line);
         }
-
     }
 
     private static class ExecuteGherkinLink extends ExecutingLink {
@@ -337,9 +338,8 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected int execute() {
-            return executor().execute(textarea.getDefaultModelObjectAsString());
+            return executor.execute(project(), textarea.getDefaultModelObjectAsString());
         }
-
     }
 
 }

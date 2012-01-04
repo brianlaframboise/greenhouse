@@ -3,9 +3,10 @@ package greenhouse.execute;
 import static greenhouse.util.Utils.joinPaths;
 import gherkin.formatter.Formatter;
 import gherkin.parser.Parser;
-import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
+import greenhouse.project.Project;
+import greenhouse.project.Project.Execution;
 import greenhouse.util.Utils;
 
 import java.io.File;
@@ -18,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -48,45 +48,37 @@ import com.google.common.io.Files;
 public class ProcessExecutor implements ScenarioExecutor {
 
     private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
-    private final AtomicInteger taskIds = new AtomicInteger(0);
     private final Map<Integer, CucumberTask> tasks = new ConcurrentHashMap<Integer, CucumberTask>();
-
-    private final Index index;
-    private final File projectRoot;
-
-    private String phase = "integration-test";
 
     /**
      * Creates a new ScenarioExecutor. By default output is inherited from the
      * current Process, which probably means output is directed to standard out.
      * 
-     * @param index An Index containing the scenario to run
-     * @param projectRoot The root directory of a cuke4duke project
      */
-    public ProcessExecutor(Index index, File projectRoot) {
-        this.index = index;
-        this.projectRoot = projectRoot;
+    public ProcessExecutor() {
     }
 
     @Override
-    public int execute(IndexedFeature feature) {
-        int taskId = taskIds.getAndIncrement();
-        File tempDir = makeTempDir(taskId);
-        copyFeature(tempDir, feature);
-        taskId = executeScenarios(tempDir, taskId);
-        return taskId;
+    public int execute(Project project, IndexedFeature feature) {
+        return execute(project, feature, null, true);
     }
 
     @Override
-    public int execute(String gherkin) {
-        int taskId = taskIds.getAndIncrement();
-        File tempDir = makeTempDir(taskId);
-        copyGherkin(tempDir, gherkin);
-        taskId = executeScenarios(tempDir, taskId);
-        return taskId;
+    public int execute(Project project, String gherkin) {
+        return execute(project, null, gherkin, false);
     }
 
-    private void copyGherkin(File tempDir, String gherkin) {
+    private int execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
+        Execution execution = project.nextExecution();
+        if (useFeature) {
+            copyFeature(project, execution.getDirectory(), feature);
+        } else {
+            copyGherkin(project, execution.getDirectory(), gherkin);
+        }
+        return executeScenarios(project, execution);
+    }
+
+    private void copyGherkin(Project project, File tempDir, String gherkin) {
         try {
             // Setup tagged destination file
             File featureFile = joinPaths(tempDir.getPath(), "gherkin.feature");
@@ -104,10 +96,10 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private void copyFeature(File tempDir, IndexedFeature feature) {
+    private void copyFeature(Project project, File tempDir, IndexedFeature feature) {
         try {
             // Setup tagged destination file
-            File featureFile = tempFeatureFile(tempDir, feature);
+            File featureFile = tempFeatureFile(project, tempDir, feature);
             Writer tempFile = new FileWriter(featureFile);
 
             // Load source file
@@ -125,34 +117,33 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private File tempFeatureFile(File tempDir, IndexedFeature feature) {
-        String root = index.getFeaturesRoot().getAbsolutePath();
+    private File tempFeatureFile(Project project, File tempDir, IndexedFeature feature) {
+        String root = project.index().getFeaturesRoot().getAbsolutePath();
         String subPath = feature.getUri().substring(root.length() + 1);
         return joinPaths(tempDir.getPath(), subPath);
     }
 
     @Override
-    public int execute(IndexedScenario scenario) {
-        return executeWithLine(scenario, -1);
+    public int execute(Project project, IndexedScenario scenario) {
+        return executeWithLine(project, scenario, -1);
     }
 
     @Override
-    public int executeExample(IndexedScenario outline, int line) {
-        return executeWithLine(outline, line);
+    public int executeExample(Project project, IndexedScenario outline, int line) {
+        return executeWithLine(project, outline, line);
     }
 
-    private int executeWithLine(IndexedScenario scenario, int line) {
-        int taskId = taskIds.getAndIncrement();
-        File tempDir = makeTempDir(taskId);
-        copyScenarios(tempDir, scenario, line);
-        return executeScenarios(tempDir, taskId);
+    private int executeWithLine(Project project, IndexedScenario scenario, int line) {
+        Execution exeuction = project.nextExecution();
+        copyScenarios(project, exeuction.getDirectory(), scenario, line);
+        return executeScenarios(project, exeuction);
     }
 
-    private void copyScenarios(File tempDir, IndexedScenario scenario, int line) {
+    private void copyScenarios(Project project, File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
-            IndexedFeature feature = index.findByScenario(scenario);
-            File featureFile = tempFeatureFile(tempDir, feature);
+            IndexedFeature feature = project.index().findByScenario(scenario);
+            File featureFile = tempFeatureFile(project, tempDir, feature);
             Files.createParentDirs(featureFile);
             Writer tempFile = new FileWriter(featureFile);
 
@@ -172,15 +163,16 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private int executeScenarios(File tempDir, final int taskId) {
-        String features = "-Dcucumber.features=\"" + tempDir.getAbsolutePath() + "\"";
+    private int executeScenarios(Project project, Execution execution) {
+        String features = "-Dcucumber.features=\"" + execution.getDirectory().getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
-        final File output = joinPaths(Utils.TEMP_DIR, "greenhouse", Integer.toString(taskId), "output");
+        final File output = joinPaths(execution.getDirectory().getAbsolutePath(), "output.txt");
         try {
-            ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(phase));
+            ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
             argsList.addAll(Lists.newArrayList(features, tags, ">", output.getAbsolutePath()));
-            final ProcessBuilder builder = Utils.mavenProcess(projectRoot, argsList);
+            final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
             System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
+            final int taskId = execution.getTaskId();
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
@@ -203,8 +195,6 @@ public class ProcessExecutor implements ScenarioExecutor {
         try {
             Future<String> gherkinFuture = tasks.get(taskId).getResult();
             String gherkin = gherkinFuture.get();
-            File output = tasks.get(taskId).getOutput();
-            // delete( output.getParentFile() );
             tasks.remove(taskId);
             return gherkin;
         } catch (Exception e) {
@@ -224,15 +214,6 @@ public class ProcessExecutor implements ScenarioExecutor {
         return tasks.get(taskId).getResult().isDone();
     }
 
-    private File makeTempDir(int taskId) {
-        File tempScenarioDir = Utils.tempFile("greenhouse", Integer.toString(taskId));
-        if (!tempScenarioDir.exists() && !tempScenarioDir.mkdirs()) {
-            throw new RuntimeException("Could not create temp directory: " + tempScenarioDir.getAbsolutePath());
-        }
-
-        return tempScenarioDir;
-    }
-
     private void delete(File f) {
         if (f.isDirectory()) {
             for (File c : f.listFiles()) {
@@ -243,16 +224,6 @@ public class ProcessExecutor implements ScenarioExecutor {
         if (!f.delete()) {
             throw new RuntimeException("Could not delete " + f.getPath());
         }
-    }
-
-    /**
-     * Sets the Maven phase to execute. This is "integration-test" by default.
-     * 
-     * @param phase the new Maven phase to execute
-     */
-    @Override
-    public void setPhase(String phase) {
-        this.phase = phase;
     }
 
 }

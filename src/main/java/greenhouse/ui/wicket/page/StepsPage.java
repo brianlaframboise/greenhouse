@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -24,11 +23,8 @@ import com.google.common.collect.ImmutableSet;
 @MountPath(path = "/steps")
 public class StepsPage extends GreenhousePage {
 
-    private final String projectKey;
-
     public StepsPage(PageParameters params) {
         super(params);
-        projectKey = getProjectKey();
 
         final TextArea<String> scenario = new TextArea<String>("scenario", Model.of(""));
         add(scenario.setOutputMarkupId(true));

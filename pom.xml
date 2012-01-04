@@ -48,7 +48,7 @@
 					<systemProperties>
 						<systemProperty>
 							<name>greenhouse.repo</name>
-							<value>${basedir}/repo.properties</value>
+							<value>${basedir}/demo</value>
 						</systemProperty>
 					</systemProperties>
 					<scanIntervalSeconds>0</scanIntervalSeconds>

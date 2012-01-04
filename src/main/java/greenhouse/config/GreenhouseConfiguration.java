@@ -1,5 +1,7 @@
 package greenhouse.config;
 
+import greenhouse.execute.ProcessExecutor;
+import greenhouse.execute.ScenarioExecutor;
 import greenhouse.project.ProjectRepository;
 import greenhouse.project.PropsProjectRepository;
 
@@ -18,5 +20,10 @@ public class GreenhouseConfiguration {
     @Bean
     public ProjectRepository projectRepository() {
         return new PropsProjectRepository(repo);
+    }
+
+    @Bean
+    public ScenarioExecutor scenarioExecutor() {
+        return new ProcessExecutor();
     }
 }

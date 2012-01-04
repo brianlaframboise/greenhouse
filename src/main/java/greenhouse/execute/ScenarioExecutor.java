@@ -2,22 +2,21 @@ package greenhouse.execute;
 
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
+import greenhouse.project.Project;
 
 public interface ScenarioExecutor {
 
-    int execute(IndexedFeature feature);
+    int execute(Project project, IndexedFeature feature);
 
-    int execute(IndexedScenario scenario);
+    int execute(Project project, IndexedScenario scenario);
 
-    int executeExample(IndexedScenario outline, int line);
+    int executeExample(Project project, IndexedScenario outline, int line);
 
-    int execute(String gherkin);
+    int execute(Project project, String gherkin);
 
     String getOutput(int taskId);
 
     String getPartialOutput(int taskId);
 
     boolean isComplete(int taskId);
-
-    void setPhase(String command);
 }
