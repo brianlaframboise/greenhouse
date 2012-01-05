@@ -16,13 +16,15 @@ public class InMemoryIndex implements Index {
     private final ImmutableMap<IndexedScenario, IndexedFeature> featuresByScenario;
     private final ImmutableMultimap<String, IndexedScenario> scenariosByTag;
     private final ImmutableSet<StepMethod> steps;
+    private final ImmutableMap<String, ImmutableList<String>> examples;
 
     public InMemoryIndex(File featuresRoot, ImmutableList<IndexedFeature> features, ImmutableMultimap<String, IndexedScenario> scenariosByTag,
-            ImmutableSet<StepMethod> steps) {
+            ImmutableSet<StepMethod> steps, ImmutableMap<String, ImmutableList<String>> examples) {
         this.featuresRoot = featuresRoot;
         this.features = features;
         this.scenariosByTag = scenariosByTag;
         this.steps = steps;
+        this.examples = examples;
 
         Builder<IndexedScenario, IndexedFeature> builder = ImmutableMap.<IndexedScenario, IndexedFeature> builder();
         for (IndexedFeature feature : features) {
@@ -105,6 +107,11 @@ public class InMemoryIndex implements Index {
     @Override
     public ImmutableSet<StepMethod> steps() {
         return steps;
+    }
+
+    @Override
+    public ImmutableMap<String, ImmutableList<String>> examples() {
+        return examples;
     }
 
 }

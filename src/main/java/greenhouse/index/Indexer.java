@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -26,8 +27,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 public class Indexer {
@@ -68,15 +72,16 @@ public class Indexer {
         sortedFeatures.addAll(features);
         Collections.sort(sortedFeatures, FEATURE_NAME_COMPARATOR);
 
-        ImmutableSet<StepMethod> steps = indexSteps();
-        return new InMemoryIndex(featuresRoot, ImmutableList.copyOf(features), ImmutableMultimap.copyOf(scenariosByTag), steps);
+        System.out.println("Indexing steps...");
+        Properties props = loadIndex();
+        ImmutableSet<StepMethod> steps = indexSteps(props);
+        ImmutableMap<String, ImmutableList<String>> examples = indexExamples(props);
+        return new InMemoryIndex(featuresRoot, ImmutableList.copyOf(features), ImmutableMultimap.copyOf(scenariosByTag), steps, examples);
     }
 
-    private ImmutableSet<StepMethod> indexSteps() {
-        System.out.println("Indexing steps...");
+    private Properties loadIndex() {
         final ProcessBuilder builder = Utils.mavenProcess(projectRoot, ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
         builder.redirectErrorStream(true);
-        Set<StepMethod> stepMethods = new HashSet<StepMethod>();
         try {
             System.out.println("Executing: "
                     + Joiner.on(' ').join(ImmutableList.builder().add(builder.directory().getAbsolutePath()).addAll(builder.command()).build()));
@@ -100,22 +105,44 @@ public class Indexer {
             Properties props = new Properties();
             FileReader reader = new FileReader(stepIndex);
             props.load(reader);
-            int i = 1;
-            while (true) {
-                String key = i + ".regex";
-                if (!props.containsKey(key)) {
-                    break;
-                }
-                String regex = props.getProperty(key);
-                String params = props.getProperty(i + ".params");
-                stepMethods.add(new StepMethod(regex, ImmutableList.copyOf(Splitter.on(',').split(params))));
-                i++;
-            }
-            System.out.println("Loaded " + (i - 1) + " indexed steps.");
+            return props;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Unable to load index properties file", e);
         }
+    }
+
+    private ImmutableSet<StepMethod> indexSteps(Properties props) {
+        int i = 1;
+        Set<StepMethod> stepMethods = new HashSet<StepMethod>();
+        while (true) {
+            String key = i + ".regex";
+            if (!props.containsKey(key)) {
+                break;
+            }
+            String regex = props.getProperty(key);
+            String params = props.getProperty(i + ".params");
+            ImmutableList<String> types = "".equals(params) ? ImmutableList.<String> of() : ImmutableList.copyOf(Splitter.on(',').split(params));
+            stepMethods.add(new StepMethod(regex, types));
+            i++;
+        }
+        System.out.println("Loaded " + (i - 1) + " indexed steps.");
         return ImmutableSet.copyOf(stepMethods);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private ImmutableMap<String, ImmutableList<String>> indexExamples(Properties props) {
+        Map<String, ImmutableList<String>> examples = Maps.newHashMap();
+        for (String key : (Set<String>) (Set) props.keySet()) {
+            if (key.startsWith("enum.")) {
+                String clazz = key.substring("enum.".length());
+                String value = props.getProperty(key);
+                List<String> values = Lists.newArrayList(Splitter.on(',').split(value));
+                Collections.sort(values);
+                examples.put(clazz, ImmutableList.copyOf(values));
+            }
+        }
+        System.out.println("Loaded " + examples.keySet().size() + " enum values.");
+        return ImmutableMap.copyOf(examples);
     }
 
     private void walk(File file) {

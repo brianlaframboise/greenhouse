@@ -32,9 +32,13 @@ public class GreenhousePage extends WebPage {
     }
 
     protected Index index() {
+        return project().index();
+    }
+
+    protected Project project() {
         ImmutableMap<String, Project> projects = repo.getProjects();
         Project project = projects.get(getProjectKey());
-        return project.index();
+        return project;
     }
 
 }

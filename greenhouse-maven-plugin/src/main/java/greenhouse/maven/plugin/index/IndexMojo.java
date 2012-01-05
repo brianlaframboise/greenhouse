@@ -3,12 +3,12 @@ package greenhouse.maven.plugin.index;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +21,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import cuke4duke.annotation.I18n.EN.And;
 import cuke4duke.annotation.I18n.EN.But;
@@ -152,7 +154,7 @@ public class IndexMojo extends AbstractMojo {
         getLog().info("Writing step index to: " + stepIndex.getPath());
         try {
             BufferedWriter buffer = new BufferedWriter(new FileWriter(stepIndex));
-
+            Multimap<Class<?>, String> enums = HashMultimap.create();
             int i = 1;
             for (StepMethod method : stepMethods) {
                 buffer.write(i + ".regex=" + method.regex);
@@ -160,16 +162,33 @@ public class IndexMojo extends AbstractMojo {
 
                 List<String> types = new ArrayList<String>(method.params.length);
                 for (Class<?> paramClass : method.params) {
+
                     types.add(paramClass.getCanonicalName());
+
+                    if (paramClass.isEnum() && !enums.containsKey(paramClass)) {
+                        Object[] constants = paramClass.getEnumConstants();
+                        for (Object constant : constants) {
+                            String name = (String) constant.getClass().getMethod("name", (Class<?>[]) null).invoke(constant, (Object[]) null);
+                            enums.put(paramClass, name);
+                        }
+                    }
                 }
                 buffer.write(i + ".params=" + Joiner.on(',').join(types));
                 buffer.newLine();
                 buffer.newLine();
                 i++;
             }
+            for (Class<?> clazz : enums.keySet()) {
+                Collection<String> names = enums.get(clazz);
+                buffer.write("enum.");
+                buffer.write(clazz.getCanonicalName());
+                buffer.write("=");
+                buffer.write(Joiner.on(',').join(names));
+                buffer.newLine();
+            }
             buffer.flush();
             buffer.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         getLog().info("Step index written");

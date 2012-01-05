@@ -3,6 +3,7 @@ package greenhouse.index;
 import java.io.File;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 
@@ -38,5 +39,17 @@ public interface Index {
     // Steps
 
     ImmutableSet<StepMethod> steps();
+
+    /**
+     * Maps a canonical class name to a list of example values (in the case of
+     * an open-ended value class) or actual values (in the case of an enum).
+     * 
+     * Example:
+     * 
+     * com.acme.enum.DayOfWeek -> [MON, TUE, ...]
+     * 
+     * @return
+     */
+    ImmutableMap<String, ImmutableList<String>> examples();
 
 }
