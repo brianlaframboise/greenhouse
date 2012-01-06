@@ -4,35 +4,41 @@
 <body>
 <wicket:extend>
 	<section class='grid_2'>
-		<span>My scenario</span>
-		<textarea wicket:id='scenario' rows="10" cols="80" style="font-family: monospace;"></textarea>
-		<span>Enter a step</span>
-		<form wicket:id='form'>
-			<input wicket:id='step' type="text" size="80">
-			<table wicket:id='table'>
-				<thead>
-					<tr>
-						<td>Type</td>
-						<td>Input</td>
-						<td>Example</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr wicket:id='inputs'>
-						<td wicket:id='type'>[Date]</td>
-						<td><span wicket:id='input'></span></td>
-						<wicket:fragment wicket:id='text'><input wicket:id='input'></wicket:fragment>
-						<wicket:fragment wicket:id='select'><select wicket:id='input'></select></wicket:fragment>
-						<td wicket:id='example'>[2012-01-01]</td>
-					</tr>
-				</tbody>
-			</table>		
-			<input wicket:id='add' type="submit" value="Add">
-			<input wicket:id='substitute' type="submit" value="Substitute">
-			<input wicket:id='execute' type="submit" value="Execute">
-		</form>
+		<div>
+			<span>My scenario</span>
+			<textarea wicket:id='scenario' rows="10" cols="80" style="font-family: monospace;"></textarea>
+			<a wicket:id='execute'>Execute</a>
+			<a wicket:id='undo'>Undo</a>
+		</div>
+		<div>
+			<form wicket:id='form'>
+				<span>Enter a step</span>
+				<input wicket:id='step' type="text" size="80">
+				<table wicket:id='table'>
+					<thead>
+						<tr>
+							<td>Type</td>
+							<td>Input</td>
+							<td>Example</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr wicket:id='inputs'>
+							<td wicket:id='type'>[Date]</td>
+							<td><span wicket:id='input'></span></td>
+							<wicket:fragment wicket:id='text'><input wicket:id='input'></wicket:fragment>
+							<wicket:fragment wicket:id='select'><select wicket:id='input'></select></wicket:fragment>
+							<td wicket:id='example'>[2012-01-01]</td>
+						</tr>
+					</tbody>
+				</table>		
+				<input wicket:id='add' type="submit" value="Add">
+				<input wicket:id='substitute' type="submit" value="Substitute">
+			</form>
+		</div>
 	</section>
 	<div class='clear'></div>
+	<div wicket:id='dialog'>[OutputDialog goes here]</div>
 </wicket:extend>
 </body>
 </html>

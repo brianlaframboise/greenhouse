@@ -1,16 +1,17 @@
 package greenhouse.ui.wicket.page;
 
-import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.StepMethod;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTextField;
@@ -26,10 +27,12 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.Strings;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,11 +42,83 @@ import com.google.common.collect.Lists;
 @MountIndexedParam
 public class StepsPage extends GreenhousePage {
 
+    /**
+     * Splits a Gherkin step into a list of the predicate part and the remainder
+     * part.
+     * 
+     * Input: "given I do x" Result: 0 -> "Given ", 1 -> "I do x"
+     * 
+     * Input: "I do x" Result: 0 -> "", 1 -> "I do x"
+     * 
+     * @param step A gherkin step
+     * @return A two-element List of (predicate, remainder)
+     */
+    private static ImmutableList<String> splitStep(String step) {
+        for (String arg : ImmutableList.of("given ", "when ", "then ", "and ", "but ")) {
+            if (step.toLowerCase(Locale.ENGLISH).startsWith(arg)) {
+                int index = step.indexOf(' ') + 1;
+                return ImmutableList.of(Strings.capitalize(step.substring(0, index).toLowerCase(Locale.ENGLISH)), step.substring(index));
+            }
+        }
+        return ImmutableList.of("", step);
+    }
+
+    public static class AppendingGherkinModel extends Model<String> {
+        private List<String> steps = Lists.newArrayList();
+
+        public AppendingGherkinModel(String value) {
+            super.setObject(value);
+        }
+
+        @Override
+        public String getObject() {
+            return Joiner.on('\n').join(steps);
+        }
+
+        @Override
+        public void setObject(String step) {
+            ImmutableList<String> split = splitStep(step);
+            String prep = split.get(0);
+            String remainder = split.get(1);
+            if ("".equals(prep)) {
+                steps.add((steps.isEmpty() ? "Given " : "And ") + remainder);
+            } else {
+                steps.add(Strings.capitalize(prep) + remainder);
+            }
+        }
+
+        public void undo() {
+            steps.remove(steps.size() - 1);
+        }
+
+    }
+
     public StepsPage(PageParameters params) {
         super(params);
 
-        final TextArea<String> scenario = new TextArea<String>("scenario", Model.of(""));
+        OutputDialog dialog = new OutputDialog("dialog");
+        add(dialog);
+
+        final AppendingGherkinModel gherkinModel = new AppendingGherkinModel("");
+        final TextArea<String> scenario = new TextArea<String>("scenario", gherkinModel);
         add(scenario.setOutputMarkupId(true));
+        add(new ExecuteGherkinLink("execute", project().getKey(), dialog, new AbstractReadOnlyModel<String>() {
+            @Override
+            public String getObject() {
+                String gherkin = gherkinModel.getObject();
+                String formatted = Joiner.on("\n\t\t").join(Splitter.on('\n').split(gherkin));
+                return "Feature: Custom feature\n\n\tScenario: Custom scenario\n" + formatted;
+            }
+        }));
+        add(new AjaxFallbackLink<Void>("undo") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                gherkinModel.undo();
+                if (target != null) {
+                    target.addComponent(scenario);
+                }
+            }
+        });
 
         Form<Void> form = new Form<Void>("form");
         add(form);
@@ -67,7 +142,11 @@ public class StepsPage extends GreenhousePage {
                 if ("".equals(input)) {
                     return ImmutableList.<String> of().iterator();
                 }
-                List<String> tokens = ImmutableList.copyOf(Splitter.on(' ').split(input));
+                ImmutableList<String> split = splitStep(input);
+                String prep = split.get(0);
+                String remainder = split.get(1);
+
+                List<String> tokens = ImmutableList.copyOf(Splitter.on(' ').split(remainder));
 
                 ImmutableSet<StepMethod> steps = index().steps();
                 ArrayList<String> choices = new ArrayList<String>();
@@ -87,23 +166,18 @@ public class StepsPage extends GreenhousePage {
                         int i = 0;
                         while (trimmed.contains("(")) {
                             int indexOf = trimmed.indexOf('(');
-                            if (indexOf == -1) {
-                                System.out.println("whoops");
-                            }
-
                             String newTrimmed = trimmed.substring(0, indexOf);
                             String type = types.get(i);
                             newTrimmed += "[[" + type.substring(type.lastIndexOf('.') + 1) + "]]";
                             trimmed = newTrimmed + trimmed.substring(trimmed.indexOf(')') + 1);
                             i++;
                         }
-                        choices.add(trimmed);
+                        choices.add(prep + trimmed);
                     }
                 }
                 Collections.sort(choices);
                 return choices.iterator();
             }
-
         };
         form.add(stepField.setMarkupId("step").setOutputMarkupId(true));
 
@@ -174,26 +248,14 @@ public class StepsPage extends GreenhousePage {
                 }
             }
         });
-
-        form.add(new AjaxButton("execute", form) {
-
-            @SpringBean
-            private ScenarioExecutor executor;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                executor.execute(StepsPage.this.project(), "Feature: Custom feature\nScenario: Custom scenario\n" + scenario.getModelObject());
-            }
-        });
     }
 
     private void updateScenario(final TextArea<String> scenario, final Model<String> stepModel, final AutoCompleteTextField<String> stepField,
             AjaxRequestTarget target, String text) {
-        scenario.setDefaultModelObject(scenario.getDefaultModelObjectAsString() + "\nGiven " + text);
+        scenario.setDefaultModelObject(text);
         stepModel.setObject("");
         target.addComponent(stepField);
         target.addComponent(scenario);
-        target.appendJavascript("document.getElementById('step').focus()");
     }
 
 }
