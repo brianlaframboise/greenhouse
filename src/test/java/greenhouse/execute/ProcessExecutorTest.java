@@ -37,7 +37,7 @@ public class ProcessExecutorTest {
     public void executes_feature() {
         IndexedFeature feature = project.index().featureByName("Hello World Feature");
 
-        int taskId = executor.execute(project, feature);
+        TaskId taskId = executor.execute(project, feature);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("3 scenarios (3 passed)"));
@@ -51,7 +51,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.execute(project, scenario);
+        TaskId taskId = executor.execute(project, scenario);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@hello @world @greenhouse"));
@@ -65,7 +65,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.execute(project, scenario);
+        TaskId taskId = executor.execute(project, scenario);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -79,7 +79,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        int taskId = executor.executeExample(project, scenario, 21);
+        TaskId taskId = executor.executeExample(project, scenario, 21);
         String output = executor.getOutput(taskId);
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -91,7 +91,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_gherkin() {
-        int taskId = executor.execute(project, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
+        TaskId taskId = executor.execute(project, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
                 + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
         String output = executor.getOutput(taskId);
 

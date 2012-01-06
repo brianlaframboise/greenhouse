@@ -48,7 +48,7 @@ import com.google.common.io.Files;
 public class ProcessExecutor implements ScenarioExecutor {
 
     private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
-    private final Map<Integer, CucumberTask> tasks = new ConcurrentHashMap<Integer, CucumberTask>();
+    private final Map<TaskId, CucumberTask> tasks = new ConcurrentHashMap<TaskId, CucumberTask>();
 
     /**
      * Creates a new ScenarioExecutor. By default output is inherited from the
@@ -59,16 +59,16 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public int execute(Project project, IndexedFeature feature) {
+    public TaskId execute(Project project, IndexedFeature feature) {
         return execute(project, feature, null, true);
     }
 
     @Override
-    public int execute(Project project, String gherkin) {
+    public TaskId execute(Project project, String gherkin) {
         return execute(project, null, gherkin, false);
     }
 
-    private int execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
+    private TaskId execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
         Execution execution = project.nextExecution();
         if (useFeature) {
             copyFeature(project, execution.getDirectory(), feature);
@@ -124,16 +124,16 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public int execute(Project project, IndexedScenario scenario) {
+    public TaskId execute(Project project, IndexedScenario scenario) {
         return executeWithLine(project, scenario, -1);
     }
 
     @Override
-    public int executeExample(Project project, IndexedScenario outline, int line) {
+    public TaskId executeExample(Project project, IndexedScenario outline, int line) {
         return executeWithLine(project, outline, line);
     }
 
-    private int executeWithLine(Project project, IndexedScenario scenario, int line) {
+    private TaskId executeWithLine(Project project, IndexedScenario scenario, int line) {
         Execution exeuction = project.nextExecution();
         copyScenarios(project, exeuction.getDirectory(), scenario, line);
         return executeScenarios(project, exeuction);
@@ -163,7 +163,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private int executeScenarios(Project project, Execution execution) {
+    private TaskId executeScenarios(Project project, Execution execution) {
         String features = "-Dcucumber.features=\"" + execution.getDirectory().getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
         final File output = file(execution.getDirectory().getAbsolutePath(), "output.txt");
@@ -172,7 +172,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             argsList.addAll(Lists.newArrayList(features, tags, ">", output.getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
             System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
-            final int taskId = execution.getTaskId();
+            final TaskId taskId = new TaskId(project.getKey(), execution.getExecutionNumber());
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
@@ -191,7 +191,7 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public String getOutput(int taskId) {
+    public String getOutput(TaskId taskId) {
         try {
             Future<String> gherkinFuture = tasks.get(taskId).getResult();
             String gherkin = gherkinFuture.get();
@@ -203,14 +203,14 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public String getPartialOutput(int taskId) {
+    public String getPartialOutput(TaskId taskId) {
         CucumberTask task = tasks.get(taskId);
         File outputFile = task.getOutput();
         return Utils.readContents(outputFile.getAbsolutePath());
     }
 
     @Override
-    public boolean isComplete(int taskId) {
+    public boolean isComplete(TaskId taskId) {
         return tasks.get(taskId).getResult().isDone();
     }
 

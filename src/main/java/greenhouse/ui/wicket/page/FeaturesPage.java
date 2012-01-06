@@ -1,6 +1,7 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.execute.ScenarioExecutor;
+import greenhouse.execute.TaskId;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
@@ -233,7 +234,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         public void onClick(AjaxRequestTarget target) {
-            final int taskId = execute();
+            final TaskId taskId = execute();
             final long startTime = System.currentTimeMillis();
             final Label progress = (Label) output.getParent().get("progress");
             output.add(new AbstractAjaxTimerBehavior(Duration.seconds(1)) {
@@ -273,7 +274,7 @@ public class FeaturesPage extends GreenhousePage {
             return repo.getProjects().get(projectKey);
         }
 
-        protected abstract int execute();
+        protected abstract TaskId execute();
     }
 
     private static class ExecuteFeatureLink extends ExecutingLink {
@@ -286,7 +287,7 @@ public class FeaturesPage extends GreenhousePage {
         }
 
         @Override
-        protected int execute() {
+        protected TaskId execute() {
             IndexedFeature feature = index().featureByName(name);
             return executor.execute(project(), feature);
         }
@@ -302,7 +303,7 @@ public class FeaturesPage extends GreenhousePage {
         }
 
         @Override
-        protected int execute() {
+        protected TaskId execute() {
             IndexedScenario scenario = index().scenarioByName(name);
             return executor.execute(project(), scenario);
         }
@@ -320,7 +321,7 @@ public class FeaturesPage extends GreenhousePage {
         }
 
         @Override
-        protected int execute() {
+        protected TaskId execute() {
             IndexedScenario scenario = index().scenarioByName(name);
             return executor.executeExample(project(), scenario, line);
         }
@@ -335,7 +336,7 @@ public class FeaturesPage extends GreenhousePage {
         }
 
         @Override
-        protected int execute() {
+        protected TaskId execute() {
             return executor.execute(project(), textarea.getDefaultModelObjectAsString());
         }
     }

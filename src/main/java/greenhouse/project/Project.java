@@ -97,7 +97,7 @@ public class Project {
             throw new RuntimeException("Could not create execution results directory: " + results.getAbsolutePath());
         }
         save();
-        return new Execution(taskId, results);
+        return new Execution(key, taskId, results);
     }
 
     public void update() {
@@ -130,16 +130,22 @@ public class Project {
 
     public static class Execution {
 
-        private final int taskId;
+        private final String projectKey;
+        private final int executionNumber;
         private final File directory;
 
-        public Execution(int taskId, File directory) {
-            this.taskId = taskId;
+        public Execution(String projectKey, int executionNumber, File directory) {
+            this.projectKey = projectKey;
+            this.executionNumber = executionNumber;
             this.directory = directory;
         }
 
-        public int getTaskId() {
-            return taskId;
+        public String getProjectKey() {
+            return projectKey;
+        }
+
+        public int getExecutionNumber() {
+            return executionNumber;
         }
 
         public File getDirectory() {
