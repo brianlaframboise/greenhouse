@@ -100,6 +100,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         try {
             // Setup tagged destination file
             File featureFile = tempFeatureFile(project, tempDir, feature);
+            featureFile.getParentFile().mkdirs();
             Writer tempFile = new FileWriter(featureFile);
 
             // Load source file

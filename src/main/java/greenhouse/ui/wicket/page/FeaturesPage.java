@@ -6,7 +6,8 @@ import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.util.Utils;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -21,10 +22,12 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
+import org.springframework.util.StringUtils;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Displays and executes Features, Scenarios, and Examples.
@@ -44,10 +47,11 @@ public class FeaturesPage extends GreenhousePage {
         super(params);
         projectKey = getProjectKey();
         ImmutableList<IndexedFeature> features = index().features();
-        ArrayList<String> names = new ArrayList<String>();
+        List<String> names = Lists.newArrayList();
         for (IndexedFeature feature : features) {
             names.add(feature.getName());
         }
+        Collections.sort(names);
 
         add(dialog = new OutputDialog("dialog"));
 
@@ -144,7 +148,7 @@ public class FeaturesPage extends GreenhousePage {
                     executeScenarioLink.add(new Label("name", scenarioName));
 
                     context.add(pretext, executeScenarioLink);
-                } else if (line.contains("|") && !getModelObject().get(item.getIndex() - 1).contains("Examples")) {
+                } else if (isExample(line, item.getIndex(), getModelObject())) {
                     // Example
                     context = new Fragment("context", "example", this);
 
@@ -164,6 +168,36 @@ public class FeaturesPage extends GreenhousePage {
                 }
                 item.add(new WebMarkupContainer("pre").add(context));
             }
+
+            /**
+             * Determines whether or not the given line is a row in an Examples
+             * block.
+             * 
+             * @param line The line of gherkin
+             * @param lineIndex The index of the current line in allLines
+             * @param allLines All of the lines of gherkin in which line exists
+             * @return true iff line is an example row
+             */
+            private boolean isExample(String line, int lineIndex, List<String> allLines) {
+                line = StringUtils.trimLeadingWhitespace(line);
+                if (!line.startsWith("|")) {
+                    return false;
+                }
+                if (line.startsWith("|")) {
+                    if (allLines.get(lineIndex - 1).contains("Examples")) {
+                        return false;
+                    }
+                    for (int i = lineIndex - 2; i >= 0; i--) {
+                        String preceeding = StringUtils.trimLeadingWhitespace(allLines.get(i));
+                        if (!preceeding.startsWith("|")) {
+                            return preceeding.startsWith("Examples");
+                        }
+
+                    }
+                }
+                return false;
+            }
+
         }.setRenderBodyOnly(true));
         feature.setVisible(true);
         editForm.setVisible(false);

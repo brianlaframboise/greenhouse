@@ -18,9 +18,9 @@ public class ExampleFilterer extends DelegatingFormatter {
 
     @Override
     public void examples(Examples examples) {
+        List<Row> newRows = new ArrayList<Row>(2);
         if (line >= 0) {
             List<Row> rows = examples.getRows();
-            List<Row> newRows = new ArrayList<Row>(2);
             newRows.add(rows.get(0));
             for (Row row : rows.subList(1, rows.size())) {
                 if (row.getLine() == line) {
@@ -28,6 +28,8 @@ public class ExampleFilterer extends DelegatingFormatter {
                     break;
                 }
             }
+        }
+        if (newRows.size() == 2) {
             examples.setRows(newRows);
         }
         super.examples(examples);
