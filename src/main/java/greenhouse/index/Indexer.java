@@ -11,7 +11,6 @@ import greenhouse.util.Utils;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +21,8 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.lf5.util.StreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -35,6 +36,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 public class Indexer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Indexer.class);
+
     private static final Comparator<IndexedFeature> FEATURE_NAME_COMPARATOR = new Comparator<IndexedFeature>() {
         @Override
         public int compare(IndexedFeature first, IndexedFeature second) {
@@ -49,6 +53,7 @@ public class Indexer {
         }
     };
 
+    private final String projectKey;
     private final File projectRoot;
     private final File featuresRoot;
     private final Set<IndexedFeature> features = new HashSet<IndexedFeature>();
@@ -58,21 +63,20 @@ public class Indexer {
     private String featureName;
     private final List<IndexedScenario> scenarios = new ArrayList<IndexedScenario>();
 
-    public Indexer(String projectRoot) {
+    public Indexer(String projectKey, String projectRoot) {
+        this.projectKey = projectKey;
         this.projectRoot = new File(projectRoot);
         featuresRoot = Utils.file(projectRoot, "features");
     }
 
     public InMemoryIndex index() {
-        System.out.println("Indexing features...");
         walk(featuresRoot);
-        System.out.println("Features indexed.");
+        LOGGER.info("Indexed features for " + projectKey);
 
         List<IndexedFeature> sortedFeatures = new ArrayList<IndexedFeature>();
         sortedFeatures.addAll(features);
         Collections.sort(sortedFeatures, FEATURE_NAME_COMPARATOR);
 
-        System.out.println("Indexing steps...");
         Properties props = loadIndex();
         ImmutableSet<StepMethod> steps = indexSteps(props);
         ImmutableMap<String, ImmutableList<String>> examples = indexExamples(props);
@@ -83,7 +87,7 @@ public class Indexer {
         final ProcessBuilder builder = Utils.mavenProcess(projectRoot, ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
         builder.redirectErrorStream(true);
         try {
-            System.out.println("Executing: "
+            LOGGER.info(projectKey + " Loading index via: "
                     + Joiner.on(' ').join(ImmutableList.builder().add(builder.directory().getAbsolutePath()).addAll(builder.command()).build()));
             final Process process = builder.start();
             new Thread() {
@@ -100,12 +104,7 @@ public class Indexer {
                 }
             }.start();
             process.waitFor();
-            File stepIndex = Utils.file(projectRoot.getAbsolutePath(), "target", "greenhouse-step-index.properties");
-            System.out.println("Steps indexed. Loading: " + stepIndex.getAbsolutePath());
-            Properties props = new Properties();
-            FileReader reader = new FileReader(stepIndex);
-            props.load(reader);
-            return props;
+            return Utils.load(Utils.file(projectRoot.getAbsolutePath(), "target"), "greenhouse-step-index.properties");
         } catch (Exception e) {
             throw new RuntimeException("Unable to load index properties file", e);
         }
@@ -125,7 +124,7 @@ public class Indexer {
             stepMethods.add(new StepMethod(regex, types));
             i++;
         }
-        System.out.println("Loaded " + (i - 1) + " indexed steps.");
+        LOGGER.info(projectKey + " Loaded " + (i - 1) + " indexed steps.");
         return ImmutableSet.copyOf(stepMethods);
     }
 
@@ -141,7 +140,7 @@ public class Indexer {
                 examples.put(clazz, ImmutableList.copyOf(values));
             }
         }
-        System.out.println("Loaded " + examples.keySet().size() + " enum values.");
+        LOGGER.info(projectKey + " Loaded " + (examples.keySet().size()) + " enums.");
         return ImmutableMap.copyOf(examples);
     }
 
@@ -157,7 +156,7 @@ public class Indexer {
 
     private void index(File file) {
         try {
-            System.out.println("Indexing: " + file.getAbsolutePath());
+            LOGGER.debug(projectKey + " indexing file  " + file.getAbsolutePath());
             uri = file.getPath();
             IndexingFormatter formatter = new IndexingFormatter(this);
             Parser parser = new Parser(formatter);

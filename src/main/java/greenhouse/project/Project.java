@@ -25,7 +25,7 @@ public class Project {
         this.name = name;
         this.root = root;
         files = Utils.file(root.getAbsolutePath(), "files");
-        index = new Indexer(files.getAbsolutePath()).index();
+        index = new Indexer(key, files.getAbsolutePath()).index();
         this.command = command;
         this.fileSource = fileSource;
         this.executions = executions;

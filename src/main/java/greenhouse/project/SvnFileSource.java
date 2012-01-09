@@ -5,12 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.util.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 /**
  * A FileSource that checks out and updates a project from a target Subversion
  * url.
  */
 public class SvnFileSource implements FileSource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SvnFileSource.class);
 
     private final File projectRoot;
     private final File files;
@@ -62,15 +67,15 @@ public class SvnFileSource implements FileSource {
         builder.command(args);
 
         try {
-            System.out.println("Checking out " + url + " into " + files);
+            LOGGER.info("Checking out " + url + " into " + files);
             Process process = builder.start();
-            System.out.println(IOUtils.toString(process.getInputStream()));
+            LOGGER.info(StringUtils.trimWhitespace(IOUtils.toString(process.getInputStream())));
 
             process.waitFor();
         } catch (Exception e) {
             throw new RuntimeException("Unable to checkout project from " + url, e);
         }
-        System.out.println("Checkout complete: " + url);
+        LOGGER.info("Checkout complete: " + url);
     }
 
     @Override
@@ -84,15 +89,15 @@ public class SvnFileSource implements FileSource {
         builder.command(args);
 
         try {
-            System.out.println("Updating: " + files);
+            LOGGER.info("Updating: " + files);
             Process process = builder.start();
-            System.out.println(IOUtils.toString(process.getInputStream()));
+            LOGGER.info(StringUtils.trimWhitespace(IOUtils.toString(process.getInputStream())));
 
             process.waitFor();
         } catch (Exception e) {
             throw new RuntimeException("Unable to update " + files, e);
         }
-        System.out.println("Update complete: " + files);
+        LOGGER.info("Update complete: " + files);
     }
 
     private List<String> basicArgs() {

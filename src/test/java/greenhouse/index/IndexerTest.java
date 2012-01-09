@@ -13,7 +13,7 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        index = new Indexer(TestUtils.HELLO_WORLD_FILES).index();
+        index = new Indexer("hello-world", TestUtils.HELLO_WORLD_FILES).index();
     }
 
     @Test

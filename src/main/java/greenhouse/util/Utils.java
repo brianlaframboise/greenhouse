@@ -8,9 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Joiner;
 
 public class Utils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
     public static final String SEPARATOR = System.getProperty("file.separator");
 
@@ -76,8 +81,8 @@ public class Utils {
                 delete(c);
             }
         }
-        System.out.println("Deleting: " + file);
-        if (!file.delete()) {
+        LOGGER.debug("Deleting: " + file);
+        if (file.exists() && !file.delete()) {
             throw new RuntimeException("Could not delete " + file.getPath());
         }
     }

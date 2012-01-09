@@ -20,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -47,6 +50,8 @@ import com.google.common.io.Files;
  */
 public class ProcessExecutor implements ScenarioExecutor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
+
     private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
     private final Map<TaskId, CucumberTask> tasks = new ConcurrentHashMap<TaskId, CucumberTask>();
 
@@ -60,11 +65,13 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     @Override
     public TaskId execute(Project project, IndexedFeature feature) {
+        LOGGER.info("Executing " + project.getKey() + " feature " + feature.getName());
         return execute(project, feature, null, true);
     }
 
     @Override
     public TaskId execute(Project project, String gherkin) {
+        LOGGER.info("Executing " + project.getKey() + " raw gherkin");
         return execute(project, null, gherkin, false);
     }
 
@@ -86,7 +93,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
             // Parse to copy source into destination
             Parser parser = new Parser(new GreenhouseTagger(tempFile));
-            System.out.println("Copying raw gherkin into " + featureFile.getPath());
+            LOGGER.info("Copying raw gherkin into " + featureFile.getPath());
             parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
 
             tempFile.flush();
@@ -108,7 +115,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
             // Parse to copy source into destination
             Parser parser = new Parser(new GreenhouseTagger(tempFile));
-            System.out.println("Copying " + feature.getUri() + " into " + featureFile.getPath());
+            LOGGER.info("Copying " + feature.getUri() + " into " + featureFile.getPath());
             parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
 
             tempFile.flush();
@@ -126,11 +133,13 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     @Override
     public TaskId execute(Project project, IndexedScenario scenario) {
+        LOGGER.info("Executing " + project.getKey() + " scenario " + scenario.getName());
         return executeWithLine(project, scenario, -1);
     }
 
     @Override
     public TaskId executeExample(Project project, IndexedScenario outline, int line) {
+        LOGGER.info("Executing " + project.getKey() + " scenario outline " + outline.getName() + " line " + line);
         return executeWithLine(project, outline, line);
     }
 
@@ -154,7 +163,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             // Parse and tag source into destination
             Formatter formatter = new ExampleFilterer(new ScenarioTagger(scenario, tempFile), line);
             Parser parser = new Parser(formatter);
-            System.out.println("Tagging " + feature.getUri() + " into " + featureFile.getPath());
+            LOGGER.info("Tagging " + feature.getUri() + " into " + featureFile.getPath());
             parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
 
             tempFile.flush();
@@ -175,15 +184,17 @@ public class ProcessExecutor implements ScenarioExecutor {
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
             argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", output.getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
-            System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
+
+            LOGGER.info("Executing: " + Joiner.on(' ').join(builder.command()));
             final TaskId taskId = new TaskId(project.getKey(), execution.getExecutionNumber());
+
             Future<String> submittedTask = executorService.submit(new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    System.out.println("Task " + taskId + " running...");
+                    LOGGER.info("Running: " + taskId);
                     builder.start().waitFor();
                     String gherkin = Utils.readContents(output.getAbsolutePath());
-                    System.out.println("Task " + taskId + " complete");
+                    LOGGER.info("Complete: " + taskId);
                     return gherkin;
                 }
             });
