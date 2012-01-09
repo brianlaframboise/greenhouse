@@ -167,10 +167,13 @@ public class ProcessExecutor implements ScenarioExecutor {
     private TaskId executeScenarios(Project project, Execution execution) {
         String features = "-Dcucumber.features=\"" + execution.getDirectory().getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
+        String format = "-Dcucumber.format=html";
+        String out = "-Dcucumber.out=" + file(execution.getDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
+
         final File output = file(execution.getDirectory().getAbsolutePath(), "output.txt");
         try {
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
-            argsList.addAll(Lists.newArrayList(features, tags, ">", output.getAbsolutePath()));
+            argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", output.getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
             System.out.println("Executing: " + Joiner.on(' ').join(builder.command()));
             final TaskId taskId = new TaskId(project.getKey(), execution.getExecutionNumber());

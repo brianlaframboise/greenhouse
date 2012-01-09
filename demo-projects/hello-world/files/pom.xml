@@ -11,6 +11,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<cucumber.tagsArg>--tags=~@ignore</cucumber.tagsArg>
+		<cucumber.format>junit</cucumber.format>
+		<cucumber.out>${project.build.directory}/cucumber-reports</cucumber.out>
 	</properties>
 
 	<build>
@@ -31,9 +33,9 @@
 						<cucumberArg>--format</cucumberArg>
 						<cucumberArg>pretty</cucumberArg>
 						<cucumberArg>--format</cucumberArg>
-						<cucumberArg>junit</cucumberArg>
+						<cucumberArg>${cucumber.format}</cucumberArg>
 						<cucumberArg>--out</cucumberArg>
-						<cucumberArg>${project.build.directory}/cucumber-reports</cucumberArg>
+						<cucumberArg>${cucumber.out}</cucumberArg>
 						<cucumberArg>--require</cucumberArg>
 						<cucumberArg>${basedir}/target/test-classes</cucumberArg>
 						<cucumberArg>${cucumber.tagsArg}</cucumberArg>

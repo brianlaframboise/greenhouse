@@ -1,36 +1,55 @@
 package greenhouse.project;
 
+import greenhouse.util.Utils;
+
 import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 
 /**
- * A FileSource that uses an unversioned project on the local file system. As
- * such, the initialize and update operations are no-ops.
+ * A FileSource that copies an unversioned project on the local file system into
+ * the project files directory.
  */
 public class LocalFileSource implements FileSource {
 
-    private final File directory;
+    private final File source;
+    private final File files;
 
     /**
      * Creates a new LocalFileSource.
      * 
-     * @param directory A project root directory that exists on the local file
+     * @param source A project root directory that exists on the local file
      *            system.
+     * @param files The greenhouse project files directory
      */
-    public LocalFileSource(String directory) {
-        this.directory = new File(directory);
+    public LocalFileSource(String source, File files) {
+        this.source = new File(source);
+        this.files = files;
     }
 
     @Override
     public File getDirectory() {
-        return directory;
+        return files;
     }
 
     @Override
     public void initialize() {
+        Utils.delete(files);
+        copySourceToFiles();
     }
 
     @Override
     public void update() {
+        copySourceToFiles();
+    }
+
+    private void copySourceToFiles() {
+        try {
+            FileUtils.copyDirectory(source, files);
+        } catch (final IOException e) {
+            throw new RuntimeException("Error while copying " + source.getAbsolutePath() + " to " + files.getAbsolutePath(), e);
+        }
     }
 
 }

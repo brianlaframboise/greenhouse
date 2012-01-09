@@ -3,9 +3,9 @@ package greenhouse.project;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import greenhouse.TestUtils;
 
 import java.io.File;
-import java.net.URL;
 
 import org.junit.Test;
 
@@ -15,17 +15,14 @@ public class PropsProjectRepositoryTest {
 
     @Test
     public void load() {
-        URL resource = PropsProjectRepositoryTest.class.getResource(".");
-        String projectsRoot = resource.getPath().toString() + "../../../../demo";
-
-        File repo = new File(projectsRoot);
+        File repo = new File(TestUtils.DEMO_PROJECTS);
         PropsProjectRepository repository = new PropsProjectRepository(repo);
         ImmutableMap<String, Project> projects = repository.getProjects();
         assertEquals(1, projects.size());
 
-        Project project = projects.get("example");
+        Project project = projects.get("hello-world");
         assertNotNull(project);
-        assertEquals("Example Project", project.getName());
+        assertEquals("Hello World Example Project", project.getName());
         assertFalse(project.getRoot().getAbsolutePath().equals(""));
     }
 }

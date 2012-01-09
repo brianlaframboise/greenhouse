@@ -15,7 +15,7 @@
 		<slf4j.version>1.6.1</slf4j.version>
 		<log4j.version>1.2.16</log4j.version>
 		<spring.version>3.0.5.RELEASE</spring.version>
-		
+
 		<greenhouse.projects>${basedir}/demo</greenhouse.projects>
 	</properties>
 
@@ -95,12 +95,18 @@
 			<artifactId>gherkin</artifactId>
 			<version>2.4.6</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>11.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.1</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>

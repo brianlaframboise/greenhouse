@@ -65,4 +65,20 @@ public class Utils {
         return properties;
     }
 
+    /**
+     * Deletes the file or recursively deletes the given directory
+     * 
+     * @param file the file or directory to delete
+     */
+    public static void delete(File file) {
+        if (file.isDirectory()) {
+            for (File c : file.listFiles()) {
+                delete(c);
+            }
+        }
+        System.out.println("Deleting: " + file);
+        if (!file.delete()) {
+            throw new RuntimeException("Could not delete " + file.getPath());
+        }
+    }
 }

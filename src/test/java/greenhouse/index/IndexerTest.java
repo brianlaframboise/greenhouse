@@ -2,8 +2,7 @@ package greenhouse.index;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-
-import java.net.URL;
+import greenhouse.TestUtils;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,9 +13,7 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        URL resource = IndexerTest.class.getResource(".");
-        String projectRoot = resource.getPath().toString() + "../../../../demo/example/files";
-        index = new Indexer(projectRoot).index();
+        index = new Indexer(TestUtils.HELLO_WORLD_FILES).index();
     }
 
     @Test

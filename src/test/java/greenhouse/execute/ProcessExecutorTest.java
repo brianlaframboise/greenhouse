@@ -4,6 +4,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import greenhouse.TestUtils;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
@@ -24,7 +25,7 @@ public class ProcessExecutorTest {
 
     @BeforeClass
     public static void build_index() {
-        project = Project.load(new File(ProcessExecutorTest.class.getResource(".").getPath().toString() + "../../../../demo/example"));
+        project = Project.load(new File(TestUtils.HELLO_WORLD_PROJECT));
         executor = new ProcessExecutor();
     }
 

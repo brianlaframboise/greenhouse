@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 public class GreenhousePage extends WebPage {
 
     @SpringBean
-    private ProjectRepository repo;
+    protected ProjectRepository repo;
 
     public GreenhousePage() {
     }

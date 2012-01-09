@@ -54,26 +54,33 @@ public class Project {
         return new Project(key, name, root, command, fileSource, executions);
     }
 
-    private static FileSource loadFileSource(File root, Properties project) {
-        String protocol = project.getProperty("src.protocol", "file");
-        String url = project.getProperty("src.url");
-        File filesDirectory = Utils.file(root.getAbsolutePath(), "files");
+    /**
+     * Creates a FileSource based on a project's location and properties.
+     * 
+     * @param project The greenhouse directory for the project being loaded
+     * @param props The project's properties
+     * @return a new FileSource
+     */
+    private static FileSource loadFileSource(File project, Properties props) {
+        String protocol = props.getProperty("src.protocol", "file");
+        String url = props.getProperty("src.url");
+        File filesDirectory = Utils.file(project.getAbsolutePath(), "files");
         FileSource fileSource;
 
         if (protocol.equals("file")) {
             if (url == null) {
-                url = filesDirectory.getAbsolutePath();
+                fileSource = new InPlaceFileSource(filesDirectory);
+            } else {
+                fileSource = new LocalFileSource(url, filesDirectory);
             }
-            fileSource = new LocalFileSource(url);
         } else if (protocol.equals("svn")) {
-            String username = project.getProperty("src.username");
-            String password = project.getProperty("src.password");
-            fileSource = new SvnFileSource(root, filesDirectory, url, username, password);
-            fileSource.getDirectory();
-            fileSource.initialize();
+            String username = props.getProperty("src.username");
+            String password = props.getProperty("src.password");
+            fileSource = new SvnFileSource(project, filesDirectory, url, username, password);
         } else {
             throw new RuntimeException("Unrecoginized protocol: " + protocol);
         }
+        fileSource.initialize();
         return fileSource;
     }
 
@@ -107,25 +114,13 @@ public class Project {
     public void clearHistory() {
         File results = Utils.file(root.getAbsolutePath(), "results");
         if (results.exists()) {
-            delete(results);
+            Utils.delete(results);
         }
         File state = Utils.file(root.getAbsolutePath(), "state.properties");
         if (state.exists()) {
-            delete(state);
+            Utils.delete(state);
         }
         executions = 1;
-    }
-
-    private void delete(File f) {
-        if (f.isDirectory()) {
-            for (File c : f.listFiles()) {
-                delete(c);
-            }
-        }
-        System.out.println("Deleting: " + f);
-        if (!f.delete()) {
-            throw new RuntimeException("Could not delete " + f.getPath());
-        }
     }
 
     public static class Execution {
