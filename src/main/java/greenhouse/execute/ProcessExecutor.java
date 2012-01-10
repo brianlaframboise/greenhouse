@@ -6,19 +6,23 @@ import gherkin.parser.Parser;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
-import greenhouse.project.Project.Execution;
+import greenhouse.project.ProjectRepository;
+import greenhouse.util.DirectoryFilter;
 import greenhouse.util.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +33,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 /**
+ * TODO: Overhaul this documentation.
+ * 
  * Executes Features, Scenarios, Scenario Outlines, and individul Scenario
  * Outline Examples by:
  * 
@@ -52,55 +58,115 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessExecutor.class);
 
-    private final ExecutorService executorService = Executors.newScheduledThreadPool(8);
-    private final Map<TaskId, CucumberTask> tasks = new ConcurrentHashMap<TaskId, CucumberTask>();
+    /** Arbitrarily chosen small number of threads. */
+    private static final int NUM_THREADS = 4;
 
     /**
-     * Creates a new ScenarioExecutor. By default output is inherited from the
-     * current Process, which probably means output is directed to standard out.
-     * 
+     * The ExecutorService that executes the tasks associated with each
+     * Execution.
      */
-    public ProcessExecutor() {
+    private final ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+    /** Maps an ExecutionKey to its Execution. */
+    private final ConcurrentHashMap<ExecutionKey, Execution> tasks = new ConcurrentHashMap<ExecutionKey, Execution>(16, 0.75f, NUM_THREADS);
+    /** Maps a project key to that project's next execution number. */
+    private final Map<String, AtomicInteger> executionIds = new HashMap<String, AtomicInteger>();
+
+    /**
+     * Resets and reloads the stored project state.
+     * 
+     * @param repo
+     * @param projectsDir
+     */
+    public void reset(ProjectRepository repo, File projectsDir) {
+        tasks.clear();
+        executionIds.clear();
+
+        DirectoryFilter directoryFilter = new DirectoryFilter();
+        for (File file : projectsDir.listFiles(directoryFilter)) {
+            String projectKey = file.getName();
+            File executionsDirectory = Utils.file(file.getAbsolutePath(), "executions");
+            if (executionsDirectory.exists()) {
+                Project project = repo.getProjects().get(projectKey);
+                int max = 1;
+                for (File executionDir : executionsDirectory.listFiles(directoryFilter)) {
+                    int executionNumber = Integer.valueOf(executionDir.getName());
+                    Properties props = Utils.load(executionDir, "execution.properties");
+                    Execution execution = new Execution(project, executionNumber, ExecutionType.valueOf(props.getProperty("type")),
+                            props.getProperty("details"));
+
+                    execution.setCommand(props.getProperty("command"));
+                    execution.setEnd(Long.valueOf(props.getProperty("end", "0")));
+                    execution.setStart(Long.valueOf(props.getProperty("start", "0")));
+                    execution.setState(ExecutionState.COMPLETE);
+
+                    tasks.put(execution.getKey(), execution);
+                    max = Math.max(max, executionNumber);
+                }
+                AtomicInteger nextId = getNextId(project);
+                nextId.set(max + 1);
+                executionIds.put(projectKey, nextId);
+            }
+        }
+    }
+
+    private Execution nextExecution(Project project, ExecutionType type, String details) {
+        int id = getNextId(project).getAndIncrement();
+        return new Execution(project, id, type, details);
+    }
+
+    private AtomicInteger getNextId(Project project) {
+        synchronized (executionIds) {
+            String key = project.getKey();
+            AtomicInteger id = executionIds.get(key);
+            if (id == null) {
+                id = new AtomicInteger(1);
+                executionIds.put(key, id);
+            }
+            return id;
+        }
     }
 
     @Override
-    public TaskId execute(Project project, IndexedFeature feature) {
-        LOGGER.info("Executing " + project.getKey() + " feature " + feature.getName());
+    public ExecutionKey execute(Project project, IndexedFeature feature) {
+        LOGGER.info("Executing " + project.getKey() + " feature \"" + feature.getName() + "\"");
         return execute(project, feature, null, true);
     }
 
     @Override
-    public TaskId execute(Project project, String gherkin) {
+    public ExecutionKey execute(Project project, String gherkin) {
         LOGGER.info("Executing " + project.getKey() + " raw gherkin");
         return execute(project, null, gherkin, false);
     }
 
-    private TaskId execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
-        Execution execution = project.nextExecution();
-        if (useFeature) {
-            copyFeature(project, execution.getDirectory(), feature);
-        } else {
-            copyGherkin(project, execution.getDirectory(), gherkin);
-        }
+    @Override
+    public ExecutionKey execute(Project project, IndexedScenario scenario) {
+        LOGGER.info("Executing " + project.getKey() + " scenario \"" + scenario.getName() + "\"");
+        Execution execution = nextExecution(project, ExecutionType.SCENARIO, scenario.getName());
+        return executeWithLine(project, execution, scenario, -1);
+    }
+
+    @Override
+    public ExecutionKey executeExample(Project project, IndexedScenario outline, int line) {
+        LOGGER.info("Executing " + project.getKey() + " scenario outline \"" + outline.getName() + "\" line " + line);
+        Execution execution = nextExecution(project, ExecutionType.EXAMPLE, Integer.toString(line));
+        return executeWithLine(project, execution, outline, line);
+    }
+
+    private ExecutionKey executeWithLine(Project project, Execution execution, IndexedScenario scenario, int line) {
+        copyScenarios(project, execution.getExecutionDirectory(), scenario, line);
         return executeScenarios(project, execution);
     }
 
-    private void copyGherkin(Project project, File tempDir, String gherkin) {
-        try {
-            // Setup tagged destination file
-            File featureFile = file(tempDir.getPath(), "gherkin.feature");
-            Writer tempFile = new FileWriter(featureFile);
-
-            // Parse to copy source into destination
-            Parser parser = new Parser(new GreenhouseTagger(tempFile));
-            LOGGER.info("Copying raw gherkin into " + featureFile.getPath());
-            parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
-
-            tempFile.flush();
-            tempFile.close();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not copy gherkin", e);
+    private ExecutionKey execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
+        Execution execution;
+        if (useFeature) {
+            execution = nextExecution(project, ExecutionType.FEATURE, feature.getName());
+            copyFeature(project, execution.getExecutionDirectory(), feature);
+        } else {
+            execution = nextExecution(project, ExecutionType.GHERKIN, "");
+            copyGherkin(project, execution.getExecutionDirectory(), gherkin);
         }
+        return executeScenarios(project, execution);
     }
 
     private void copyFeature(Project project, File tempDir, IndexedFeature feature) {
@@ -125,28 +191,28 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
+    private void copyGherkin(Project project, File tempDir, String gherkin) {
+        try {
+            // Setup tagged destination file
+            File featureFile = file(tempDir.getPath(), "gherkin.feature");
+            Writer tempFile = new FileWriter(featureFile);
+
+            // Parse to copy source into destination
+            Parser parser = new Parser(new GreenhouseTagger(tempFile));
+            LOGGER.info("Copying raw gherkin into " + featureFile.getPath());
+            parser.parse(gherkin, featureFile.getAbsolutePath(), 0);
+
+            tempFile.flush();
+            tempFile.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not copy gherkin", e);
+        }
+    }
+
     private File tempFeatureFile(Project project, File tempDir, IndexedFeature feature) {
         String root = project.index().getFeaturesRoot().getAbsolutePath();
         String subPath = feature.getUri().substring(root.length() + 1);
         return file(tempDir.getPath(), subPath);
-    }
-
-    @Override
-    public TaskId execute(Project project, IndexedScenario scenario) {
-        LOGGER.info("Executing " + project.getKey() + " scenario " + scenario.getName());
-        return executeWithLine(project, scenario, -1);
-    }
-
-    @Override
-    public TaskId executeExample(Project project, IndexedScenario outline, int line) {
-        LOGGER.info("Executing " + project.getKey() + " scenario outline " + outline.getName() + " line " + line);
-        return executeWithLine(project, outline, line);
-    }
-
-    private TaskId executeWithLine(Project project, IndexedScenario scenario, int line) {
-        Execution exeuction = project.nextExecution();
-        copyScenarios(project, exeuction.getDirectory(), scenario, line);
-        return executeScenarios(project, exeuction);
     }
 
     private void copyScenarios(Project project, File tempDir, IndexedScenario scenario, int line) {
@@ -173,60 +239,77 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private TaskId executeScenarios(Project project, Execution execution) {
-        String features = "-Dcucumber.features=\"" + execution.getDirectory().getAbsolutePath() + "\"";
+    private ExecutionKey executeScenarios(Project project, final Execution execution) {
+        String features = "-Dcucumber.features=\"" + execution.getExecutionDirectory().getAbsolutePath() + "\"";
         String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
         String format = "-Dcucumber.format=html";
-        String out = "-Dcucumber.out=" + file(execution.getDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
+        String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
-        final File output = file(execution.getDirectory().getAbsolutePath(), "output.txt");
         try {
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
-            argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", output.getAbsolutePath()));
+            argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
 
-            LOGGER.info("Executing: " + Joiner.on(' ').join(builder.command()));
-            final TaskId taskId = new TaskId(project.getKey(), execution.getExecutionNumber());
+            String command = Joiner.on(' ').join(builder.command());
+            execution.setCommand(command);
+            LOGGER.info("Executing: " + command);
 
-            Future<String> submittedTask = executorService.submit(new Callable<String>() {
+            final ExecutionKey executionKey = execution.getKey();
+            Future<Void> task = executor.submit(new Callable<Void>() {
                 @Override
-                public String call() throws Exception {
-                    LOGGER.info("Running: " + taskId);
-                    builder.start().waitFor();
-                    String gherkin = Utils.readContents(output.getAbsolutePath());
-                    LOGGER.info("Complete: " + taskId);
-                    return gherkin;
+                public Void call() throws Exception {
+                    try {
+                        execution.setStart(System.currentTimeMillis());
+                        execution.setState(ExecutionState.RUNNING);
+                        save(execution);
+                        LOGGER.info("Running: " + executionKey);
+
+                        builder.start().waitFor();
+
+                        complete(execution);
+                        LOGGER.info("Task " + executionKey + " complete.");
+                    } catch (RuntimeException e) {
+                        complete(execution);
+                        LOGGER.error("Task " + executionKey + " threw error", e);
+                    }
+                    return null;
+                }
+
+                private void complete(final Execution execution) {
+                    execution.setEnd(System.currentTimeMillis());
+                    execution.setState(ExecutionState.COMPLETE);
+                    save(execution);
                 }
             });
-            tasks.put(taskId, new CucumberTask(output, submittedTask));
-            return taskId;
+
+            execution.setResult(task);
+            tasks.put(executionKey, execution);
+            return executionKey;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public String getOutput(TaskId taskId) {
-        try {
-            Future<String> gherkinFuture = tasks.get(taskId).getResult();
-            String gherkin = gherkinFuture.get();
-            tasks.remove(taskId);
-            return gherkin;
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to get resulting gherkin string", e);
-        }
+    private void save(Execution execution) {
+        final Properties props = new Properties();
+        props.setProperty("command", execution.getCommand());
+        props.setProperty("details", execution.getDetails());
+        props.setProperty("end", Long.toString(execution.getEnd()));
+        props.setProperty("type", execution.getType().name());
+        props.setProperty("start", Long.toString(execution.getStart()));
+
+        final File executionPropsFile = Utils.file(execution.getExecutionDirectory().getAbsolutePath(), "execution.properties");
+        Utils.save(executionPropsFile, props);
     }
 
     @Override
-    public String getPartialOutput(TaskId taskId) {
-        CucumberTask task = tasks.get(taskId);
-        File outputFile = task.getOutput();
-        return Utils.readContents(outputFile.getAbsolutePath());
+    public Execution getExecution(ExecutionKey taskId) {
+        return tasks.get(taskId);
     }
 
     @Override
-    public boolean isComplete(TaskId taskId) {
-        return tasks.get(taskId).getResult().isDone();
+    public Iterable<Execution> getAllExecutions() {
+        return tasks.values();
     }
 
 }

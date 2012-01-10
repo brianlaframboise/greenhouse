@@ -4,6 +4,7 @@ import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -88,7 +89,7 @@ public class TagsPage extends GreenhousePage {
         });
     }
 
-    private static class CountedTag {
+    private static class CountedTag implements Serializable {
         public final String name;
         public final Integer count;
 

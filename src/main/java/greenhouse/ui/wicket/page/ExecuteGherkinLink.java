@@ -1,6 +1,6 @@
 package greenhouse.ui.wicket.page;
 
-import greenhouse.execute.TaskId;
+import greenhouse.execute.ExecutionKey;
 
 import org.apache.wicket.model.IModel;
 
@@ -13,7 +13,7 @@ class ExecuteGherkinLink extends ExecutingLink {
     }
 
     @Override
-    protected TaskId execute() {
+    protected ExecutionKey execute() {
         return executor.execute(project(), gherkinModel.getObject());
     }
 }

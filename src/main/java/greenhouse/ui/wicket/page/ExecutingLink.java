@@ -1,7 +1,7 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.execute.ScenarioExecutor;
-import greenhouse.execute.TaskId;
+import greenhouse.execute.ExecutionKey;
 import greenhouse.index.Index;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
@@ -40,5 +40,5 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
         return repo.getProjects().get(projectKey);
     }
 
-    protected abstract TaskId execute();
+    protected abstract ExecutionKey execute();
 }

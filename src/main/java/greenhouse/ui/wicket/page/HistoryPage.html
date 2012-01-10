@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+<wicket:extend>
+
+<h3>History</h3>
+
+<div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>State</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Type</th>
+                <th>Details</th>
+                <th>Logs</th>
+                <th>Report</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr wicket:id='history'>
+                <td wicket:id='number'>[1]</td>
+                <td wicket:id='state'>[RUNNING]</td>
+                <td wicket:id='start'>[Start time]</td>
+                <td wicket:id='end'>[End time]</td>
+                <td wicket:id='type'>[FEATURE]</td>
+                <td wicket:id='details'>[Feature name]</td>
+                <td><a wicket:id='output' target="_blank">View</a></td>
+                <td><a wicket:id='report' target="_blank">View</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</wicket:extend>
+</body>
+</html>

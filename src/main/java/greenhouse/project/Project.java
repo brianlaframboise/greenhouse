@@ -5,11 +5,12 @@ import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.util.Locale;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 public class Project {
+
+    private static final Pattern KEY_PATTERN = Pattern.compile("^[A-Z]+$");
 
     private final String key;
     private final String name;
@@ -18,9 +19,11 @@ public class Project {
     private final Index index;
     private final FileSource fileSource;
     private final String command;
-    private int executions;
 
-    public Project(String key, String name, File root, String command, FileSource fileSource, int executions) {
+    public Project(String key, String name, File root, String command, FileSource fileSource) {
+        if (!KEY_PATTERN.matcher(key).matches()) {
+            throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
+        }
         this.key = key;
         this.name = name;
         this.root = root;
@@ -28,7 +31,6 @@ public class Project {
         index = new Indexer(key, files.getAbsolutePath()).index();
         this.command = command;
         this.fileSource = fileSource;
-        this.executions = executions;
     }
 
     /**
@@ -47,11 +49,7 @@ public class Project {
 
         FileSource fileSource = loadFileSource(root, project);
 
-        Properties state = Utils.load(root, "state.properties");
-        int executions = Integer.valueOf(state.getProperty("executions", "1"));
-
-        String key = root.getName().toLowerCase(Locale.ENGLISH);
-        return new Project(key, name, root, command, fileSource, executions);
+        return new Project(root.getName(), name, root, command, fileSource);
     }
 
     /**
@@ -84,67 +82,14 @@ public class Project {
         return fileSource;
     }
 
-    public void save() {
-        Properties props = new Properties();
-        props.setProperty("executions", Integer.toString(executions));
-
-        try {
-            FileWriter writer = new FileWriter(Utils.file(root.getAbsolutePath(), "state.properties"));
-            props.store(writer, null);
-            writer.close();
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to write " + name + " state properties file", e);
-        }
-    }
-
-    public synchronized Execution nextExecution() {
-        int taskId = executions++;
-        File results = Utils.file(root.getAbsolutePath(), "results", Integer.toString(taskId));
-        if (!results.mkdirs()) {
-            throw new RuntimeException("Could not create execution results directory: " + results.getAbsolutePath());
-        }
-        save();
-        return new Execution(key, taskId, results);
-    }
-
     public void update() {
         fileSource.update();
     }
 
     public void clearHistory() {
-        File results = Utils.file(root.getAbsolutePath(), "results");
+        File results = Utils.file(root.getAbsolutePath(), "executions");
         if (results.exists()) {
             Utils.delete(results);
-        }
-        File state = Utils.file(root.getAbsolutePath(), "state.properties");
-        if (state.exists()) {
-            Utils.delete(state);
-        }
-        executions = 1;
-    }
-
-    public static class Execution {
-
-        private final String projectKey;
-        private final int executionNumber;
-        private final File directory;
-
-        public Execution(String projectKey, int executionNumber, File directory) {
-            this.projectKey = projectKey;
-            this.executionNumber = executionNumber;
-            this.directory = directory;
-        }
-
-        public String getProjectKey() {
-            return projectKey;
-        }
-
-        public int getExecutionNumber() {
-            return executionNumber;
-        }
-
-        public File getDirectory() {
-            return directory;
         }
     }
 

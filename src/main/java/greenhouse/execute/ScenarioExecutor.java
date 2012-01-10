@@ -6,17 +6,15 @@ import greenhouse.project.Project;
 
 public interface ScenarioExecutor {
 
-    TaskId execute(Project project, IndexedFeature feature);
+    ExecutionKey execute(Project project, IndexedFeature feature);
 
-    TaskId execute(Project project, IndexedScenario scenario);
+    ExecutionKey execute(Project project, IndexedScenario scenario);
 
-    TaskId executeExample(Project project, IndexedScenario outline, int line);
+    ExecutionKey executeExample(Project project, IndexedScenario outline, int line);
 
-    TaskId execute(Project project, String gherkin);
+    ExecutionKey execute(Project project, String gherkin);
 
-    String getOutput(TaskId taskId);
+    Execution getExecution(ExecutionKey executionKey);
 
-    String getPartialOutput(TaskId taskId);
-
-    boolean isComplete(TaskId taskId);
+    Iterable<Execution> getAllExecutions();
 }

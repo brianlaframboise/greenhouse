@@ -1,30 +1,21 @@
 package greenhouse.project;
 
+import greenhouse.util.DirectoryFilter;
+
 import java.io.File;
-import java.io.FileFilter;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
 public class PropsProjectRepository implements ProjectRepository {
 
-    private ImmutableMap<String, Project> projects;
+    private ImmutableMap<String, Project> projects = ImmutableMap.<String, Project> of();
 
     public PropsProjectRepository(File projectsDir) {
-        File[] directories = projectsDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
+        File[] directories = projectsDir.listFiles(new DirectoryFilter());
 
-        Map<String, Project> projectsMap = new HashMap<String, Project>();
         for (File root : directories) {
-            Project project = Project.load(root);
-            projectsMap.put(project.getKey(), project);
+            add(Project.load(root));
         }
-        projects = ImmutableMap.copyOf(projectsMap);
     }
 
     @Override
@@ -34,7 +25,6 @@ public class PropsProjectRepository implements ProjectRepository {
 
     @Override
     public void add(Project project) {
-        project.save();
         projects = ImmutableMap.<String, Project> builder().putAll(projects).put(project.getKey(), project).build();
     }
 

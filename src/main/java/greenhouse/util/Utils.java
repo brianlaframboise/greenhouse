@@ -4,6 +4,7 @@ import gherkin.util.FixJava;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -13,6 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 
+/**
+ * Miscellaneous utilities for dealing with files, maven, and properties.
+ */
 public class Utils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
@@ -68,6 +72,16 @@ public class Utils {
             }
         }
         return properties;
+    }
+
+    public static void save(File file, Properties props) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            props.store(writer, null);
+            writer.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to save properties to " + file, e);
+        }
     }
 
     /**

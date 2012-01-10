@@ -1,20 +1,32 @@
 package greenhouse.execute;
 
-public class TaskId {
+import java.io.Serializable;
+
+/**
+ * A symbolic key representative of a single Cucumber execution in a given
+ * Project.
+ */
+public class ExecutionKey implements Serializable {
 
     private final String projectKey;
     private final int executionNumber;
 
-    public TaskId(String projectKey, int execution) {
+    /**
+     * Creates a new ExecutionKey.
+     * 
+     * @param projectKey The key to the associated Project.
+     * @param executionNumber The unique execution number for this execution.
+     */
+    public ExecutionKey(String projectKey, int executionNumber) {
         this.projectKey = projectKey;
-        executionNumber = execution;
+        this.executionNumber = executionNumber;
     }
 
     public String getProjectKey() {
         return projectKey;
     }
 
-    public int getExecution() {
+    public int getNumber() {
         return executionNumber;
     }
 
@@ -38,7 +50,7 @@ public class TaskId {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        TaskId other = (TaskId) obj;
+        ExecutionKey other = (ExecutionKey) obj;
         if (executionNumber != other.executionNumber) {
             return false;
         }

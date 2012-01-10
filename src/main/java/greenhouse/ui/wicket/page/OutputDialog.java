@@ -1,7 +1,9 @@
 package greenhouse.ui.wicket.page;
 
+import greenhouse.execute.Execution;
 import greenhouse.execute.ScenarioExecutor;
-import greenhouse.execute.TaskId;
+import greenhouse.execute.ExecutionKey;
+import greenhouse.execute.ExecutionState;
 
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -43,7 +45,7 @@ public class OutputDialog extends Panel {
         });
     }
 
-    public void begin(final TaskId taskId, AjaxRequestTarget target) {
+    public void begin(final ExecutionKey executionKey, AjaxRequestTarget target) {
         progress.setDefaultModelObject("Preparing...");
         output.setDefaultModelObject("");
         final long startTime = System.currentTimeMillis();
@@ -53,12 +55,11 @@ public class OutputDialog extends Panel {
                 String outputText = "";
                 long runtime = (System.currentTimeMillis() - startTime) / 1000;
                 String prefix = "Running...";
-                if (executor.isComplete(taskId)) {
-                    outputText = executor.getOutput(taskId);
+                Execution task = executor.getExecution(executionKey);
+                outputText = task.getOutput();
+                if (task.getState() == ExecutionState.COMPLETE) {
                     prefix = "Complete!";
                     stop();
-                } else {
-                    outputText = executor.getPartialOutput(taskId);
                 }
                 progress.setDefaultModelObject(prefix + " (" + runtime + "s)");
                 output.setDefaultModelObject(outputText);

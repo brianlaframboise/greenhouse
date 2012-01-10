@@ -20,7 +20,7 @@ public class PropsProjectRepositoryTest {
         ImmutableMap<String, Project> projects = repository.getProjects();
         assertEquals(1, projects.size());
 
-        Project project = projects.get("hello-world");
+        Project project = projects.get("HELLO");
         assertNotNull(project);
         assertEquals("Hello World Example Project", project.getName());
         assertFalse(project.getRoot().getAbsolutePath().equals(""));

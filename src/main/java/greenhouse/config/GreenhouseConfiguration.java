@@ -24,6 +24,8 @@ public class GreenhouseConfiguration {
 
     @Bean
     public ScenarioExecutor scenarioExecutor() {
-        return new ProcessExecutor();
+        ProcessExecutor executor = new ProcessExecutor();
+        executor.reset(projectRepository(), projects);
+        return executor;
     }
 }
