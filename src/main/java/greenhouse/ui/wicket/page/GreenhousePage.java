@@ -9,8 +9,6 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import com.google.common.collect.ImmutableMap;
-
 public class GreenhousePage extends WebPage {
 
     @SpringBean
@@ -36,9 +34,7 @@ public class GreenhousePage extends WebPage {
     }
 
     protected Project project() {
-        ImmutableMap<String, Project> projects = repo.getProjects();
-        Project project = projects.get(getProjectKey());
-        return project;
+        return repo.getProject(getProjectKey());
     }
 
 }

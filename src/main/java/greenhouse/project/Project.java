@@ -8,6 +8,9 @@ import java.io.File;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
 public class Project {
 
     private static final Pattern KEY_PATTERN = Pattern.compile("^[A-Z]+$");
@@ -18,9 +21,9 @@ public class Project {
     private final File files;
     private final Index index;
     private final FileSource fileSource;
-    private final String command;
+    private final ImmutableMap<String, String> commands;
 
-    public Project(String key, String name, File root, String command, FileSource fileSource) {
+    public Project(String key, String name, File root, ImmutableMap<String, String> commands, FileSource fileSource) {
         if (!KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
         }
@@ -29,7 +32,7 @@ public class Project {
         this.root = root;
         files = Utils.file(root.getAbsolutePath(), "files");
         index = new Indexer(key, files.getAbsolutePath()).index();
-        this.command = command;
+        this.commands = commands;
         this.fileSource = fileSource;
     }
 
@@ -43,13 +46,11 @@ public class Project {
      */
     public static Project load(File root) {
         Properties project = Utils.load(root, "project.properties");
-
-        String name = project.getProperty("name");
-        String command = project.getProperty("command");
-
         FileSource fileSource = loadFileSource(root, project);
+        String name = project.getProperty("name");
 
-        return new Project(root.getName(), name, root, command, fileSource);
+        ImmutableMap<String, String> commands = Maps.fromProperties(Utils.load(root, "commands.properties"));
+        return new Project(root.getName(), name, root, commands, fileSource);
     }
 
     /**
@@ -109,8 +110,8 @@ public class Project {
         return fileSource.getDirectory();
     }
 
-    public String getCommand() {
-        return command;
+    public ImmutableMap<String, String> getCommands() {
+        return commands;
     }
 
     public Index index() {

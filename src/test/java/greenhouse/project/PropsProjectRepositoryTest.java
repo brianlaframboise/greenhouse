@@ -9,7 +9,7 @@ import java.io.File;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 
 public class PropsProjectRepositoryTest {
 
@@ -17,10 +17,10 @@ public class PropsProjectRepositoryTest {
     public void load() {
         File repo = new File(TestUtils.DEMO_PROJECTS);
         PropsProjectRepository repository = new PropsProjectRepository(repo);
-        ImmutableMap<String, Project> projects = repository.getProjects();
+        ImmutableList<Project> projects = ImmutableList.copyOf(repository.getAllProjects());
         assertEquals(1, projects.size());
 
-        Project project = projects.get("HELLO");
+        Project project = projects.get(0);
         assertNotNull(project);
         assertEquals("Hello World Example Project", project.getName());
         assertFalse(project.getRoot().getAbsolutePath().equals(""));

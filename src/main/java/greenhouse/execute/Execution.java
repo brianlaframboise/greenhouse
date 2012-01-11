@@ -1,7 +1,6 @@
 package greenhouse.execute;
 
 import static greenhouse.util.Utils.file;
-import greenhouse.project.Project;
 import greenhouse.util.Utils;
 
 import java.io.File;
@@ -11,14 +10,11 @@ import java.util.concurrent.Future;
  * An execution of Cucumber against a given Project.
  */
 public class Execution {
+
+    private final ExecutionRequest request;
+
     /** The symbolic key for this execution. */
     private final ExecutionKey key;
-    /** The type of Cucumber execution this task peforms. */
-    private final ExecutionType type;
-    /** Furthur information specific to the execution type of this task. */
-    private final String details;
-    /** The command line that, when executed, performs this task. */
-    private String command;
 
     /**
      * The directory into which all input for this execution is placed and all
@@ -35,6 +31,8 @@ public class Execution {
     /** The Future tied to this execution. */
     private Future<Void> result;
 
+    /** The actual command used to perform this task. */
+    private String command;
     /** The time at which the task started. */
     private long start = 0;
     /** The time at which the task completed, either successfully or in error. */
@@ -42,19 +40,14 @@ public class Execution {
     /** The current state of this task. */
     private ExecutionState state = ExecutionState.PENDING;
 
-    public Execution(Project project, int executionNumber, ExecutionType type, String details) {
-        key = new ExecutionKey(project.getKey(), executionNumber);
-        this.type = type;
-        this.details = details;
-        executionDirectory = Utils.file(project.getRoot().getAbsolutePath(), "executions", Integer.toString(executionNumber));
+    public Execution(ExecutionRequest request, File projectRootDir, int executionNumber) {
+        this.request = request;
+        key = new ExecutionKey(request.getProjectKey(), executionNumber);
+        executionDirectory = Utils.file(projectRootDir.getAbsolutePath(), "executions", Integer.toString(executionNumber));
         if (!executionDirectory.exists() && !executionDirectory.mkdirs()) {
             throw new RuntimeException("Could not create execution directory for " + key);
         }
         outputFile = file(executionDirectory.getAbsolutePath(), "output.txt");
-    }
-
-    public String getCommand() {
-        return command;
     }
 
     /**
@@ -111,7 +104,11 @@ public class Execution {
     }
 
     public String getDetails() {
-        return details;
+        return "TODO";
+    }
+
+    public String getCommand() {
+        return command;
     }
 
     public long getEnd() {
@@ -120,6 +117,30 @@ public class Execution {
 
     public ExecutionKey getKey() {
         return key;
+    }
+
+    public String getCommandKey() {
+        return request.getCommandKey();
+    }
+
+    public String getFeatureName() {
+        return request.getFeature();
+    }
+
+    public String getScenarioName() {
+        return request.getScenario();
+    }
+
+    public ExecutionType getType() {
+        return request.getType();
+    }
+
+    public int getExampleLine() {
+        return request.getLine();
+    }
+
+    public String getGherkin() {
+        return request.getGherkin();
     }
 
     public File getOutputFile() {
@@ -140,10 +161,6 @@ public class Execution {
 
     public ExecutionState getState() {
         return state;
-    }
-
-    public ExecutionType getType() {
-        return type;
     }
 
     void setCommand(String command) {

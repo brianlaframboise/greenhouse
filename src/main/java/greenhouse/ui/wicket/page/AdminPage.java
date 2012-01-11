@@ -18,7 +18,7 @@ public class AdminPage extends GreenhousePage {
         add(new AjaxFallbackLink<Void>("clearAllHistory") {
             @Override
             public void onClick(AjaxRequestTarget target) {
-                for (Project project : repo.getProjects().values()) {
+                for (Project project : repo.getAllProjects()) {
                     project.clearHistory();
                 }
             }

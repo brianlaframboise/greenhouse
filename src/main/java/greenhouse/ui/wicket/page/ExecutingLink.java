@@ -1,7 +1,7 @@
 package greenhouse.ui.wicket.page;
 
-import greenhouse.execute.ScenarioExecutor;
 import greenhouse.execute.ExecutionKey;
+import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.Index;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
@@ -18,7 +18,7 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
     @SpringBean
     protected ScenarioExecutor executor;
 
-    private final String projectKey;
+    protected final String projectKey;
     private final OutputDialog dialog;
 
     public ExecutingLink(String id, String projectKey, OutputDialog dialog) {
@@ -37,7 +37,11 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
     }
 
     protected Project project() {
-        return repo.getProjects().get(projectKey);
+        return repo.getProject(projectKey);
+    }
+
+    protected String commandKey() {
+        return "default";
     }
 
     protected abstract ExecutionKey execute();

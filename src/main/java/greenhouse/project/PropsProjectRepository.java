@@ -19,8 +19,13 @@ public class PropsProjectRepository implements ProjectRepository {
     }
 
     @Override
-    public ImmutableMap<String, Project> getProjects() {
-        return projects;
+    public Project getProject(String projectKey) {
+        return projects.get(projectKey);
+    }
+
+    @Override
+    public Iterable<Project> getAllProjects() {
+        return projects.values();
     }
 
     @Override

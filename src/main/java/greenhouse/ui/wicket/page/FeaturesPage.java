@@ -1,6 +1,7 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.execute.ExecutionKey;
+import greenhouse.execute.ExecutionRequest;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
@@ -218,8 +219,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            IndexedFeature feature = index().featureByName(name);
-            return executor.execute(project(), feature);
+            return executor.execute(ExecutionRequest.feature(projectKey, commandKey(), name));
         }
     }
 
@@ -234,8 +234,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            IndexedScenario scenario = index().scenarioByName(name);
-            return executor.execute(project(), scenario);
+            return executor.execute(ExecutionRequest.scenario(projectKey, commandKey(), name));
         }
     }
 
@@ -252,8 +251,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            IndexedScenario scenario = index().scenarioByName(name);
-            return executor.executeExample(project(), scenario, line);
+            return executor.execute(ExecutionRequest.example(projectKey, commandKey(), name, line));
         }
     }
 

@@ -5,9 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import greenhouse.TestUtils;
-import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
+import greenhouse.project.PropsProjectRepository;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,9 @@ public class ProcessExecutorTest {
     @BeforeClass
     public static void build_index() {
         project = Project.load(new File(TestUtils.HELLO_WORLD_PROJECT));
-        executor = new ProcessExecutor();
+        File repo = new File(TestUtils.DEMO_PROJECTS);
+        PropsProjectRepository repository = new PropsProjectRepository(repo);
+        executor = new ProcessExecutor(repository);
     }
 
     @After
@@ -36,9 +38,8 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_feature() {
-        IndexedFeature feature = project.index().featureByName("Hello World Feature");
-
-        ExecutionKey executionKey = executor.execute(project, feature);
+        ExecutionRequest request = ExecutionRequest.feature(project.getKey(), "default", "Hello World Feature");
+        ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
         assertTrue(output.contains("3 scenarios (3 passed)"));
@@ -52,7 +53,8 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionKey executionKey = executor.execute(project, scenario);
+        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), "default", scenario.getName());
+        ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
         assertTrue(output.contains("@hello @world @greenhouse"));
@@ -66,7 +68,8 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionKey executionKey = executor.execute(project, scenario);
+        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), "default", scenario.getName());
+        ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -80,7 +83,8 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionKey executionKey = executor.executeExample(project, scenario, 21);
+        ExecutionRequest request = ExecutionRequest.example(project.getKey(), "default", scenario.getName(), 21);
+        ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
         assertTrue(output.contains("@goodbye @world @greenhouse"));
@@ -94,8 +98,10 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_gherkin() {
-        ExecutionKey executionKey = executor.execute(project, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n" + "\t\tGiven the Action is Hello\n"
-                + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
+        ExecutionRequest request = ExecutionRequest.gherkin(project.getKey(), "default", "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n"
+                + "\t\tGiven the Action is Hello\n" + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
+
+        ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
         assertTrue(output.contains("1 scenario (1 passed)"));

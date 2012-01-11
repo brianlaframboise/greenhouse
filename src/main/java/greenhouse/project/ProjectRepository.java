@@ -1,10 +1,10 @@
 package greenhouse.project;
 
-import com.google.common.collect.ImmutableMap;
-
 public interface ProjectRepository {
 
-    ImmutableMap<String, Project> getProjects();
+    Iterable<Project> getAllProjects();
+
+    Project getProject(String projectKey);
 
     void add(Project project);
 }

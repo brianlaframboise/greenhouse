@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -71,13 +72,19 @@ public class ProcessExecutor implements ScenarioExecutor {
     /** Maps a project key to that project's next execution number. */
     private final Map<String, AtomicInteger> executionIds = new HashMap<String, AtomicInteger>();
 
+    private final ProjectRepository repository;
+
+    public ProcessExecutor(ProjectRepository repository) {
+        this.repository = repository;
+    }
+
     /**
      * Resets and reloads the stored project state.
      * 
      * @param repo
      * @param projectsDir
      */
-    public void reset(ProjectRepository repo, File projectsDir) {
+    public void reset(File projectsDir) {
         tasks.clear();
         executionIds.clear();
 
@@ -86,13 +93,25 @@ public class ProcessExecutor implements ScenarioExecutor {
             String projectKey = file.getName();
             File executionsDirectory = Utils.file(file.getAbsolutePath(), "executions");
             if (executionsDirectory.exists()) {
-                Project project = repo.getProjects().get(projectKey);
+                Project project = repository.getProject(projectKey);
                 int max = 1;
                 for (File executionDir : executionsDirectory.listFiles(directoryFilter)) {
                     int executionNumber = Integer.valueOf(executionDir.getName());
                     Properties props = Utils.load(executionDir, "execution.properties");
-                    Execution execution = new Execution(project, executionNumber, ExecutionType.valueOf(props.getProperty("type")),
-                            props.getProperty("details"));
+
+                    ExecutionType type = ExecutionType.valueOf(props.getProperty("type"));
+                    ExecutionRequest request = null;
+                    if (type == ExecutionType.FEATURE) {
+                        request = ExecutionRequest.feature(projectKey, "", props.getProperty("feature"));
+                    } else if (type == ExecutionType.SCENARIO) {
+                        request = ExecutionRequest.scenario(projectKey, "", props.getProperty("scenario"));
+                    } else if (type == ExecutionType.EXAMPLE) {
+                        request = ExecutionRequest.example(projectKey, "", props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
+                    } else if (type == ExecutionType.GHERKIN) {
+                        request = ExecutionRequest.gherkin(projectKey, "", props.getProperty("gherkin"));
+                    }
+
+                    Execution execution = new Execution(request, project.getRoot(), executionNumber);
 
                     execution.setCommand(props.getProperty("command"));
                     execution.setEnd(Long.valueOf(props.getProperty("end", "0")));
@@ -109,9 +128,9 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private Execution nextExecution(Project project, ExecutionType type, String details) {
-        int id = getNextId(project).getAndIncrement();
-        return new Execution(project, id, type, details);
+    private Execution nextExecution(ExecutionRequest request, Project project) {
+        int number = getNextId(project).getAndIncrement();
+        return new Execution(request, project.getRoot(), number);
     }
 
     private AtomicInteger getNextId(Project project) {
@@ -127,44 +146,49 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     @Override
-    public ExecutionKey execute(Project project, IndexedFeature feature) {
-        LOGGER.info("Executing " + project.getKey() + " feature \"" + feature.getName() + "\"");
-        return execute(project, feature, null, true);
+    public ExecutionKey execute(ExecutionRequest request) {
+        ExecutionType type = request.getType();
+        String projectKey = request.getProjectKey();
+        Project project = repository.getProject(projectKey);
+        if (ExecutionType.FEATURE == type) {
+
+            IndexedFeature feature = project.index().featureByName(request.getFeature());
+            LOGGER.info("Executing " + project.getKey() + " feature \"" + feature.getName() + "\"");
+            return execute(request, project, true);
+
+        } else if (ExecutionType.GHERKIN == type) {
+
+            LOGGER.info("Executing " + project.getKey() + " raw gherkin");
+            return execute(request, project, false);
+
+        } else if (ExecutionType.SCENARIO == type) {
+
+            IndexedScenario scenario = project.index().scenarioByName(request.getScenario());
+            LOGGER.info("Executing " + project.getKey() + " scenario \"" + scenario.getName() + "\"");
+            Execution execution = nextExecution(request, project);
+            return executeWithLine(project, execution, scenario, -1);
+
+        } else if (ExecutionType.EXAMPLE == type) {
+
+            IndexedScenario outline = project.index().scenarioByName(request.getScenario());
+            int line = request.getLine();
+            LOGGER.info("Executing " + project.getKey() + " scenario outline \"" + outline.getName() + "\" line " + line);
+            Execution execution = nextExecution(request, project);
+            return executeWithLine(project, execution, outline, line);
+
+        }
+        return null;
     }
 
-    @Override
-    public ExecutionKey execute(Project project, String gherkin) {
-        LOGGER.info("Executing " + project.getKey() + " raw gherkin");
-        return execute(project, null, gherkin, false);
-    }
-
-    @Override
-    public ExecutionKey execute(Project project, IndexedScenario scenario) {
-        LOGGER.info("Executing " + project.getKey() + " scenario \"" + scenario.getName() + "\"");
-        Execution execution = nextExecution(project, ExecutionType.SCENARIO, scenario.getName());
-        return executeWithLine(project, execution, scenario, -1);
-    }
-
-    @Override
-    public ExecutionKey executeExample(Project project, IndexedScenario outline, int line) {
-        LOGGER.info("Executing " + project.getKey() + " scenario outline \"" + outline.getName() + "\" line " + line);
-        Execution execution = nextExecution(project, ExecutionType.EXAMPLE, Integer.toString(line));
-        return executeWithLine(project, execution, outline, line);
-    }
-
-    private ExecutionKey executeWithLine(Project project, Execution execution, IndexedScenario scenario, int line) {
-        copyScenarios(project, execution.getExecutionDirectory(), scenario, line);
-        return executeScenarios(project, execution);
-    }
-
-    private ExecutionKey execute(Project project, IndexedFeature feature, String gherkin, boolean useFeature) {
+    private ExecutionKey execute(ExecutionRequest request, Project project, boolean useFeature) {
         Execution execution;
         if (useFeature) {
-            execution = nextExecution(project, ExecutionType.FEATURE, feature.getName());
+            execution = nextExecution(request, project);
+            IndexedFeature feature = project.index().featureByName(request.getFeature());
             copyFeature(project, execution.getExecutionDirectory(), feature);
         } else {
-            execution = nextExecution(project, ExecutionType.GHERKIN, "");
-            copyGherkin(project, execution.getExecutionDirectory(), gherkin);
+            execution = nextExecution(request, project);
+            copyGherkin(project, execution.getExecutionDirectory(), request.getGherkin());
         }
         return executeScenarios(project, execution);
     }
@@ -215,6 +239,11 @@ public class ProcessExecutor implements ScenarioExecutor {
         return file(tempDir.getPath(), subPath);
     }
 
+    private ExecutionKey executeWithLine(Project project, Execution execution, IndexedScenario scenario, int line) {
+        copyScenarios(project, execution.getExecutionDirectory(), scenario, line);
+        return executeScenarios(project, execution);
+    }
+
     private void copyScenarios(Project project, File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
@@ -246,13 +275,14 @@ public class ProcessExecutor implements ScenarioExecutor {
         String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
         try {
-            ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(project.getCommand()));
+            String command = project.getCommands().get(execution.getCommandKey());
+            ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(command));
             argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
 
-            String command = Joiner.on(' ').join(builder.command());
-            execution.setCommand(command);
-            LOGGER.info("Executing: " + command);
+            String builderCommand = Joiner.on(' ').join(builder.command());
+            execution.setCommand(builderCommand);
+            LOGGER.info("Executing: " + builderCommand);
 
             final ExecutionKey executionKey = execution.getKey();
             Future<Void> task = executor.submit(new Callable<Void>() {
@@ -263,14 +293,18 @@ public class ProcessExecutor implements ScenarioExecutor {
                         execution.setState(ExecutionState.RUNNING);
                         save(execution);
                         LOGGER.info("Running: " + executionKey);
-
+                        builder.redirectErrorStream(true);
                         builder.start().waitFor();
 
                         complete(execution);
                         LOGGER.info("Task " + executionKey + " complete.");
                     } catch (RuntimeException e) {
-                        complete(execution);
-                        LOGGER.error("Task " + executionKey + " threw error", e);
+                        try {
+                            complete(execution);
+                            LOGGER.error("Task " + executionKey + " threw error", e);
+                        } catch (RuntimeException e2) {
+                            LOGGER.error("Error while handling error", e2);
+                        }
                     }
                     return null;
                 }
@@ -292,10 +326,15 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     private void save(Execution execution) {
         final Properties props = new Properties();
-        props.setProperty("command", execution.getCommand());
-        props.setProperty("details", execution.getDetails());
-        props.setProperty("end", Long.toString(execution.getEnd()));
+
         props.setProperty("type", execution.getType().name());
+        props.setProperty("feature", String.valueOf(execution.getFeatureName()));
+        props.setProperty("scenario", String.valueOf(execution.getScenarioName()));
+        props.setProperty("line", Integer.toString(execution.getExampleLine()));
+        props.setProperty("gherkin", String.valueOf(execution.getGherkin()));
+
+        props.setProperty("command", execution.getCommand());
+        props.setProperty("end", Long.toString(execution.getEnd()));
         props.setProperty("start", Long.toString(execution.getStart()));
 
         final File executionPropsFile = Utils.file(execution.getExecutionDirectory().getAbsolutePath(), "execution.properties");
@@ -309,7 +348,7 @@ public class ProcessExecutor implements ScenarioExecutor {
 
     @Override
     public Iterable<Execution> getAllExecutions() {
-        return tasks.values();
+        return Iterables.unmodifiableIterable(tasks.values());
     }
 
 }

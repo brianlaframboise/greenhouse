@@ -24,14 +24,14 @@ public class ProjectsPage extends GreenhousePage {
     private final class ProjectsListModel extends AbstractReadOnlyModel<List<Project>> {
         @Override
         public List<Project> getObject() {
-            return ImmutableList.copyOf(repo.getProjects().values());
+            return ImmutableList.copyOf(repo.getAllProjects());
         }
     }
 
     public ProjectsPage(PageParameters params) {
         if (params != null) {
             String key = params.getString("0", "");
-            Project project = repo.getProjects().get(key);
+            Project project = repo.getProject(key);
             if (project != null) {
                 String page = params.getString("1", "");
                 if (page.equals("features")) {

@@ -1,20 +1,33 @@
 package greenhouse.execute;
 
-import greenhouse.index.IndexedFeature;
-import greenhouse.index.IndexedScenario;
-import greenhouse.project.Project;
-
 public interface ScenarioExecutor {
 
-    ExecutionKey execute(Project project, IndexedFeature feature);
+    /**
+     * Creates and schedules an Execution to be performed as soon as possible.
+     * 
+     * @param request The request from which an Execution can be created, once
+     *            scheduled
+     * @return the ExecutionKey that can be used to retrieve and monitor the
+     *         Execution
+     */
+    ExecutionKey execute(ExecutionRequest request);
 
-    ExecutionKey execute(Project project, IndexedScenario scenario);
-
-    ExecutionKey executeExample(Project project, IndexedScenario outline, int line);
-
-    ExecutionKey execute(Project project, String gherkin);
-
+    /**
+     * Returns the Execution associated with the given key. Note that the state
+     * of this Execution may be modified after it has been returned.
+     * 
+     * @param executionKey The key matching an Execution
+     * @return the associated execution or null if no Execution exists for the
+     *         given key
+     */
     Execution getExecution(ExecutionKey executionKey);
 
+    /**
+     * Returns all Executions, past and present, that have been scheduled by
+     * this executor. The state of any Execution contained within may continue
+     * to change after this method returns.
+     * 
+     * @return all executions known to this executor
+     */
     Iterable<Execution> getAllExecutions();
 }
