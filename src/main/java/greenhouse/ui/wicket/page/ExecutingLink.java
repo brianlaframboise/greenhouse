@@ -5,9 +5,11 @@ import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.Index;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
+import greenhouse.ui.wicket.WicketUtils;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxFallbackLink;
+import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
@@ -40,8 +42,13 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
         return repo.getProject(projectKey);
     }
 
-    protected String commandKey() {
-        return "default";
+    protected String contextKey() {
+        Project project = project();
+        String contextKey = WicketUtils.getContextKey(getWebRequest(), project);
+        if (contextKey == null) {
+            WicketUtils.addContextKey(getWebRequest(), (WebResponse) getResponse(), project, project.getContexts().keySet().iterator().next());
+        }
+        return contextKey;
     }
 
     protected abstract ExecutionKey execute();

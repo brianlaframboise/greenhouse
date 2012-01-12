@@ -29,7 +29,7 @@ import com.google.common.collect.Multiset;
  * Displays tags and their associated Features and Scenarios.
  */
 @MountIndexedParam
-public class TagsPage extends GreenhousePage {
+public class TagsPage extends BaseProjectPage {
 
     public TagsPage(PageParameters params) {
         super(params);

@@ -5,13 +5,21 @@ import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class Project {
+
+    public static final String DEFAULT_COMMAND_KEY = "default";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Project.class);
 
     private static final Pattern KEY_PATTERN = Pattern.compile("^[A-Z]+$");
 
@@ -21,9 +29,9 @@ public class Project {
     private final File files;
     private final Index index;
     private final FileSource fileSource;
-    private final ImmutableMap<String, String> commands;
+    private final ImmutableMap<String, Context> contexts;
 
-    public Project(String key, String name, File root, ImmutableMap<String, String> commands, FileSource fileSource) {
+    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
         if (!KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
         }
@@ -32,7 +40,7 @@ public class Project {
         this.root = root;
         files = Utils.file(root.getAbsolutePath(), "files");
         index = new Indexer(key, files.getAbsolutePath()).index();
-        this.commands = commands;
+        this.contexts = contexts;
         this.fileSource = fileSource;
     }
 
@@ -49,8 +57,17 @@ public class Project {
         FileSource fileSource = loadFileSource(root, project);
         String name = project.getProperty("name");
 
-        ImmutableMap<String, String> commands = Maps.fromProperties(Utils.load(root, "commands.properties"));
-        return new Project(root.getName(), name, root, commands, fileSource);
+        ImmutableMap<String, String> commands = Maps.fromProperties(Utils.load(root, "contexts.properties"));
+        int i = 1;
+        String key;
+        Map<String, Context> contexts = Maps.newHashMap();
+        while ((key = commands.get(i + ".key")) != null) {
+            String contextName = commands.get(i + ".name");
+            String command = commands.get(i + ".command");
+            contexts.put(key, new Context(key, contextName, command));
+            i++;
+        }
+        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
     }
 
     /**
@@ -88,9 +105,14 @@ public class Project {
     }
 
     public void clearHistory() {
-        File results = Utils.file(root.getAbsolutePath(), "executions");
-        if (results.exists()) {
-            Utils.delete(results);
+        try {
+            File results = Utils.file(root.getAbsolutePath(), "executions");
+            if (results.exists()) {
+                Utils.delete(results);
+            }
+            LOGGER.info("History cleared for project " + key);
+        } catch (RuntimeException e) {
+            LOGGER.error("Unable to clear history for project " + key, e);
         }
     }
 
@@ -110,8 +132,8 @@ public class Project {
         return fileSource.getDirectory();
     }
 
-    public ImmutableMap<String, String> getCommands() {
-        return commands;
+    public ImmutableMap<String, Context> getContexts() {
+        return contexts;
     }
 
     public Index index() {

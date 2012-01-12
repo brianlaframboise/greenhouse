@@ -4,6 +4,8 @@ import greenhouse.execute.Execution;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionState;
 import greenhouse.execute.ScenarioExecutor;
+import greenhouse.project.Context;
+import greenhouse.project.Project;
 import greenhouse.ui.wicket.WicketUtils;
 
 import java.util.Collections;
@@ -27,7 +29,7 @@ import org.wicketstuff.annotation.strategy.MountIndexedParam;
 import com.google.common.collect.Lists;
 
 @MountIndexedParam
-public class HistoryPage extends GreenhousePage {
+public class HistoryPage extends BaseProjectPage {
 
     @SpringBean
     private ScenarioExecutor executor;
@@ -83,8 +85,14 @@ public class HistoryPage extends GreenhousePage {
 
                 item.add(new Label("state", state.name()));
                 item.add(new Label("start", Model.of(new Date(execution.getStart()))));
+
                 long end = execution.getEnd();
                 item.add(new Label("end", end == 0 ? Model.of("-") : Model.of(new Date(end))));
+
+                Project project = repo.getProject(projectKey);
+                Context context = project.getContexts().get(execution.getContextKey());
+                item.add(new Label("environment", context.getName()));
+
                 item.add(new Label("type", Model.of(execution.getType().name())));
                 item.add(new Label("details", execution.getDetails()));
                 item.add(new BookmarkablePageLink<Void>("output", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "output")));

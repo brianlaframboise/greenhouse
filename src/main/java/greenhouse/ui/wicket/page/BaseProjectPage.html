@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+<wicket:extend>
+
+<wicket:container wicket:id='base'>
+	<h3 wicket:id='name'>Projects</h3>
+	
+	<div>
+		<ul>
+			<li><a wicket:id='features'>Features</a></li>
+			<li><a wicket:id='tags'>Tags</a></li>
+			<li><a wicket:id='create'>Create</a></li>
+			<li><a wicket:id='history'>History</a></li>
+		</ul>
+	</div>
+	
+	<div>
+		<span>Select environment: </span><select wicket:id='commands'>[Options]</select>
+	</div>
+</wicket:container>
+
+<wicket:child/>
+
+</wicket:extend>
+</body>
+</html>

@@ -119,8 +119,8 @@ public class Execution {
         return key;
     }
 
-    public String getCommandKey() {
-        return request.getCommandKey();
+    public String getContextKey() {
+        return request.getContextKey();
     }
 
     public String getFeatureName() {

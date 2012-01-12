@@ -90,10 +90,21 @@
 	</repositories>
 
 	<dependencies>
+
 		<dependency>
-			<groupId>gherkin</groupId>
-			<artifactId>gherkin</artifactId>
-			<version>2.4.6</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
 		</dependency>
 
 		<dependency>
@@ -106,7 +117,13 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.1</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>gherkin</groupId>
+			<artifactId>gherkin</artifactId>
+			<version>2.4.6</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -114,10 +131,16 @@
 		</dependency>
 
 		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket</artifactId>
@@ -138,21 +161,6 @@
 			<artifactId>annotation</artifactId>
 			<version>${wicket.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>com.visural</groupId>
@@ -164,7 +172,6 @@
 			<artifactId>visural-wicket</artifactId>
 			<version>0.6.5</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>junit</groupId>

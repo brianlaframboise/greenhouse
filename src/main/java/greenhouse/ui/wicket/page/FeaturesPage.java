@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
  * Displays and executes Features, Scenarios, and Examples.
  */
 @MountIndexedParam
-public class FeaturesPage extends GreenhousePage {
+public class FeaturesPage extends BaseProjectPage {
 
     private final String projectKey;
 
@@ -219,7 +219,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.feature(projectKey, commandKey(), name));
+            return executor.execute(ExecutionRequest.feature(projectKey, contextKey(), name));
         }
     }
 
@@ -234,7 +234,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.scenario(projectKey, commandKey(), name));
+            return executor.execute(ExecutionRequest.scenario(projectKey, contextKey(), name));
         }
     }
 
@@ -251,7 +251,7 @@ public class FeaturesPage extends GreenhousePage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.example(projectKey, commandKey(), name, line));
+            return executor.execute(ExecutionRequest.example(projectKey, contextKey(), name, line));
         }
     }
 

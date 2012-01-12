@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 @MountIndexedParam
-public class CreatePage extends GreenhousePage {
+public class CreatePage extends BaseProjectPage {
 
     /**
      * Splits a Gherkin step into a list of the predicate part and the remainder

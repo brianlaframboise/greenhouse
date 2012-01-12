@@ -101,14 +101,15 @@ public class ProcessExecutor implements ScenarioExecutor {
 
                     ExecutionType type = ExecutionType.valueOf(props.getProperty("type"));
                     ExecutionRequest request = null;
+                    String contextKey = props.getProperty("contextKey");
                     if (type == ExecutionType.FEATURE) {
-                        request = ExecutionRequest.feature(projectKey, "", props.getProperty("feature"));
+                        request = ExecutionRequest.feature(projectKey, contextKey, props.getProperty("feature"));
                     } else if (type == ExecutionType.SCENARIO) {
-                        request = ExecutionRequest.scenario(projectKey, "", props.getProperty("scenario"));
+                        request = ExecutionRequest.scenario(projectKey, contextKey, props.getProperty("scenario"));
                     } else if (type == ExecutionType.EXAMPLE) {
-                        request = ExecutionRequest.example(projectKey, "", props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
+                        request = ExecutionRequest.example(projectKey, contextKey, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
                     } else if (type == ExecutionType.GHERKIN) {
-                        request = ExecutionRequest.gherkin(projectKey, "", props.getProperty("gherkin"));
+                        request = ExecutionRequest.gherkin(projectKey, contextKey, props.getProperty("gherkin"));
                     }
 
                     Execution execution = new Execution(request, project.getRoot(), executionNumber);
@@ -275,7 +276,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
         try {
-            String command = project.getCommands().get(execution.getCommandKey());
+            String command = project.getContexts().get(execution.getContextKey()).getCommand();
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(command));
             argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
@@ -333,6 +334,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         props.setProperty("line", Integer.toString(execution.getExampleLine()));
         props.setProperty("gherkin", String.valueOf(execution.getGherkin()));
 
+        props.setProperty("contextKey", execution.getContextKey());
         props.setProperty("command", execution.getCommand());
         props.setProperty("end", Long.toString(execution.getEnd()));
         props.setProperty("start", Long.toString(execution.getStart()));

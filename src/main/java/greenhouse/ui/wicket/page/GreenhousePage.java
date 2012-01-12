@@ -7,6 +7,7 @@ import greenhouse.project.ProjectRepository;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 public class GreenhousePage extends WebPage {
@@ -15,10 +16,12 @@ public class GreenhousePage extends WebPage {
     protected ProjectRepository repo;
 
     public GreenhousePage() {
+        this(null);
     }
 
     public GreenhousePage(PageParameters params) {
         super(params);
+        add(new BookmarkablePageLink<Void>("home", ProjectsPage.class));
     }
 
     protected String getProjectKey() {
