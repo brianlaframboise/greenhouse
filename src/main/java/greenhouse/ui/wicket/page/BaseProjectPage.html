@@ -2,25 +2,28 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 <wicket:extend>
-
 <wicket:container wicket:id='base'>
-	<h3 wicket:id='name'>Projects</h3>
-	
-	<div>
-		<ul>
-			<li><a wicket:id='features'>Features</a></li>
-			<li><a wicket:id='tags'>Tags</a></li>
-			<li><a wicket:id='create'>Create</a></li>
-			<li><a wicket:id='history'>History</a></li>
-		</ul>
-	</div>
-	
-	<div>
-		<span>Select environment: </span><select wicket:id='commands'>[Options]</select>
+	<div class="topbar" data-dropdown="dropdown">
+		<div class="topbar-inner">
+			<div class="container">
+				<h3><a wicket:id='project'><wicket:container wicket:id='name'>Projects</wicket:container></a></h3>
+				<ul class="nav">
+					<li wicket:id='pages'><a wicket:id='link'><wicket:container wicket:id='name'>[Name]</wicket:container></a></li>
+				</ul>
+				<ul class="nav secondary-nav">
+					<li class="dropdown">
+						<a class="dropdown-toggle" href='#'><wicket:container wicket:id='currentContext'>[Context]</wicket:container></a>
+						<ul class="dropdown-menu">
+							<li wicket:id='contexts'><a wicket:id='link'><wicket:container wicket:id='name'>[Context name]</wicket:container></a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
 	</div>
 </wicket:container>
 
-<wicket:child/>
+<div class="container main"><wicket:child/></div>
 
 </wicket:extend>
 </body>

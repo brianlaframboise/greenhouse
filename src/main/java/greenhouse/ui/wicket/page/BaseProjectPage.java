@@ -5,21 +5,24 @@ import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 import org.apache.wicket.PageParameters;
+import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.WebRequest;
 import org.apache.wicket.protocol.http.WebResponse;
+import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -29,44 +32,44 @@ import com.google.common.collect.Lists;
  */
 abstract class BaseProjectPage extends GreenhousePage {
 
-    private static final IChoiceRenderer<Context> CONTEXT_RENDERER = new IChoiceRenderer<Context>() {
-        @Override
-        public Object getDisplayValue(Context context) {
-            return context.getName();
-        }
-
-        @Override
-        public String getIdValue(Context context, int index) {
-            return context.getKey();
-        }
-    };
-
+    @SuppressWarnings("unchecked")
     public BaseProjectPage(PageParameters params) {
         super(params);
         WebMarkupContainer base = new WebMarkupContainer("base");
         Project project = project();
-        base.add(new Label("name", project.getName()));
-
-        base.add(newPageLink(project, FeaturesPage.class));
-        base.add(newPageLink(project, TagsPage.class));
-        base.add(newPageLink(project, CreatePage.class));
-        base.add(newPageLink(project, HistoryPage.class));
-
         final String projectKey = getProjectKey();
-        base.add(new DropDownChoice<Context>("commands", Model.of(getCurrentContext(project)), new CommandsModel(repo, getProjectKey()), CONTEXT_RENDERER) {
-            @Override
-            protected boolean wantOnSelectionChangedNotifications() {
-                return true;
-            }
+        Link<Void> projectLink = new BookmarkablePageLink<Void>("project", ProjectsPage.class, WicketUtils.indexed(projectKey));
+        base.add(projectLink.add(new Label("name", project.getName())));
 
+        base.add(new ListView<Class<? extends GreenhousePage>>("pages", Arrays.asList(FeaturesPage.class, TagsPage.class, CreatePage.class, HistoryPage.class)) {
             @Override
-            protected void onSelectionChanged(Context newContext) {
-                WicketUtils.addContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), newContext.getKey());
+            protected void populateItem(ListItem<Class<? extends GreenhousePage>> item) {
+                Class<? extends GreenhousePage> clazz = item.getModelObject();
+                if (BaseProjectPage.this.getClass().equals(clazz)) {
+                    item.add(new SimpleAttributeModifier("class", "active"));
+                }
+                String simpleName = simpleName(clazz);
+                BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>("link", ProjectsPage.class, params(projectKey, simpleName));
+                link.add(new Label("name", StringUtils.capitalize(simpleName)));
+                item.add(link);
             }
+        });
+        base.add(new Label("currentContext", getCurrentContext(project()).getName()));
 
+        base.add(new ListView<Context>("contexts", new ContextsModel(repo, projectKey)) {
             @Override
-            public boolean isNullValid() {
-                return false;
+            protected void populateItem(ListItem<Context> item) {
+                Context context = item.getModelObject();
+                final String contextKey = context.getKey();
+                Link<Void> link = new Link<Void>("link") {
+                    @Override
+                    public void onClick() {
+                        WicketUtils.addContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), contextKey);
+                        setResponsePage(ProjectsPage.class, params(projectKey, simpleName(BaseProjectPage.this.getClass())));
+                        setRedirect(true);
+                    }
+                };
+                item.add(link.add(new Label("name", context.getName())));
             }
         });
         add(base);
@@ -83,17 +86,30 @@ abstract class BaseProjectPage extends GreenhousePage {
         return context;
     }
 
-    public static BookmarkablePageLink<Void> newPageLink(Project project, Class<? extends GreenhousePage> clazz) {
-        String simpleName = clazz.getSimpleName();
-        String name = simpleName.substring(0, simpleName.indexOf("Page")).toLowerCase(Locale.ENGLISH);
-        return new BookmarkablePageLink<Void>(name, ProjectsPage.class, WicketUtils.indexed(project.getKey(), name));
+    public BookmarkablePageLink<Void> newPageLink(Project project, Class<? extends GreenhousePage> clazz) {
+        String name = simpleName(clazz);
+        BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>(name, ProjectsPage.class, params(project.getKey(), name));
+        if (getClass().equals(clazz)) {
+            link.add(new SimpleAttributeModifier("class", "active"));
+        }
+        return link;
     }
 
-    private static class CommandsModel extends LoadableDetachableModel<List<Context>> {
+    private static String simpleName(Class<? extends GreenhousePage> clazz) {
+        String simpleName = clazz.getSimpleName();
+        return simpleName.substring(0, simpleName.indexOf("Page")).toLowerCase(Locale.ENGLISH);
+    }
+
+    private static PageParameters params(String projectKey, String simpleClassName) {
+        return WicketUtils.indexed(projectKey, simpleClassName);
+
+    }
+
+    private static class ContextsModel extends LoadableDetachableModel<List<Context>> {
         private final ProjectRepository repo;
         private final String projectKey;
 
-        private CommandsModel(ProjectRepository repo, String projectKey) {
+        private ContextsModel(ProjectRepository repo, String projectKey) {
             this.repo = repo;
             this.projectKey = projectKey;
         }

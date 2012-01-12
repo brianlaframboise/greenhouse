@@ -9,7 +9,9 @@ import java.util.Set;
 
 import javax.servlet.http.Cookie;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.protocol.http.WebRequest;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.util.string.Strings;
@@ -36,6 +38,14 @@ public final class WicketUtils {
             params.put(Integer.toString(i), Strings.toString(args[i]));
         }
         return new PageParameters(params);
+    }
+
+    public static void addComponents(AjaxRequestTarget target, Component... components) {
+        if (target != null) {
+            for (Component component : components) {
+                target.addComponent(component);
+            }
+        }
     }
 
     public static String getContextKey(WebRequest request, Project project) {
