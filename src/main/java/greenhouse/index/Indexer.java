@@ -3,7 +3,6 @@ package greenhouse.index;
 import gherkin.formatter.model.Feature;
 import gherkin.formatter.model.Scenario;
 import gherkin.formatter.model.ScenarioOutline;
-import gherkin.formatter.model.Tag;
 import gherkin.formatter.model.TagStatement;
 import gherkin.parser.Parser;
 import greenhouse.util.Utils;
@@ -34,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 public class Indexer {
 
@@ -190,12 +190,20 @@ public class Indexer {
         int line = statement.getLine();
         String name = statement.getName();
         String description = statement.getDescription();
-        ImmutableSet<Tag> tags = ImmutableSet.copyOf(statement.getTags());
+        ImmutableSet<Tag> tags = copy(statement.getTags());
 
         IndexedScenario indexed = new IndexedScenario(line, type, name, description, tags);
         scenarios.add(indexed);
-        for (Tag tag : indexed.getTags()) {
+        for (greenhouse.index.Tag tag : indexed.getTags()) {
             scenariosByTag.put(tag.getName(), indexed);
         }
+    }
+
+    private ImmutableSet<Tag> copy(List<gherkin.formatter.model.Tag> gherkinTags) {
+        Set<Tag> tags = Sets.newHashSet();
+        for (gherkin.formatter.model.Tag tag : gherkinTags) {
+            tags.add(new Tag(tag.getName(), tag.getLine()));
+        }
+        return ImmutableSet.copyOf(tags);
     }
 }

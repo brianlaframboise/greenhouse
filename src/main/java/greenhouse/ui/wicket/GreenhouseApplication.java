@@ -1,5 +1,7 @@
 package greenhouse.ui.wicket;
 
+import greenhouse.execute.ExecutionState;
+import greenhouse.execute.ExecutionType;
 import greenhouse.ui.wicket.page.FeaturesPage;
 import greenhouse.ui.wicket.page.ProjectsPage;
 
@@ -14,6 +16,7 @@ import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.apache.wicket.util.convert.ConverterLocator;
 import org.apache.wicket.util.convert.IConverter;
+import org.springframework.util.StringUtils;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.jquery.JQueryResourceReference;
@@ -38,18 +41,29 @@ public class GreenhouseApplication extends WebApplication {
     @Override
     protected IConverterLocator newConverterLocator() {
         ConverterLocator locator = (ConverterLocator) super.newConverterLocator();
-        locator.set(Date.class, new IConverter() {
+        locator.set(Date.class, new StringConverter() {
             @Override
             public String convertToString(Object value, Locale locale) {
                 return new SimpleDateFormat(DATE_FORMAT).format((Date) value);
             }
-
-            @Override
-            public Object convertToObject(String value, Locale locale) {
-                throw new UnsupportedOperationException();
-            }
         });
+        locator.set(ExecutionState.class, new ToStringCapitalizer());
+        locator.set(ExecutionType.class, new ToStringCapitalizer());
         return locator;
+    }
+
+    private static class ToStringCapitalizer extends StringConverter {
+        @Override
+        public String convertToString(Object value, Locale locale) {
+            return StringUtils.capitalize(value.toString().toLowerCase(Locale.ENGLISH));
+        }
+    }
+
+    private static abstract class StringConverter implements IConverter {
+        @Override
+        public Object convertToObject(String value, Locale locale) {
+            throw new UnsupportedOperationException();
+        }
     }
 
 }

@@ -1,7 +1,5 @@
 package greenhouse.index;
 
-import gherkin.formatter.model.Tag;
-
 import java.io.Serializable;
 
 import com.google.common.collect.ImmutableSet;
@@ -15,7 +13,7 @@ public class IndexedScenario implements Serializable {
     private final String description;
     private final ImmutableSet<Tag> tags;
 
-    public IndexedScenario(int line, String type, String name, String description, ImmutableSet<Tag> tags) {
+    public IndexedScenario(int line, String type, String name, String description, ImmutableSet<greenhouse.index.Tag> tags) {
         this.line = line;
         this.type = type;
         this.name = name;

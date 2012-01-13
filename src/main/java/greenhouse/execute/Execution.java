@@ -103,8 +103,8 @@ public class Execution {
         return Utils.readContents(getReportFile().getAbsolutePath());
     }
 
-    public String getDetails() {
-        return "TODO";
+    public String getDescription() {
+        return request.getDescription();
     }
 
     public String getCommand() {

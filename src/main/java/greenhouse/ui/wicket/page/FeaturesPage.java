@@ -81,7 +81,7 @@ public class FeaturesPage extends BaseProjectPage {
             }
         });
 
-        String featureNameArg = params.getString("1", "");
+        String featureNameArg = params.getString("2", "");
         if (names.contains(featureNameArg)) {
             showFeature(featureNameArg, null);
         }

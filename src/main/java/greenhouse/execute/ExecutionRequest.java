@@ -36,6 +36,17 @@ public class ExecutionRequest {
         return new ExecutionRequest(ExecutionType.GHERKIN, projectKey, contextKey, null, null, -1, gherkin);
     }
 
+    public String getDescription() {
+        if (type == ExecutionType.FEATURE) {
+            return feature;
+        } else if (type == ExecutionType.SCENARIO) {
+            return scenario;
+        } else if (type == ExecutionType.EXAMPLE) {
+            return scenario + " : " + line;
+        }
+        return "";
+    }
+
     public String getProjectKey() {
         return projectKey;
     }

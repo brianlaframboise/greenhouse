@@ -83,7 +83,7 @@ public class HistoryPage extends BaseProjectPage {
                 ExecutionState state = execution.getState();
                 item.add(new Label("number", Integer.toString(number)));
 
-                item.add(new Label("state", state.name()));
+                item.add(new Label("state", Model.of(state)));
                 item.add(new Label("start", Model.of(new Date(execution.getStart()))));
 
                 long end = execution.getEnd();
@@ -93,8 +93,8 @@ public class HistoryPage extends BaseProjectPage {
                 Context context = project.getContexts().get(execution.getContextKey());
                 item.add(new Label("environment", context.getName()));
 
-                item.add(new Label("type", Model.of(execution.getType().name())));
-                item.add(new Label("details", execution.getDetails()));
+                item.add(new Label("type", Model.of(execution.getType())));
+                item.add(new Label("details", execution.getDescription()));
                 item.add(new BookmarkablePageLink<Void>("output", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "output")));
                 item.add(new BookmarkablePageLink<Void>("report", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "report"))
                         .setEnabled(state == ExecutionState.COMPLETE));
