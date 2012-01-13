@@ -4,20 +4,36 @@
 <body>
 <wicket:extend>
 
-<h3>Create</h3>
-		<div>
-			<span>My scenario</span>
-			<textarea wicket:id='scenario' rows="10" cols="80" style="font-family: monospace;"></textarea>
-			<a wicket:id='execute'>Execute</a>
-			<a wicket:id='undo'>Undo</a>
+		<div class='row show-grid'>
+			<div class='span8'>
+				<h3>Scenario Editor</h3>
+			</div>
+			<div class='span8'>
+				<h3>Preview</h3>
+			</div>
 		</div>
+		<div class='row show-grid'>
+			<div class='span8'>
+				<textarea wicket:id='scenario' rows="10" cols="80" style="font-family: monospace;"></textarea>
+			</div>
+			<div class='span8'>
+				<pre wicket:id='preview'>[Preview text]</pre>
+			</div>
+			<div class='span1'>
+				<a wicket:id='execute' class='btn danger'>Execute</a>
+			</div>
+		</div>
+		
+		<div class='row'>
+		</div>
+		
 		<div>
 			<form wicket:id='form' class='form-stacked'>
 				<fieldset>
 					<label> Enter a step
 						<input wicket:id='step' type="text" size="80">
 					</label>
-					<input wicket:id='add' type="submit" value="Add">
+					<input wicket:id='add' class='btn info' type="submit" value="Add">
 					<input wicket:id='substitute' type="submit" value="Substitute">
 				</fieldset>
 				

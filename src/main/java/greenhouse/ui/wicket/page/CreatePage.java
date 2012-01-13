@@ -1,6 +1,7 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.index.StepMethod;
+import greenhouse.ui.wicket.WicketUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +12,7 @@ import java.util.Locale;
 import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTextField;
@@ -28,8 +29,10 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.AbstractReadOnlyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.string.Strings;
+import org.springframework.util.StringUtils;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Joiner;
@@ -76,7 +79,14 @@ public class CreatePage extends BaseProjectPage {
         }
 
         @Override
-        public void setObject(String step) {
+        public void setObject(String newSteps) {
+            steps.clear();
+            for (String step : Splitter.on('\n').split(StringUtils.trimWhitespace(newSteps))) {
+                append(step);
+            }
+        }
+
+        public void append(String step) {
             ImmutableList<String> split = splitStep(step);
             String prep = split.get(0);
             String remainder = split.get(1);
@@ -87,8 +97,8 @@ public class CreatePage extends BaseProjectPage {
             }
         }
 
-        public void undo() {
-            steps.remove(steps.size() - 1);
+        public Iterator<String> steps() {
+            return steps.iterator();
         }
 
     }
@@ -100,25 +110,26 @@ public class CreatePage extends BaseProjectPage {
         add(dialog);
 
         final AppendingGherkinModel gherkinModel = new AppendingGherkinModel("");
-        final TextArea<String> scenario = new TextArea<String>("scenario", gherkinModel);
-        add(scenario.setOutputMarkupId(true));
-        add(new ExecuteGherkinLink("execute", project().getKey(), dialog, new AbstractReadOnlyModel<String>() {
+        IModel<String> previewModel = new AbstractReadOnlyModel<String>() {
             @Override
             public String getObject() {
-                String gherkin = gherkinModel.getObject();
-                String formatted = Joiner.on("\n\t\t").join(Splitter.on('\n').split(gherkin));
-                return "Feature: Custom feature\n\n\tScenario: Custom scenario\n" + formatted;
+                String formatted = Joiner.on("\n\t\t").join(gherkinModel.steps());
+                return "Feature: Custom feature\n\n\tScenario: Custom scenario\n\t\t" + formatted;
             }
-        }));
-        add(new AjaxFallbackLink<Void>("undo") {
+        };
+        final Label preview = new Label("preview", previewModel);
+        final TextArea<String> scenario = new TextArea<String>("scenario", gherkinModel);
+        scenario.add(new AjaxFormComponentUpdatingBehavior("onblur") {
             @Override
-            public void onClick(AjaxRequestTarget target) {
-                gherkinModel.undo();
-                if (target != null) {
-                    target.addComponent(scenario);
-                }
+            protected void onUpdate(AjaxRequestTarget target) {
+                WicketUtils.addComponents(target, scenario, preview);
             }
         });
+        add(scenario.setOutputMarkupId(true));
+
+        add(new ExecuteGherkinLink("execute", project().getKey(), dialog, previewModel));
+
+        add(preview.setOutputMarkupId(true));
 
         Form<Void> form = new Form<Void>("form");
         add(form);
@@ -198,11 +209,14 @@ public class CreatePage extends BaseProjectPage {
                 for (String value : values) {
                     step = step.substring(0, step.indexOf("[[")) + value + step.substring(step.indexOf("]]") + 2);
                 }
-                updateScenario(scenario, stepModel, stepField, target, step);
+
+                gherkinModel.append(step);
+                stepModel.setObject("");
+
                 setVisible(false);
                 table.setVisible(false);
                 form.get("add").setVisible(true);
-                target.addComponent(form);
+                WicketUtils.addComponents(target, scenario, preview, form);
             }
         };
         form.add(substitute.setVisible(false).setOutputMarkupPlaceholderTag(true));
@@ -244,18 +258,11 @@ public class CreatePage extends BaseProjectPage {
                     setVisible(false);
                     target.addComponent(form);
                 } else {
-                    updateScenario(scenario, stepModel, stepField, target, text);
+                    gherkinModel.append(text);
+                    WicketUtils.addComponents(target, scenario, preview, form);
                 }
             }
         });
-    }
-
-    private void updateScenario(final TextArea<String> scenario, final Model<String> stepModel, final AutoCompleteTextField<String> stepField,
-            AjaxRequestTarget target, String text) {
-        scenario.setDefaultModelObject(text);
-        stepModel.setObject("");
-        target.addComponent(stepField);
-        target.addComponent(scenario);
     }
 
 }
