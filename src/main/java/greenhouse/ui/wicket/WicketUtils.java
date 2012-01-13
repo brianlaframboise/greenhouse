@@ -32,6 +32,13 @@ public final class WicketUtils {
     private WicketUtils() {
     }
 
+    /**
+     * Creates a PageParameters with 0-based numeric indices for the toString()
+     * value of the given args.
+     * 
+     * @param args Zero or more indexed parameters
+     * @return a new PageParameters
+     */
     public static PageParameters indexed(Object... args) {
         Map<String, String> params = Maps.newHashMap();
         for (int i = 0; i < args.length; i++) {
@@ -40,6 +47,14 @@ public final class WicketUtils {
         return new PageParameters(params);
     }
 
+    /**
+     * Adds components to the AjaxRequestTarget, or does nothing if target is
+     * null.
+     * 
+     * @param target An AjaxRequestTarget, or null
+     * @param components The components to add to the AjaxRequestTarget, if
+     *            available
+     */
     public static void addComponents(AjaxRequestTarget target, Component... components) {
         if (target != null) {
             for (Component component : components) {
@@ -48,6 +63,15 @@ public final class WicketUtils {
         }
     }
 
+    /**
+     * Retrieves the selected context key for the given project, or randomly
+     * selects a valid context key for the given Project if the request does not
+     * contain a context key for the given project in the contexts cookie.
+     * 
+     * @param request A WebRequest
+     * @param project A Project
+     * @return a valid Project context key
+     */
     public static String getContextKey(WebRequest request, Project project) {
         Cookie cookie = getContextCookie(request);
         if (cookie == null) {
@@ -56,7 +80,16 @@ public final class WicketUtils {
         return projectsToContexts(cookie).get(project.getKey());
     }
 
-    public static void addContextKey(WebRequest request, WebResponse response, Project project, String contextKey) {
+    /**
+     * Adds, or updates, the context key in Contexts cookie for the given
+     * Project.
+     * 
+     * @param request The current WebRequest
+     * @param response The current WebResponse
+     * @param project The contextKey's associated Project
+     * @param contextKey The context key to set in the cookie
+     */
+    public static void setContextKey(WebRequest request, WebResponse response, Project project, String contextKey) {
         Cookie cookie = getContextCookie(request);
         Map<String, String> projectsToContexts = projectsToContexts(cookie);
         projectsToContexts.put(project.getKey(), contextKey);
@@ -73,9 +106,12 @@ public final class WicketUtils {
     }
 
     private static Cookie getContextCookie(WebRequest request) {
-        for (Cookie cookie : request.getCookies()) {
-            if (CONTEXTS_COOKIE.equals(cookie.getName())) {
-                return cookie;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (CONTEXTS_COOKIE.equals(cookie.getName())) {
+                    return cookie;
+                }
             }
         }
         return null;

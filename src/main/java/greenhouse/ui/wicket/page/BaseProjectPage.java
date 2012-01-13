@@ -65,7 +65,7 @@ abstract class BaseProjectPage extends GreenhousePage {
                 Link<Void> link = new Link<Void>("link") {
                     @Override
                     public void onClick() {
-                        WicketUtils.addContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), contextKey);
+                        WicketUtils.setContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), contextKey);
                         setResponsePage(ProjectsPage.class, params(projectKey, simpleName(BaseProjectPage.this.getClass())));
                         setRedirect(true);
                     }
@@ -82,7 +82,7 @@ abstract class BaseProjectPage extends GreenhousePage {
         Context context = contexts.get(contextKey);
         if (contextKey == null) {
             context = contexts.values().iterator().next();
-            WicketUtils.addContextKey((WebRequest) getRequest(), (WebResponse) getResponse(), project, context.getKey());
+            WicketUtils.setContextKey((WebRequest) getRequest(), (WebResponse) getResponse(), project, context.getKey());
         }
         return context;
     }

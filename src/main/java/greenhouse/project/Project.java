@@ -147,6 +147,9 @@ public class Project {
 
     public void removeContext(String removeKey) {
         synchronized (contexts) {
+            if (contexts.size() == 1 && contexts.containsKey(removeKey)) {
+                throw new IllegalStateException("Cannot remove the last Context from project " + key);
+            }
             contexts.remove(removeKey);
             saveContexts();
         }

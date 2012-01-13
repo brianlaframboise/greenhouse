@@ -12,14 +12,15 @@
 
 #header a {
 	color: #ffffff;
+	font-variant: small-caps;
 	text-decoration: none;
 }
 
 /* Overridding Bootstrap topbar*/
-
 .topbar {
-	top: inherit;
+	position: absolute; top : inherit;
 	z-index: inherit;
+	top: inherit;
 }
 
 .topbar-inner,.topbar .fill {
@@ -32,10 +33,13 @@
 	background-color: rgba(187, 228, 117, 1.0);
 }
 
-/* Greenhouse custom styles */
+title {
+	font-variant: small-caps;
+}
 
+/* Greenhouse custom styles */
 body {
-	background-color: #bbe475;
+	background-color: #ebffb4;
 	font-family: Helvetica;
 }
 
@@ -45,12 +49,13 @@ body {
 }
 
 a {
-	 color: #164b2b
-}
-a:hover {
-color: #ffffff;
+	color: #164b2b
 }
 
+a:hover {
+	color: #ff08a2;
+	text-decoration: underline;
+}
 
 pre {
 	background-color: inherit;
@@ -60,10 +65,14 @@ pre {
 	padding: 0;
 }
 
+pre a {
+	text-decoration: underline;
+}
+
+pre a:hover {
+	text-decoration: none;
+}
+
 table th {
 	text-align: center;
 }
-
-t-align: center;
-}
-

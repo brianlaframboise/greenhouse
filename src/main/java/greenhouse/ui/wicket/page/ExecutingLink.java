@@ -46,7 +46,7 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
         Project project = project();
         String contextKey = WicketUtils.getContextKey(getWebRequest(), project);
         if (contextKey == null) {
-            WicketUtils.addContextKey(getWebRequest(), (WebResponse) getResponse(), project, project.getContexts().keySet().iterator().next());
+            WicketUtils.setContextKey(getWebRequest(), (WebResponse) getResponse(), project, project.getContexts().keySet().iterator().next());
         }
         return contextKey;
     }
