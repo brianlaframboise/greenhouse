@@ -1,3 +1,4 @@
+/* Top-most header */
 #header {
 	background: none repeat scroll 0 0 #164b2b;
 	clear: both;
@@ -14,22 +15,7 @@
 	text-decoration: none;
 }
 
-body {
-	background-color: #bbe475;
-	font-family: Helvetica;
-}
-
-a {
-	color: #164b2b
-}
-
-pre {
-	background-color: inherit;
-	border: none;
-	line-height: 16px;
-	margin: 0;
-	padding: 0;
-}
+/* Overridding Bootstrap topbar*/
 
 .topbar {
 	top: inherit;
@@ -42,13 +28,42 @@ pre {
 	box-shadow: none;
 }
 
+.nav .active {
+	background-color: rgba(187, 228, 117, 1.0);
+}
+
+/* Greenhouse custom styles */
+
+body {
+	background-color: #bbe475;
+	font-family: Helvetica;
+}
+
 .main {
 	padding-top: 40px;
+	margin-top: 1em;
+}
+
+a {
+	 color: #164b2b
+}
+a:hover {
+color: #ffffff;
+}
+
+
+pre {
+	background-color: inherit;
+	border: none;
+	line-height: 16px;
+	margin: 0;
+	padding: 0;
 }
 
 table th {
 	text-align: center;
 }
-.nav .active {
-background-color: rgba(187, 228, 117, 1.0);
+
+t-align: center;
 }
+

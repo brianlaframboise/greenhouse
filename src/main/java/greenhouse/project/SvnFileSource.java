@@ -79,7 +79,7 @@ public class SvnFileSource implements FileSource {
     }
 
     @Override
-    public void update() {
+    public String update() {
         ProcessBuilder builder = new ProcessBuilder();
         builder.directory(files);
         builder.redirectErrorStream(true);
@@ -88,16 +88,19 @@ public class SvnFileSource implements FileSource {
         args.add("update");
         builder.command(args);
 
+        String output;
         try {
             LOGGER.info("Updating: " + files);
             Process process = builder.start();
-            LOGGER.info(StringUtils.trimWhitespace(IOUtils.toString(process.getInputStream())));
+            output = StringUtils.trimWhitespace(IOUtils.toString(process.getInputStream()));
+            LOGGER.info(output);
 
             process.waitFor();
         } catch (Exception e) {
             throw new RuntimeException("Unable to update " + files, e);
         }
         LOGGER.info("Update complete: " + files);
+        return output;
     }
 
     private List<String> basicArgs() {

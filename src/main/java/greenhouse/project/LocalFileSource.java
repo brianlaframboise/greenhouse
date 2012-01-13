@@ -1,9 +1,12 @@
 package greenhouse.project;
 
+import greenhouse.ui.wicket.GreenhouseApplication;
 import greenhouse.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 
@@ -40,8 +43,9 @@ public class LocalFileSource implements FileSource {
     }
 
     @Override
-    public void update() {
+    public String update() {
         copySourceToFiles();
+        return "Files copied at " + new SimpleDateFormat(GreenhouseApplication.DATE_FORMAT).format(new Date());
     }
 
     private void copySourceToFiles() {

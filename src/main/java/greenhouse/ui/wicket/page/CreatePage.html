@@ -12,10 +12,16 @@
 			<a wicket:id='undo'>Undo</a>
 		</div>
 		<div>
-			<form wicket:id='form'>
-				<span>Enter a step</span>
-				<input wicket:id='step' type="text" size="80">
-				<table wicket:id='table'>
+			<form wicket:id='form' class='form-stacked'>
+				<fieldset>
+					<label> Enter a step
+						<input wicket:id='step' type="text" size="80">
+					</label>
+					<input wicket:id='add' type="submit" value="Add">
+					<input wicket:id='substitute' type="submit" value="Substitute">
+				</fieldset>
+				
+				<table wicket:id='table' class='condensed-table'>
 					<thead>
 						<tr>
 							<td>Type</td>
@@ -33,8 +39,6 @@
 						</tr>
 					</tbody>
 				</table>		
-				<input wicket:id='add' type="submit" value="Add">
-				<input wicket:id='substitute' type="submit" value="Substitute">
 			</form>
 		</div>
 	<div class='clear'></div>

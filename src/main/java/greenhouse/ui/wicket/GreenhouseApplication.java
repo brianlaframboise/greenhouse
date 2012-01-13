@@ -20,6 +20,8 @@ import com.jquery.JQueryResourceReference;
 
 public class GreenhouseApplication extends WebApplication {
 
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
     @Override
     protected void init() {
         addComponentInstantiationListener(new SpringComponentInjector(this));
@@ -39,7 +41,7 @@ public class GreenhouseApplication extends WebApplication {
         locator.set(Date.class, new IConverter() {
             @Override
             public String convertToString(Object value, Locale locale) {
-                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss a").format((Date) value);
+                return new SimpleDateFormat(DATE_FORMAT).format((Date) value);
             }
 
             @Override

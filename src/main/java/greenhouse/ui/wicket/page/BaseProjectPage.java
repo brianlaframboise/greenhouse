@@ -41,7 +41,8 @@ abstract class BaseProjectPage extends GreenhousePage {
         Link<Void> projectLink = new BookmarkablePageLink<Void>("project", ProjectsPage.class, WicketUtils.indexed(projectKey));
         base.add(projectLink.add(new Label("name", project.getName())));
 
-        base.add(new ListView<Class<? extends GreenhousePage>>("pages", Arrays.asList(FeaturesPage.class, TagsPage.class, CreatePage.class, HistoryPage.class)) {
+        base.add(new ListView<Class<? extends GreenhousePage>>("pages", Arrays.asList(FeaturesPage.class, TagsPage.class, CreatePage.class, HistoryPage.class,
+                SettingsPage.class)) {
             @Override
             protected void populateItem(ListItem<Class<? extends GreenhousePage>> item) {
                 Class<? extends GreenhousePage> clazz = item.getModelObject();

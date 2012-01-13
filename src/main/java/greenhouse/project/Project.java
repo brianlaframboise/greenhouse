@@ -17,11 +17,11 @@ import com.google.common.collect.Maps;
 
 public class Project {
 
-    public static final String DEFAULT_COMMAND_KEY = "default";
+    public static final Pattern PROJECT_KEY_PATTERN = Pattern.compile("^[A-Z]+$");
+
+    public static final Pattern CONTEXT_KEY_PATTERN = Pattern.compile("^[a-z]+$");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Project.class);
-
-    private static final Pattern KEY_PATTERN = Pattern.compile("^[A-Z]+$");
 
     private final String key;
     private final String name;
@@ -29,10 +29,12 @@ public class Project {
     private final File files;
     private final Index index;
     private final FileSource fileSource;
-    private final ImmutableMap<String, Context> contexts;
+
+    private Map<String, Context> contexts;
+    private String lastUpdateOutput = "";
 
     public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
-        if (!KEY_PATTERN.matcher(key).matches()) {
+        if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
         }
         this.key = key;
@@ -40,7 +42,7 @@ public class Project {
         this.root = root;
         files = Utils.file(root.getAbsolutePath(), "files");
         index = new Indexer(key, files.getAbsolutePath()).index();
-        this.contexts = contexts;
+        this.contexts = Maps.newHashMap(contexts);
         this.fileSource = fileSource;
     }
 
@@ -57,16 +59,7 @@ public class Project {
         FileSource fileSource = loadFileSource(root, project);
         String name = project.getProperty("name");
 
-        ImmutableMap<String, String> commands = Maps.fromProperties(Utils.load(root, "contexts.properties"));
-        int i = 1;
-        String key;
-        Map<String, Context> contexts = Maps.newHashMap();
-        while ((key = commands.get(i + ".key")) != null) {
-            String contextName = commands.get(i + ".name");
-            String command = commands.get(i + ".command");
-            contexts.put(key, new Context(key, contextName, command));
-            i++;
-        }
+        Map<String, Context> contexts = loadContexts(root);
         return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
     }
 
@@ -100,8 +93,13 @@ public class Project {
         return fileSource;
     }
 
-    public void update() {
-        fileSource.update();
+    public String update() {
+        lastUpdateOutput = fileSource.update();
+        return getLastUpdateOutput();
+    }
+
+    public String getLastUpdateOutput() {
+        return lastUpdateOutput;
     }
 
     public void clearHistory() {
@@ -133,11 +131,51 @@ public class Project {
     }
 
     public ImmutableMap<String, Context> getContexts() {
-        return contexts;
+        return ImmutableMap.copyOf(contexts);
     }
 
     public Index index() {
         return index;
+    }
+
+    public void addContext(String addKey, Context context) {
+        synchronized (contexts) {
+            contexts.put(addKey, context);
+            saveContexts();
+        }
+    }
+
+    public void removeContext(String removeKey) {
+        synchronized (contexts) {
+            contexts.remove(removeKey);
+            saveContexts();
+        }
+    }
+
+    private static Map<String, Context> loadContexts(File root) {
+        ImmutableMap<String, String> commands = Maps.fromProperties(Utils.load(root, "contexts.properties"));
+        int i = 1;
+        String key;
+        Map<String, Context> contexts = Maps.newHashMap();
+        while ((key = commands.get(i + ".key")) != null) {
+            String contextName = commands.get(i + ".name");
+            String command = commands.get(i + ".command");
+            contexts.put(key, new Context(key, contextName, command));
+            i++;
+        }
+        return contexts;
+    }
+
+    private void saveContexts() {
+        Properties props = new Properties();
+        int i = 1;
+        for (Context context : contexts.values()) {
+            props.put(i + ".key", context.getKey());
+            props.put(i + ".name", context.getName());
+            props.put(i + ".command", context.getCommand());
+            i++;
+        }
+        Utils.save(Utils.file(root.getAbsolutePath(), "contexts.properties"), props);
     }
 
 }

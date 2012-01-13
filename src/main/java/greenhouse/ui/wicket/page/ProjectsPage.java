@@ -42,6 +42,8 @@ public class ProjectsPage extends GreenhousePage {
                     setResponsePage(CreatePage.class, params);
                 } else if (page.equals("history")) {
                     setResponsePage(HistoryPage.class, params);
+                } else if (page.equals("settings")) {
+                    setResponsePage(SettingsPage.class, params);
                 } else {
                     setResponsePage(ProjectPage.class, params);
                 }

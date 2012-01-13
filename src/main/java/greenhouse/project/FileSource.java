@@ -26,6 +26,9 @@ public interface FileSource {
 
     /**
      * Updates to the latest version of the project source files, if applicable.
+     * 
+     * @return text describing the result of the update, such as output from the
+     *         update command
      */
-    void update();
+    String update();
 }

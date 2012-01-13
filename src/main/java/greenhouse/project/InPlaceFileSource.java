@@ -25,7 +25,8 @@ public class InPlaceFileSource implements FileSource {
     }
 
     @Override
-    public void update() {
+    public String update() {
+        return "No files to update.";
     }
 
 }
