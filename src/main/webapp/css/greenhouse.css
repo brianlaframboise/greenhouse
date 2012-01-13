@@ -53,7 +53,7 @@ a {
 }
 
 a:hover {
-	color: #ff08a2;
+	color: red;
 	text-decoration: underline;
 }
 

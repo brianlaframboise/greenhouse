@@ -4,60 +4,65 @@
 <body>
 <wicket:extend>
 
-		<div class='row show-grid'>
-			<div class='span8'>
-				<h3>Scenario Editor</h3>
-			</div>
-			<div class='span8'>
+
+	<div class='row'>
+		<div class='span16'>
+			<h3>Scenario Editor</h3>
+		</div>
+	</div>
+	
+	<div class='row'>
+		<div class='span10'>
+			<textarea wicket:id='scenario' rows="10" cols="80" style="width: 800px; font-family: monospace;"></textarea>
+
+			<form wicket:id='form' class='form-stacked' style="padding-left: 0;" >
+				<fieldset>
+					<div class='clearfix'>
+						<label for='step'>Enter a step</label>
+						<div class='input'>
+							<input wicket:id='step' type="text" size="80" style="width: 800px">
+						</div>
+					</div>
+					<input wicket:id='add' class='btn info' type="submit" value="Add">
+				</fieldset>
+		
+				<div wicket:id='inputs' class='inputs'>
+					<div class='inline-inputs' style="width: 900px">
+						<wicket:container wicket:id='parts'>
+							<wicket:container wicket:id='part'>[Fragment]</wicket:container>
+						</wicket:container>
+						<wicket:fragment wicket:id='label'><wicket:container wicket:id='text' /></wicket:fragment>
+						<wicket:fragment wicket:id='text'>
+								<div class='input-prepend' style="display: inline-block;">
+									<span wicket:id='addOn' class='add-on'>[Type]</span>
+									<input wicket:id='input'>
+								</div>
+						</wicket:fragment>
+						<wicket:fragment wicket:id='select'><select wicket:id='input'></select></wicket:fragment>
+						<input wicket:id='substitute' class='btn info' type="submit" value="Substitute">
+					</div>
+				</div>		
+			</form>
+		</div>
+		
+		<div class='span6'>
+			<a wicket:id='execute' class='btn danger' style='float:right;'>Execute</a>
+		</div>
+	</div>
+		
+	<div class='row'>
+		<div class='span16'>
+			<div>
 				<h3>Preview</h3>
 			</div>
 		</div>
-		<div class='row show-grid'>
-			<div class='span8'>
-				<textarea wicket:id='scenario' rows="10" cols="80" style="font-family: monospace;"></textarea>
-			</div>
-			<div class='span8'>
-				<pre wicket:id='preview'>[Preview text]</pre>
-			</div>
-			<div class='span1'>
-				<a wicket:id='execute' class='btn danger'>Execute</a>
-			</div>
+	</div>
+	<div class='row'>
+		<div class='span16'>
+			<pre wicket:id='preview'>[Preview text]</pre>
 		</div>
-		
-		<div class='row'>
-		</div>
-		
-		<div>
-			<form wicket:id='form' class='form-stacked'>
-				<fieldset>
-					<label> Enter a step
-						<input wicket:id='step' type="text" size="80">
-					</label>
-					<input wicket:id='add' class='btn info' type="submit" value="Add">
-					<input wicket:id='substitute' type="submit" value="Substitute">
-				</fieldset>
-				
-				<table wicket:id='table' class='condensed-table'>
-					<thead>
-						<tr>
-							<td>Type</td>
-							<td>Input</td>
-							<td>Example</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr wicket:id='inputs'>
-							<td wicket:id='type'>[Date]</td>
-							<td><span wicket:id='input'></span></td>
-							<wicket:fragment wicket:id='text'><input wicket:id='input'></wicket:fragment>
-							<wicket:fragment wicket:id='select'><select wicket:id='input'></select></wicket:fragment>
-							<td wicket:id='example'>[2012-01-01]</td>
-						</tr>
-					</tbody>
-				</table>		
-			</form>
-		</div>
-	<div class='clear'></div>
+	</div>
+	
 	<div wicket:id='dialog'>[OutputDialog goes here]</div>
 </wicket:extend>
 </body>

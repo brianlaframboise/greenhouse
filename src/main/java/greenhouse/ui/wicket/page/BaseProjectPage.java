@@ -74,6 +74,8 @@ abstract class BaseProjectPage extends GreenhousePage {
             }
         });
         add(base);
+
+        get("home").setVisible(false);
     }
 
     private Context getCurrentContext(Project project) {

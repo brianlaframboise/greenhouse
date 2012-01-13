@@ -3,6 +3,7 @@ package greenhouse.ui.wicket.page;
 import greenhouse.index.StepMethod;
 import greenhouse.ui.wicket.WicketUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -134,9 +135,9 @@ public class CreatePage extends BaseProjectPage {
         Form<Void> form = new Form<Void>("form");
         add(form);
 
-        final WebMarkupContainer table = new WebMarkupContainer("table");
-        form.add(table.setVisible(false));
-        table.add(new WebMarkupContainer("inputs"));
+        final WebMarkupContainer inputs = new WebMarkupContainer("inputs");
+        final WebMarkupContainer parts = new WebMarkupContainer("parts");
+        form.add(inputs.add(parts.add(new WebMarkupContainer("part"))).setVisible(false));
 
         final Model<String> stepModel = Model.of("");
 
@@ -197,65 +198,73 @@ public class CreatePage extends BaseProjectPage {
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 final List<String> values = Lists.newArrayList();
-                table.visitChildren(FormComponent.class, new Component.IVisitor<FormComponent>() {
+                form.visitChildren(FormComponent.class, new Component.IVisitor<FormComponent>() {
                     @Override
                     @SuppressWarnings("unchecked")
                     public Object component(FormComponent component) {
-                        values.add(((FormComponent<String>) component).getModelObject());
+                        if ((component instanceof TextField) || (component instanceof DropDownChoice)) {
+                            values.add(((FormComponent<String>) component).getModelObject());
+                        }
                         return Component.IVisitor.CONTINUE_TRAVERSAL;
                     };
                 });
-                String step = stepModel.getObject();
-                for (String value : values) {
-                    step = step.substring(0, step.indexOf("[[")) + value + step.substring(step.indexOf("]]") + 2);
+                List<Token> tokens = tokenize(stepModel.getObject());
+                int i = 0;
+                String newStep = "";
+                for (Token token : tokens) {
+                    newStep += token.isClass ? values.get(i++) : token.text;
                 }
 
-                gherkinModel.append(step);
+                gherkinModel.append(newStep);
                 stepModel.setObject("");
 
                 setVisible(false);
-                table.setVisible(false);
+                inputs.setVisible(false);
                 form.get("add").setVisible(true);
                 WicketUtils.addComponents(target, scenario, preview, form);
             }
         };
-        form.add(substitute.setVisible(false).setOutputMarkupPlaceholderTag(true));
+        inputs.add(substitute.setVisible(false).setOutputMarkupPlaceholderTag(true));
 
         form.add(new AjaxButton("add", form) {
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 String text = stepModel.getObject();
-                if (text.contains("[[")) {
-                    List<String> types = Lists.newArrayList();
-                    while (text.contains("[[")) {
-                        int endIndex = text.indexOf("]]");
-                        types.add(text.substring(text.indexOf("[[") + 2, endIndex));
-                        text = text.substring(endIndex + 2);
-                    }
-                    table.replace(new ListView<String>("inputs", types) {
+                List<Token> tokens = tokenize(text);
+                if (tokens.size() > 1) {
+                    inputs.replace(new ListView<Token>("parts", tokens) {
                         @Override
-                        protected void populateItem(ListItem<String> item) {
-                            String type = item.getModelObject();
-                            item.add(new Label("type", type));
-                            ImmutableMap<String, ImmutableList<String>> examples = index().examples();
-                            List<String> values = null;
-                            for (String clazz : examples.keySet()) {
-                                if (type.equals(clazz.substring(clazz.lastIndexOf('.') + 1))) {
-                                    values = examples.get(clazz);
-                                    break;
+                        protected void populateItem(ListItem<Token> item) {
+                            Token token = item.getModelObject();
+                            Fragment part;
+                            if (token.isClass) {
+                                String type = token.text;
+                                ImmutableMap<String, ImmutableList<String>> examples = index().examples();
+                                List<String> values = null;
+                                for (String clazz : examples.keySet()) {
+                                    if (type.equals(clazz.substring(clazz.lastIndexOf('.') + 1))) {
+                                        values = examples.get(clazz);
+                                        break;
+                                    }
                                 }
-                            }
-                            if (values == null) {
-                                item.add(new Fragment("input", "text", this).add(new TextField<String>("input", Model.of(""))));
+                                if (values == null) {
+                                    part = new Fragment("part", "text", this);
+                                    part.add(new Label("addOn", type));
+                                    part.add(new TextField<String>("input", Model.of("")).setRequired(true));
+                                } else {
+                                    part = new Fragment("part", "select", this);
+                                    part.add(new DropDownChoice<String>("input", Model.of(""), values));
+                                }
                             } else {
-                                item.add(new Fragment("input", "select", this).add(new DropDownChoice<String>("input", Model.of(""), values)));
+                                part = new Fragment("part", "label", this);
+                                part.add(new Label("text", token.text));
                             }
-                            item.add(new Label("example", "TODO"));
+                            item.add(part);
                         }
                     });
-                    table.setVisible(true);
-                    substitute.setVisible(true);
                     setVisible(false);
+                    inputs.setVisible(true);
+                    substitute.setVisible(true);
                     target.addComponent(form);
                 } else {
                     gherkinModel.append(text);
@@ -263,6 +272,39 @@ public class CreatePage extends BaseProjectPage {
                 }
             }
         });
+    }
+
+    private static List<Token> tokenize(String text) {
+        List<Token> tokens = Lists.newArrayList();
+        while (!"".equals(text)) {
+            int start = text.indexOf("[[");
+            if (start == -1) {
+                tokens.add(new Token(text, false));
+                text = "";
+            } else {
+                String prefix = text.substring(0, start);
+                if (!"".equals(prefix)) {
+                    tokens.add(new Token(prefix, false));
+                }
+
+                int endIndex = text.indexOf("]]");
+                String clazz = text.substring(start + 2, endIndex);
+                tokens.add(new Token(clazz, true));
+                text = text.substring(endIndex + 2);
+            }
+        }
+        return tokens;
+    }
+
+    private static class Token implements Serializable {
+        public String text;
+        public boolean isClass;
+
+        public Token(String text, boolean isClass) {
+            this.text = text;
+            this.isClass = isClass;
+        }
+
     }
 
 }
