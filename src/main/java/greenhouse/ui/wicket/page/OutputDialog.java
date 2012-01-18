@@ -89,12 +89,12 @@ public class OutputDialog extends Panel {
         @Override
         public void setObject(final String object) {
             String filtered = object;
-            String remove = "greenhouse-example ---";
+            String remove = "--- cuke4duke-maven-plugin";
             int index = filtered.lastIndexOf(remove);
             if (index == -1) {
                 text += ".";
             } else {
-                filtered = filtered.substring(index + remove.length() + 1);
+                filtered = filtered.substring(filtered.indexOf('\n', index));
                 filtered = filtered.replaceAll("\\[INFO\\] ", "");
                 if ("".equals(StringUtils.trimWhitespace(filtered))) {
                     text += ".";
