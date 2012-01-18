@@ -3,6 +3,7 @@ package greenhouse.execute;
 import static greenhouse.util.Utils.file;
 import gherkin.formatter.Formatter;
 import gherkin.parser.Parser;
+import greenhouse.config.GreenhouseSettings;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
@@ -73,9 +74,11 @@ public class ProcessExecutor implements ScenarioExecutor {
     private final Map<String, AtomicInteger> executionIds = new HashMap<String, AtomicInteger>();
 
     private final ProjectRepository repository;
+    private final GreenhouseSettings settings;
 
-    public ProcessExecutor(ProjectRepository repository) {
+    public ProcessExecutor(ProjectRepository repository, GreenhouseSettings settings) {
         this.repository = repository;
+        this.settings = settings;
     }
 
     /**
@@ -279,7 +282,7 @@ public class ProcessExecutor implements ScenarioExecutor {
             String command = project.getContexts().get(execution.getContextKey()).getCommand();
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(command));
             argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
-            final ProcessBuilder builder = Utils.mavenProcess(project.getFiles(), argsList);
+            final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), project.getFiles(), argsList);
 
             String builderCommand = Joiner.on(' ').join(builder.command());
             execution.setCommand(builderCommand);

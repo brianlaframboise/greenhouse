@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import greenhouse.TestUtils;
+import greenhouse.config.GreenhouseSettings;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
 import greenhouse.project.PropsProjectRepository;
@@ -25,10 +26,11 @@ public class ProcessExecutorTest {
 
     @BeforeClass
     public static void build_index() {
-        project = Project.load(new File(TestUtils.HELLO_WORLD_PROJECT));
+        GreenhouseSettings settings = new GreenhouseSettings();
+        project = Project.load(new File(TestUtils.HELLO_WORLD_PROJECT), settings);
         File repo = new File(TestUtils.DEMO_PROJECTS);
-        PropsProjectRepository repository = new PropsProjectRepository(repo);
-        executor = new ProcessExecutor(repository);
+        PropsProjectRepository repository = new PropsProjectRepository(repo, settings);
+        executor = new ProcessExecutor(repository, settings);
     }
 
     @After

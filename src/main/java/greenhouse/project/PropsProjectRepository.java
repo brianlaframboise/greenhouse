@@ -1,5 +1,6 @@
 package greenhouse.project;
 
+import greenhouse.config.GreenhouseSettings;
 import greenhouse.util.DirectoryFilter;
 
 import java.io.File;
@@ -10,11 +11,11 @@ public class PropsProjectRepository implements ProjectRepository {
 
     private ImmutableMap<String, Project> projects = ImmutableMap.<String, Project> of();
 
-    public PropsProjectRepository(File projectsDir) {
+    public PropsProjectRepository(File projectsDir, GreenhouseSettings settings) {
         File[] directories = projectsDir.listFiles(new DirectoryFilter());
 
         for (File root : directories) {
-            add(Project.load(root));
+            add(Project.load(root, settings));
         }
     }
 

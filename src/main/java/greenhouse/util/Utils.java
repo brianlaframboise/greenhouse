@@ -23,8 +23,6 @@ public class Utils {
 
     public static final String SEPARATOR = System.getProperty("file.separator");
 
-    public static final String MVN = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";
-
     public static File file(String... parts) {
         return new File(Joiner.on(SEPARATOR).join(parts));
     }
@@ -41,19 +39,19 @@ public class Utils {
         }
     }
 
-    public static ProcessBuilder mavenProcess(File directory, List<String> args) {
+    public static ProcessBuilder mavenProcess(String mvn, File directory, List<String> args) {
         ProcessBuilder builder = new ProcessBuilder();
         builder.directory(directory);
         ArrayList<String> argList = new ArrayList<String>();
-        String osName = System.getProperty("os.name");
-        if (osName.startsWith("Windows")) {
-            argList.add(MVN);
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            argList.add(mvn);
+            for (String arg : args) {
+                argList.add(arg);
+            }
         } else {
             argList.add("bash");
             argList.add("-c");
-        }
-        for (String arg : args) {
-            argList.add(arg);
+            argList.add(mvn + " " + Joiner.on(' ').join(args));
         }
         builder.command(argList);
         return builder;

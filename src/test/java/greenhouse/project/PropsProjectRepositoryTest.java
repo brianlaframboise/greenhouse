@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import greenhouse.TestUtils;
+import greenhouse.config.GreenhouseSettings;
 
 import java.io.File;
 
@@ -16,7 +17,7 @@ public class PropsProjectRepositoryTest {
     @Test
     public void load() {
         File repo = new File(TestUtils.DEMO_PROJECTS);
-        PropsProjectRepository repository = new PropsProjectRepository(repo);
+        PropsProjectRepository repository = new PropsProjectRepository(repo, new GreenhouseSettings());
         ImmutableList<Project> projects = ImmutableList.copyOf(repository.getAllProjects());
         assertEquals(1, projects.size());
 

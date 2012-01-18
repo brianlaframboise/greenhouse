@@ -1,5 +1,6 @@
 package greenhouse.project;
 
+import greenhouse.config.GreenhouseSettings;
 import greenhouse.index.Index;
 import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
@@ -30,10 +31,10 @@ public class Project {
     private final Index index;
     private final FileSource fileSource;
 
-    private Map<String, Context> contexts;
+    private final Map<String, Context> contexts;
     private String lastUpdateOutput = "";
 
-    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
+    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource, GreenhouseSettings settings) {
         if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
         }
@@ -41,7 +42,7 @@ public class Project {
         this.name = name;
         this.root = root;
         files = Utils.file(root.getAbsolutePath(), "files");
-        index = new Indexer(key, files.getAbsolutePath()).index();
+        index = new Indexer(key, files.getAbsolutePath(), settings).index();
         this.contexts = Maps.newHashMap(contexts);
         this.fileSource = fileSource;
     }
@@ -54,13 +55,13 @@ public class Project {
      * @param root The project root directory
      * @return a new Project
      */
-    public static Project load(File root) {
+    public static Project load(File root, GreenhouseSettings settings) {
         Properties project = Utils.load(root, "project.properties");
         FileSource fileSource = loadFileSource(root, project);
         String name = project.getProperty("name");
 
         Map<String, Context> contexts = loadContexts(root);
-        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
+        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource, settings);
     }
 
     /**

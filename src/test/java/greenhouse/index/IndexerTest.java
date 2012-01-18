@@ -3,6 +3,7 @@ package greenhouse.index;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import greenhouse.TestUtils;
+import greenhouse.config.GreenhouseSettings;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,7 +14,7 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        index = new Indexer("hello-world", TestUtils.HELLO_WORLD_FILES).index();
+        index = new Indexer("hello-world", TestUtils.HELLO_WORLD_FILES, new GreenhouseSettings()).index();
     }
 
     @Test

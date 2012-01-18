@@ -5,6 +5,7 @@ import gherkin.formatter.model.Scenario;
 import gherkin.formatter.model.ScenarioOutline;
 import gherkin.formatter.model.TagStatement;
 import gherkin.parser.Parser;
+import greenhouse.config.GreenhouseSettings;
 import greenhouse.util.Utils;
 
 import java.io.BufferedInputStream;
@@ -63,10 +64,13 @@ public class Indexer {
     private String featureName;
     private final List<IndexedScenario> scenarios = new ArrayList<IndexedScenario>();
 
-    public Indexer(String projectKey, String projectRoot) {
+    private final GreenhouseSettings settings;
+
+    public Indexer(String projectKey, String projectRoot, GreenhouseSettings settings) {
         this.projectKey = projectKey;
         this.projectRoot = new File(projectRoot);
         featuresRoot = Utils.file(projectRoot, "features");
+        this.settings = settings;
     }
 
     public InMemoryIndex index() {
@@ -84,7 +88,8 @@ public class Indexer {
     }
 
     private Properties loadIndex() {
-        final ProcessBuilder builder = Utils.mavenProcess(projectRoot, ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
+        final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), projectRoot,
+                ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
         builder.redirectErrorStream(true);
         try {
             LOGGER.info(projectKey + " Loading index via: "
