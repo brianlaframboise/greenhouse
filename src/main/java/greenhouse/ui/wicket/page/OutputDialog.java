@@ -1,9 +1,9 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.execute.Execution;
-import greenhouse.execute.ScenarioExecutor;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionState;
+import greenhouse.execute.ScenarioExecutor;
 
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,7 +37,13 @@ public class OutputDialog extends Panel {
         add(dialog);
         dialog.add((progress = new Label("progress", "")).setOutputMarkupId(true));
         dialog.add(output.setOutputMarkupId(true));
-        dialog.add(new AjaxFallbackLink<Void>("close") {
+        dialog.add(new AjaxFallbackLink<Void>("close1") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                dialog.close(target);
+            }
+        });
+        dialog.add(new AjaxFallbackLink<Void>("close2") {
             @Override
             public void onClick(AjaxRequestTarget target) {
                 dialog.close(target);
