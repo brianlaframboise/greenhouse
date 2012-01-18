@@ -1,3 +1,4 @@
+@feature
 Feature: Hello World Feature
 	In order to ensure that my installation works
 	As a Developer

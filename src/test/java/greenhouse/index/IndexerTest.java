@@ -22,6 +22,7 @@ public class IndexerTest {
         assertThat(index.findByTag("@hello").size(), is(1));
         assertThat(index.findByTag("@goodbye").size(), is(1));
         assertThat(index.findByTag("@world").size(), is(2));
+        assertThat(index.findByTag("@feature").size(), is(2));
     }
 
     @Test

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -61,7 +62,7 @@ public class Indexer {
     private final Multimap<String, IndexedScenario> scenariosByTag = ArrayListMultimap.create();
 
     private String uri;
-    private String featureName;
+    private Feature feature;
     private final List<IndexedScenario> scenarios = new ArrayList<IndexedScenario>();
 
     private final GreenhouseSettings settings;
@@ -173,7 +174,7 @@ public class Indexer {
     }
 
     public void feature(Feature feature) {
-        featureName = feature.getName();
+        this.feature = feature;
     }
 
     public void scenario(Scenario scenario) {
@@ -185,9 +186,9 @@ public class Indexer {
     }
 
     public void eof() {
-        features.add(new IndexedFeature(uri, featureName, ImmutableList.copyOf(scenarios)));
+        features.add(new IndexedFeature(uri, feature.getName(), ImmutableList.copyOf(scenarios)));
         uri = null;
-        featureName = null;
+        feature = null;
         scenarios.clear();
     }
 
@@ -195,7 +196,7 @@ public class Indexer {
         int line = statement.getLine();
         String name = statement.getName();
         String description = statement.getDescription();
-        ImmutableSet<Tag> tags = copy(statement.getTags());
+        ImmutableSet<Tag> tags = copy(Iterables.concat(feature.getTags(), statement.getTags()));
 
         IndexedScenario indexed = new IndexedScenario(line, type, name, description, tags);
         scenarios.add(indexed);
@@ -204,7 +205,7 @@ public class Indexer {
         }
     }
 
-    private ImmutableSet<Tag> copy(List<gherkin.formatter.model.Tag> gherkinTags) {
+    private ImmutableSet<Tag> copy(Iterable<gherkin.formatter.model.Tag> gherkinTags) {
         Set<Tag> tags = Sets.newHashSet();
         for (gherkin.formatter.model.Tag tag : gherkinTags) {
             tags.add(new Tag(tag.getName(), tag.getLine()));
