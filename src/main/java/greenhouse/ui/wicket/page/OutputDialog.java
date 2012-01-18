@@ -4,6 +4,7 @@ import greenhouse.execute.Execution;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionState;
 import greenhouse.execute.ScenarioExecutor;
+import greenhouse.ui.wicket.WicketUtils;
 
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -13,6 +14,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
+import org.springframework.util.StringUtils;
 
 import com.visural.wicket.component.dialog.Dialog;
 
@@ -29,11 +31,12 @@ public class OutputDialog extends Panel {
     private final Label output;
     private final Label progress;
 
+    private final FilteringModel filteringModel = new FilteringModel();
+
     public OutputDialog(String id) {
         super(id);
         dialog = new Dialog("dialog");
-        // new FilteringModel();
-        output = new Label("output", new Model<String>(""));
+        output = new Label("output", filteringModel);
         add(dialog);
         dialog.add((progress = new Label("progress", "")).setOutputMarkupId(true));
         dialog.add(output.setOutputMarkupId(true));
@@ -53,7 +56,6 @@ public class OutputDialog extends Panel {
 
     public void begin(final ExecutionKey executionKey, AjaxRequestTarget target) {
         progress.setDefaultModelObject("Preparing...");
-        output.setDefaultModelObject("");
         final long startTime = System.currentTimeMillis();
         output.add(new AbstractAjaxTimerBehavior(Duration.seconds(1)) {
             @Override
@@ -69,35 +71,46 @@ public class OutputDialog extends Panel {
                 }
                 progress.setDefaultModelObject(prefix + " (" + runtime + "s)");
                 output.setDefaultModelObject(outputText);
-                if (target != null) {
-                    target.addComponent(output);
-                    target.addComponent(progress);
-                }
+                WicketUtils.addComponents(target, output, progress);
             }
         });
-        target.addComponent(dialog);
-        target.addComponent(output);
-        target.addComponent(progress);
+        filteringModel.reset();
+        WicketUtils.addComponents(target, dialog, output, progress);
         dialog.open(target);
     }
 
-    @SuppressWarnings("unused")
     private static class FilteringModel extends Model<String> {
         private String text = "";
 
+        public FilteringModel() {
+            reset();
+        }
+
         @Override
-        public void setObject(String object) {
+        public void setObject(final String object) {
             String filtered = object;
             String remove = "greenhouse-example ---";
-            int index = object.lastIndexOf(remove);
-            filtered = filtered.substring(index + remove.length() + 1);
-            filtered = filtered.replaceAll("\\[INFO\\] ", "");
-            text = filtered;
+            int index = filtered.lastIndexOf(remove);
+            if (index == -1) {
+                text += ".";
+            } else {
+                filtered = filtered.substring(index + remove.length() + 1);
+                filtered = filtered.replaceAll("\\[INFO\\] ", "");
+                if ("".equals(StringUtils.trimWhitespace(filtered))) {
+                    text += ".";
+                } else {
+                    text = filtered;
+                }
+            }
         }
 
         @Override
         public String getObject() {
             return text;
+        }
+
+        public void reset() {
+            text = "Loading Maven and Cucumber.";
         }
     }
 }
