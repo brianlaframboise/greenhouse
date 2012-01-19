@@ -66,12 +66,29 @@
 		</div>
 		<div class='row'>
 			<div class='span4'>
-				<a wicket:id='update'>Update Source</a>
+				<a wicket:id='update' class='btn info'>Update Source</a>
 			</div>
 			<div class='span4'>
 			<pre wicket:id='updateOutput'></pre>
 			</div>
 		</div>
+	</section>
+	
+	<section id='index'>
+        <div class='row'>
+            <div class='span'>
+                <h2>Index</h2>
+            </div>
+        </div>
+        <div class='row'>
+            <div class='span4'>
+                <a wicket:id='reindex' class='btn info'>Reindex</a>
+            </div>
+            <div class='span4'>
+            <pre wicket:id='reindexOutput'></pre>
+            </div>
+        </div>
+	   
 	</section>
 
 </wicket:extend>
