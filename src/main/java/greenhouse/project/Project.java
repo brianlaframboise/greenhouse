@@ -1,8 +1,5 @@
 package greenhouse.project;
 
-import greenhouse.config.GreenhouseSettings;
-import greenhouse.index.Index;
-import greenhouse.index.Indexer;
 import greenhouse.util.Utils;
 
 import java.io.File;
@@ -27,22 +24,18 @@ public class Project {
     private final String key;
     private final String name;
     private final File root;
-    private final File files;
-    private final Index index;
     private final FileSource fileSource;
 
     private final Map<String, Context> contexts;
     private String lastUpdateOutput = "";
 
-    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource, GreenhouseSettings settings) {
+    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
         if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
         }
         this.key = key;
         this.name = name;
         this.root = root;
-        files = Utils.file(root.getAbsolutePath(), "files");
-        index = new Indexer(key, files.getAbsolutePath(), settings).index();
         this.contexts = Maps.newHashMap(contexts);
         this.fileSource = fileSource;
     }
@@ -55,13 +48,13 @@ public class Project {
      * @param root The project root directory
      * @return a new Project
      */
-    public static Project load(File root, GreenhouseSettings settings) {
+    public static Project load(File root) {
         Properties project = Utils.load(root, "project.properties");
         FileSource fileSource = loadFileSource(root, project);
         String name = project.getProperty("name");
 
         Map<String, Context> contexts = loadContexts(root);
-        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource, settings);
+        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
     }
 
     /**
@@ -133,10 +126,6 @@ public class Project {
 
     public ImmutableMap<String, Context> getContexts() {
         return ImmutableMap.copyOf(contexts);
-    }
-
-    public Index index() {
-        return index;
     }
 
     public void addContext(String addKey, Context context) {

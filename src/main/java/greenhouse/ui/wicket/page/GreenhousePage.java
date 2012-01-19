@@ -1,6 +1,7 @@
 package greenhouse.ui.wicket.page;
 
 import greenhouse.index.Index;
+import greenhouse.index.IndexRepository;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 
@@ -14,6 +15,9 @@ public class GreenhousePage extends WebPage {
 
     @SpringBean
     protected ProjectRepository repo;
+
+    @SpringBean
+    protected IndexRepository indices;
 
     public GreenhousePage() {
         this(null);
@@ -33,7 +37,7 @@ public class GreenhousePage extends WebPage {
     }
 
     protected Index index() {
-        return project().index();
+        return indices.getIndex(getProjectKey());
     }
 
     protected Project project() {

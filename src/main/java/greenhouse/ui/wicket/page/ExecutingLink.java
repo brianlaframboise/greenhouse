@@ -3,6 +3,7 @@ package greenhouse.ui.wicket.page;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.Index;
+import greenhouse.index.IndexRepository;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
@@ -20,6 +21,9 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
     @SpringBean
     protected ScenarioExecutor executor;
 
+    @SpringBean
+    protected IndexRepository indices;
+
     protected final String projectKey;
     private final OutputDialog dialog;
 
@@ -35,7 +39,7 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
     }
 
     protected Index index() {
-        return project().index();
+        return indices.getIndex(projectKey);
     }
 
     protected Project project() {

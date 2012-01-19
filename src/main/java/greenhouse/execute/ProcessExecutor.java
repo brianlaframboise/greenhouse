@@ -4,6 +4,8 @@ import static greenhouse.util.Utils.file;
 import gherkin.formatter.Formatter;
 import gherkin.parser.Parser;
 import greenhouse.config.GreenhouseSettings;
+import greenhouse.index.Index;
+import greenhouse.index.IndexRepository;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
@@ -74,10 +76,12 @@ public class ProcessExecutor implements ScenarioExecutor {
     private final Map<String, AtomicInteger> executionIds = new HashMap<String, AtomicInteger>();
 
     private final ProjectRepository repository;
+    private final IndexRepository indices;
     private final GreenhouseSettings settings;
 
-    public ProcessExecutor(ProjectRepository repository, GreenhouseSettings settings) {
+    public ProcessExecutor(ProjectRepository repository, IndexRepository indices, GreenhouseSettings settings) {
         this.repository = repository;
+        this.indices = indices;
         this.settings = settings;
     }
 
@@ -154,9 +158,10 @@ public class ProcessExecutor implements ScenarioExecutor {
         ExecutionType type = request.getType();
         String projectKey = request.getProjectKey();
         Project project = repository.getProject(projectKey);
+        Index index = indices.getIndex(projectKey);
         if (ExecutionType.FEATURE == type) {
 
-            IndexedFeature feature = project.index().featureByName(request.getFeature());
+            IndexedFeature feature = index.featureByName(request.getFeature());
             LOGGER.info("Executing " + project.getKey() + " feature \"" + feature.getName() + "\"");
             return execute(request, project, true);
 
@@ -167,14 +172,14 @@ public class ProcessExecutor implements ScenarioExecutor {
 
         } else if (ExecutionType.SCENARIO == type) {
 
-            IndexedScenario scenario = project.index().scenarioByName(request.getScenario());
+            IndexedScenario scenario = index.scenarioByName(request.getScenario());
             LOGGER.info("Executing " + project.getKey() + " scenario \"" + scenario.getName() + "\"");
             Execution execution = nextExecution(request, project);
             return executeWithLine(project, execution, scenario, -1);
 
         } else if (ExecutionType.EXAMPLE == type) {
 
-            IndexedScenario outline = project.index().scenarioByName(request.getScenario());
+            IndexedScenario outline = index.scenarioByName(request.getScenario());
             int line = request.getLine();
             LOGGER.info("Executing " + project.getKey() + " scenario outline \"" + outline.getName() + "\" line " + line);
             Execution execution = nextExecution(request, project);
@@ -188,7 +193,8 @@ public class ProcessExecutor implements ScenarioExecutor {
         Execution execution;
         if (useFeature) {
             execution = nextExecution(request, project);
-            IndexedFeature feature = project.index().featureByName(request.getFeature());
+            Index index = indices.getIndex(project.getKey());
+            IndexedFeature feature = index.featureByName(request.getFeature());
             copyFeature(project, execution.getExecutionDirectory(), feature);
         } else {
             execution = nextExecution(request, project);
@@ -238,7 +244,8 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     private File tempFeatureFile(Project project, File tempDir, IndexedFeature feature) {
-        String root = project.index().getFeaturesRoot().getAbsolutePath();
+        Index index = indices.getIndex(project.getKey());
+        String root = index.getFeaturesRoot().getAbsolutePath();
         String subPath = feature.getUri().substring(root.length() + 1);
         return file(tempDir.getPath(), subPath);
     }
@@ -251,7 +258,8 @@ public class ProcessExecutor implements ScenarioExecutor {
     private void copyScenarios(Project project, File tempDir, IndexedScenario scenario, int line) {
         try {
             // Setup tagged destination file
-            IndexedFeature feature = project.index().findByScenario(scenario);
+            Index index = indices.getIndex(project.getKey());
+            IndexedFeature feature = index.findByScenario(scenario);
             File featureFile = tempFeatureFile(project, tempDir, feature);
             Files.createParentDirs(featureFile);
             Writer tempFile = new FileWriter(featureFile);

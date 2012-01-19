@@ -2,6 +2,8 @@ package greenhouse.config;
 
 import greenhouse.execute.ProcessExecutor;
 import greenhouse.execute.ScenarioExecutor;
+import greenhouse.index.InMemoryIndexRepository;
+import greenhouse.index.IndexRepository;
 import greenhouse.project.ProjectRepository;
 import greenhouse.project.PropsProjectRepository;
 import greenhouse.util.Utils;
@@ -19,15 +21,13 @@ public class GreenhouseConfiguration {
     private File projects;
 
     @Bean
-    public ProjectRepository projectRepository() {
-        return new PropsProjectRepository(projects, greenhouseSettings());
+    public IndexRepository indexRepository() {
+        return new InMemoryIndexRepository(greenhouseSettings());
     }
 
     @Bean
-    public ScenarioExecutor scenarioExecutor() {
-        ProcessExecutor executor = new ProcessExecutor(projectRepository(), greenhouseSettings());
-        executor.reset(projects);
-        return executor;
+    public ProjectRepository projectRepository() {
+        return new PropsProjectRepository(projects, indexRepository());
     }
 
     @Bean
@@ -40,4 +40,12 @@ public class GreenhouseConfiguration {
 
         return settings;
     }
+
+    @Bean
+    public ScenarioExecutor scenarioExecutor() {
+        ProcessExecutor executor = new ProcessExecutor(projectRepository(), indexRepository(), greenhouseSettings());
+        executor.reset(projects);
+        return executor;
+    }
+
 }

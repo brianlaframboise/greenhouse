@@ -6,6 +6,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import greenhouse.TestUtils;
 import greenhouse.config.GreenhouseSettings;
+import greenhouse.index.InMemoryIndexRepository;
+import greenhouse.index.Index;
 import greenhouse.index.IndexedScenario;
 import greenhouse.project.Project;
 import greenhouse.project.PropsProjectRepository;
@@ -23,14 +25,16 @@ public class ProcessExecutorTest {
 
     private static Project project;
     private static ScenarioExecutor executor;
+    private static Index index;
 
     @BeforeClass
     public static void build_index() {
         GreenhouseSettings settings = new GreenhouseSettings();
-        project = Project.load(new File(TestUtils.HELLO_WORLD_PROJECT), settings);
-        File repo = new File(TestUtils.DEMO_PROJECTS);
-        PropsProjectRepository repository = new PropsProjectRepository(repo, settings);
-        executor = new ProcessExecutor(repository, settings);
+        InMemoryIndexRepository indices = new InMemoryIndexRepository(settings);
+        PropsProjectRepository repository = new PropsProjectRepository(new File(TestUtils.DEMO_PROJECTS), indices);
+        executor = new ProcessExecutor(repository, indices, settings);
+        project = repository.getProject("HELLO");
+        index = indices.getIndex("HELLO");
     }
 
     @After
@@ -50,7 +54,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_tagged_scenario() throws IOException {
-        ImmutableSet<IndexedScenario> scenarios = project.index().findByTag("@hello");
+        ImmutableSet<IndexedScenario> scenarios = index.findByTag("@hello");
         assertThat(scenarios.size(), is(1));
 
         IndexedScenario scenario = scenarios.iterator().next();
@@ -65,7 +69,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_tagged_scenario_outline() {
-        ImmutableSet<IndexedScenario> scenarios = project.index().findByTag("@goodbye");
+        ImmutableSet<IndexedScenario> scenarios = index.findByTag("@goodbye");
         assertThat(scenarios.size(), is(1));
 
         IndexedScenario scenario = scenarios.iterator().next();
@@ -80,12 +84,12 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_tagged_scenario_outline_single_example() {
-        ImmutableSet<IndexedScenario> scenarios = project.index().findByTag("@goodbye");
+        ImmutableSet<IndexedScenario> scenarios = index.findByTag("@goodbye");
         assertThat(scenarios.size(), is(1));
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionRequest request = ExecutionRequest.example(project.getKey(), "default", scenario.getName(), 21);
+        ExecutionRequest request = ExecutionRequest.example(project.getKey(), "default", scenario.getName(), 22);
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 

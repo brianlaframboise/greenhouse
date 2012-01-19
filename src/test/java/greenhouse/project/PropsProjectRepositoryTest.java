@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import greenhouse.TestUtils;
 import greenhouse.config.GreenhouseSettings;
+import greenhouse.index.InMemoryIndexRepository;
 
 import java.io.File;
 
@@ -16,8 +17,10 @@ public class PropsProjectRepositoryTest {
 
     @Test
     public void load() {
-        File repo = new File(TestUtils.DEMO_PROJECTS);
-        PropsProjectRepository repository = new PropsProjectRepository(repo, new GreenhouseSettings());
+        GreenhouseSettings settings = new GreenhouseSettings();
+        InMemoryIndexRepository indices = new InMemoryIndexRepository(settings);
+        PropsProjectRepository repository = new PropsProjectRepository(new File(TestUtils.DEMO_PROJECTS), indices);
+
         ImmutableList<Project> projects = ImmutableList.copyOf(repository.getAllProjects());
         assertEquals(1, projects.size());
 
