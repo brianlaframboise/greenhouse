@@ -103,9 +103,9 @@ public class Indexer {
                         // Read process output to prevent blocking
                         BufferedInputStream stream = new BufferedInputStream(process.getInputStream());
                         byte[] bytes = StreamUtils.getBytes(stream);
-                        System.out.println(new String(bytes));
+                        LOGGER.info(new String(bytes));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.error("Unable to read indexing output for " + projectKey, e);
                     }
                 }
             }.start();
