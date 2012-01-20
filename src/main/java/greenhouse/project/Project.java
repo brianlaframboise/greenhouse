@@ -49,12 +49,14 @@ public class Project {
      * @return a new Project
      */
     public static Project load(File root) {
-        Properties project = Utils.load(root, "project.properties");
-        FileSource fileSource = loadFileSource(root, project);
-        String name = project.getProperty("name");
+        Properties projectProps = Utils.load(root, "project.properties");
+        FileSource fileSource = loadFileSource(root, projectProps);
+        String name = projectProps.getProperty("name");
 
         Map<String, Context> contexts = loadContexts(root);
-        return new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
+        Project project = new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
+        project.update();
+        return project;
     }
 
     /**

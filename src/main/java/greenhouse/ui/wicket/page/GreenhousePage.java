@@ -19,10 +19,6 @@ public class GreenhousePage extends WebPage {
     @SpringBean
     protected IndexRepository indices;
 
-    public GreenhousePage() {
-        this(null);
-    }
-
     public GreenhousePage(PageParameters params) {
         super(params);
         add(new BookmarkablePageLink<Void>("home", ProjectsPage.class));

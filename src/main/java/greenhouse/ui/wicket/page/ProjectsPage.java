@@ -29,6 +29,7 @@ public class ProjectsPage extends GreenhousePage {
     }
 
     public ProjectsPage(PageParameters params) {
+        super(params);
         if (params != null) {
             String key = params.getString("0", "");
             Project project = repo.getProject(key);
@@ -44,6 +45,8 @@ public class ProjectsPage extends GreenhousePage {
                     setResponsePage(HistoryPage.class, params);
                 } else if (page.equals("settings")) {
                     setResponsePage(SettingsPage.class, params);
+                } else if (page.equals("update")) {
+                    setResponsePage(UpdatePage.class, params);
                 } else {
                     setResponsePage(ProjectPage.class, params);
                 }
