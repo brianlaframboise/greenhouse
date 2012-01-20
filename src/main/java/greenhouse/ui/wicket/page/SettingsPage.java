@@ -1,6 +1,5 @@
 package greenhouse.ui.wicket.page;
 
-import greenhouse.index.IndexRepository;
 import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.ui.wicket.WicketUtils;
@@ -19,7 +18,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.PatternValidator;
 
 import com.google.common.collect.ImmutableList;
@@ -85,27 +83,12 @@ public class SettingsPage extends BaseProjectPage {
         add(new IndicatingAjaxLink<Void>("update") {
             @Override
             public void onClick(AjaxRequestTarget target) {
-                project().update();
+                Project project = project();
+                project.update();
+                indices.index(project);
                 WicketUtils.addComponents(target, updateOutput);
             }
         });
-
-        final Label reindexOutput = new Label("reindexOutput", "");
-        add(reindexOutput.setOutputMarkupId(true));
-
-        add(new IndicatingAjaxLink<Void>("reindex") {
-
-            @SpringBean
-            private IndexRepository indices;
-
-            @Override
-            public void onClick(AjaxRequestTarget target) {
-                indices.index(project());
-                reindexOutput.setDefaultModelObject("Index updated");
-                WicketUtils.addComponents(target, reindexOutput);
-            }
-        });
-
     }
 
     private TextField<String> newTextField(String id, IModel<String> model) {
