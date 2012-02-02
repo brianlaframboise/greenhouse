@@ -96,50 +96,57 @@ public class ProcessExecutor implements ScenarioExecutor {
         tasks.clear();
         executionIds.clear();
 
-        DirectoryFilter directoryFilter = new DirectoryFilter();
-        for (File file : projectsDir.listFiles(directoryFilter)) {
+        for (File file : projectsDir.listFiles(new DirectoryFilter())) {
             String projectKey = file.getName();
             File executionsDirectory = Utils.file(file.getAbsolutePath(), "executions");
             if (executionsDirectory.exists()) {
-                Project project = repository.getProject(projectKey);
-                int max = 1;
-                for (File executionDir : executionsDirectory.listFiles(directoryFilter)) {
-                    int executionNumber = Integer.valueOf(executionDir.getName());
-                    Properties props = Utils.load(executionDir, "execution.properties");
-
-                    ExecutionType type = ExecutionType.valueOf(props.getProperty("type"));
-                    ExecutionRequest request = null;
-
-                    String key = props.getProperty("context.key");
-                    String name = props.getProperty("context.name");
-                    String command = props.getProperty("context.command");
-                    Context context = new Context(key, name, command);
-
-                    if (type == ExecutionType.FEATURE) {
-                        request = ExecutionRequest.feature(projectKey, context, props.getProperty("feature"));
-                    } else if (type == ExecutionType.SCENARIO) {
-                        request = ExecutionRequest.scenario(projectKey, context, props.getProperty("scenario"));
-                    } else if (type == ExecutionType.EXAMPLE) {
-                        request = ExecutionRequest.example(projectKey, context, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
-                    } else if (type == ExecutionType.GHERKIN) {
-                        request = ExecutionRequest.gherkin(projectKey, context, props.getProperty("gherkin"));
-                    }
-
-                    Execution execution = new Execution(request, project.getRoot(), executionNumber);
-
-                    execution.setCommand(props.getProperty("command"));
-                    execution.setEnd(Long.valueOf(props.getProperty("end", "0")));
-                    execution.setStart(Long.valueOf(props.getProperty("start", "0")));
-                    execution.setState(ExecutionState.COMPLETE);
-
-                    tasks.put(execution.getKey(), execution);
-                    max = Math.max(max, executionNumber);
-                }
-                AtomicInteger nextId = getNextId(project);
-                nextId.set(max + 1);
-                executionIds.put(projectKey, nextId);
+                loadExecutions(projectKey, executionsDirectory);
             }
         }
+    }
+
+    private void loadExecutions(String projectKey, File executionsDirectory) {
+        Project project = repository.getProject(projectKey);
+        int max = 1;
+        try {
+            for (File executionDir : executionsDirectory.listFiles(new DirectoryFilter())) {
+                int executionNumber = Integer.valueOf(executionDir.getName());
+                Properties props = Utils.load(executionDir, "execution.properties");
+
+                ExecutionType type = ExecutionType.valueOf(props.getProperty("type"));
+                ExecutionRequest request = null;
+
+                String key = props.getProperty("context.key");
+                String name = props.getProperty("context.name");
+                String command = props.getProperty("context.command");
+                Context context = new Context(key, name, command);
+
+                if (type == ExecutionType.FEATURE) {
+                    request = ExecutionRequest.feature(projectKey, context, props.getProperty("feature"));
+                } else if (type == ExecutionType.SCENARIO) {
+                    request = ExecutionRequest.scenario(projectKey, context, props.getProperty("scenario"));
+                } else if (type == ExecutionType.EXAMPLE) {
+                    request = ExecutionRequest.example(projectKey, context, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
+                } else if (type == ExecutionType.GHERKIN) {
+                    request = ExecutionRequest.gherkin(projectKey, context, props.getProperty("gherkin"));
+                }
+
+                Execution execution = new Execution(request, project.getRoot(), executionNumber);
+
+                execution.setCommand(props.getProperty("command"));
+                execution.setEnd(Long.valueOf(props.getProperty("end", "0")));
+                execution.setStart(Long.valueOf(props.getProperty("start", "0")));
+                execution.setState(ExecutionState.COMPLETE);
+
+                tasks.put(execution.getKey(), execution);
+                max = Math.max(max, executionNumber);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error while loading execution at " + executionsDirectory.getAbsolutePath(), e);
+        }
+        AtomicInteger nextId = getNextId(project);
+        nextId.set(max + 1);
+        executionIds.put(projectKey, nextId);
     }
 
     private Execution nextExecution(ExecutionRequest request, Project project) {
