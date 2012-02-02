@@ -4,6 +4,7 @@ import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ScenarioExecutor;
 import greenhouse.index.Index;
 import greenhouse.index.IndexRepository;
+import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
@@ -53,6 +54,10 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
             WicketUtils.setContextKey(getWebRequest(), (WebResponse) getResponse(), project, project.getContexts().keySet().iterator().next());
         }
         return contextKey;
+    }
+
+    protected Context context() {
+        return project().getContexts().get(contextKey());
     }
 
     protected abstract ExecutionKey execute();

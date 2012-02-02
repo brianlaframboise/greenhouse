@@ -15,7 +15,7 @@ class ExecuteGherkinLink extends ExecutingLink {
 
     @Override
     protected ExecutionKey execute() {
-        return executor.execute(ExecutionRequest.gherkin(projectKey, contextKey(), gherkinModel.getObject()));
+        return executor.execute(ExecutionRequest.gherkin(projectKey, context(), gherkinModel.getObject()));
 
     }
 }

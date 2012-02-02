@@ -4,8 +4,6 @@ import greenhouse.execute.Execution;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionState;
 import greenhouse.execute.ScenarioExecutor;
-import greenhouse.project.Context;
-import greenhouse.project.Project;
 import greenhouse.ui.wicket.WicketUtils;
 
 import java.util.Collections;
@@ -88,11 +86,7 @@ public class HistoryPage extends BaseProjectPage {
 
                 long end = execution.getEnd();
                 item.add(new Label("end", end == 0 ? Model.of("-") : Model.of(new Date(end))));
-
-                Project project = repo.getProject(projectKey);
-                Context context = project.getContexts().get(execution.getContextKey());
-                item.add(new Label("environment", context.getName()));
-
+                item.add(new Label("environment", execution.getContext().getName()));
                 item.add(new Label("type", Model.of(execution.getType())));
                 item.add(new Label("details", execution.getDescription()));
                 item.add(new BookmarkablePageLink<Void>("output", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "output")));

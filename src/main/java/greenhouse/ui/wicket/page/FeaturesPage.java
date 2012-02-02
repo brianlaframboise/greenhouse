@@ -219,7 +219,7 @@ public class FeaturesPage extends BaseProjectPage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.feature(projectKey, contextKey(), name));
+            return executor.execute(ExecutionRequest.feature(projectKey, context(), name));
         }
     }
 
@@ -234,7 +234,7 @@ public class FeaturesPage extends BaseProjectPage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.scenario(projectKey, contextKey(), name));
+            return executor.execute(ExecutionRequest.scenario(projectKey, context(), name));
         }
     }
 
@@ -251,7 +251,7 @@ public class FeaturesPage extends BaseProjectPage {
 
         @Override
         protected ExecutionKey execute() {
-            return executor.execute(ExecutionRequest.example(projectKey, contextKey(), name, line));
+            return executor.execute(ExecutionRequest.example(projectKey, context(), name, line));
         }
     }
 

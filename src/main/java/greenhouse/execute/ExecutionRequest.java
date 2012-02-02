@@ -1,39 +1,41 @@
 package greenhouse.execute;
 
+import greenhouse.project.Context;
+
 public class ExecutionRequest {
 
     private final ExecutionType type;
     private final String projectKey;
-    private final String contextKey;
+    private final Context context;
     private final String feature;
     private final String scenario;
     private final int line;
     private final String gherkin;
 
-    private ExecutionRequest(ExecutionType type, String projectKey, String contextKey, String feature, String scenario, int line, String gherkin) {
+    private ExecutionRequest(ExecutionType type, String projectKey, Context context, String feature, String scenario, int line, String gherkin) {
         this.type = type;
         this.projectKey = projectKey;
-        this.contextKey = contextKey;
+        this.context = context;
         this.feature = feature;
         this.scenario = scenario;
         this.line = line;
         this.gherkin = gherkin;
     }
 
-    public static ExecutionRequest feature(String projectKey, String contextKey, String featureName) {
-        return new ExecutionRequest(ExecutionType.FEATURE, projectKey, contextKey, featureName, null, -1, null);
+    public static ExecutionRequest feature(String projectKey, Context context, String featureName) {
+        return new ExecutionRequest(ExecutionType.FEATURE, projectKey, context, featureName, null, -1, null);
     }
 
-    public static ExecutionRequest scenario(String projectKey, String contextKey, String scenarioName) {
-        return new ExecutionRequest(ExecutionType.SCENARIO, projectKey, contextKey, null, scenarioName, -1, null);
+    public static ExecutionRequest scenario(String projectKey, Context context, String scenarioName) {
+        return new ExecutionRequest(ExecutionType.SCENARIO, projectKey, context, null, scenarioName, -1, null);
     }
 
-    public static ExecutionRequest example(String projectKey, String contextKey, String scenarioOutlineName, int line) {
-        return new ExecutionRequest(ExecutionType.EXAMPLE, projectKey, contextKey, null, scenarioOutlineName, line, null);
+    public static ExecutionRequest example(String projectKey, Context context, String scenarioOutlineName, int line) {
+        return new ExecutionRequest(ExecutionType.EXAMPLE, projectKey, context, null, scenarioOutlineName, line, null);
     }
 
-    public static ExecutionRequest gherkin(String projectKey, String contextKey, String gherkin) {
-        return new ExecutionRequest(ExecutionType.GHERKIN, projectKey, contextKey, null, null, -1, gherkin);
+    public static ExecutionRequest gherkin(String projectKey, Context context, String gherkin) {
+        return new ExecutionRequest(ExecutionType.GHERKIN, projectKey, context, null, null, -1, gherkin);
     }
 
     public String getDescription() {
@@ -55,8 +57,8 @@ public class ExecutionRequest {
         return type;
     }
 
-    public String getContextKey() {
-        return contextKey;
+    public Context getContext() {
+        return context;
     }
 
     public String getFeature() {

@@ -1,6 +1,7 @@
 package greenhouse.execute;
 
 import static greenhouse.util.Utils.file;
+import greenhouse.project.Context;
 import greenhouse.util.Utils;
 
 import java.io.File;
@@ -119,8 +120,8 @@ public class Execution {
         return key;
     }
 
-    public String getContextKey() {
-        return request.getContextKey();
+    public Context getContext() {
+        return request.getContext();
     }
 
     public String getFeatureName() {

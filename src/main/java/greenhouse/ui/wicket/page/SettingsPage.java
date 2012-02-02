@@ -28,6 +28,7 @@ public class SettingsPage extends BaseProjectPage {
         super(params);
 
         ImmutableList<Context> contexts = ImmutableList.copyOf(project().getContexts().values());
+        final String activeContextKey = WicketUtils.getContextKey(getWebRequestCycle().getWebRequest(), project());
         add(new ListView<Context>("contexts", contexts) {
             @Override
             protected void populateItem(ListItem<Context> item) {
@@ -44,7 +45,7 @@ public class SettingsPage extends BaseProjectPage {
                         setResponsePage(ProjectsPage.class, params);
                         setRedirect(true);
                     }
-                });
+                }.setVisible(!key.equals(activeContextKey)));
             }
         });
 

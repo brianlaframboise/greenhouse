@@ -9,6 +9,7 @@ import greenhouse.config.GreenhouseSettings;
 import greenhouse.index.InMemoryIndexRepository;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedScenario;
+import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.project.PropsProjectRepository;
 
@@ -26,6 +27,7 @@ public class ProcessExecutorTest {
     private static Project project;
     private static ScenarioExecutor executor;
     private static Index index;
+    private static Context context;
 
     @BeforeClass
     public static void build_index() {
@@ -35,6 +37,7 @@ public class ProcessExecutorTest {
         executor = new ProcessExecutor(repository, indices, settings);
         project = repository.getProject("HELLO");
         index = indices.getIndex("HELLO");
+        context = project.getContexts().get("default");
     }
 
     @After
@@ -44,7 +47,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_feature() {
-        ExecutionRequest request = ExecutionRequest.feature(project.getKey(), "default", "Hello World Feature");
+        ExecutionRequest request = ExecutionRequest.feature(project.getKey(), context, "Hello World Feature");
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
@@ -59,7 +62,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), "default", scenario.getName());
+        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), context, scenario.getName());
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
@@ -74,7 +77,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), "default", scenario.getName());
+        ExecutionRequest request = ExecutionRequest.scenario(project.getKey(), context, scenario.getName());
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
@@ -89,7 +92,7 @@ public class ProcessExecutorTest {
 
         IndexedScenario scenario = scenarios.iterator().next();
 
-        ExecutionRequest request = ExecutionRequest.example(project.getKey(), "default", scenario.getName(), 22);
+        ExecutionRequest request = ExecutionRequest.example(project.getKey(), context, scenario.getName(), 22);
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
@@ -104,7 +107,7 @@ public class ProcessExecutorTest {
 
     @Test
     public void executes_gherkin() {
-        ExecutionRequest request = ExecutionRequest.gherkin(project.getKey(), "default", "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n"
+        ExecutionRequest request = ExecutionRequest.gherkin(project.getKey(), context, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n"
                 + "\t\tGiven the Action is Hello\n" + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");
 
         ExecutionKey executionKey = executor.execute(request);

@@ -8,6 +8,7 @@ import greenhouse.index.Index;
 import greenhouse.index.IndexRepository;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
+import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.util.DirectoryFilter;
@@ -108,15 +109,20 @@ public class ProcessExecutor implements ScenarioExecutor {
 
                     ExecutionType type = ExecutionType.valueOf(props.getProperty("type"));
                     ExecutionRequest request = null;
-                    String contextKey = props.getProperty("contextKey");
+
+                    String key = props.getProperty("context.key");
+                    String name = props.getProperty("context.name");
+                    String command = props.getProperty("context.command");
+                    Context context = new Context(key, name, command);
+
                     if (type == ExecutionType.FEATURE) {
-                        request = ExecutionRequest.feature(projectKey, contextKey, props.getProperty("feature"));
+                        request = ExecutionRequest.feature(projectKey, context, props.getProperty("feature"));
                     } else if (type == ExecutionType.SCENARIO) {
-                        request = ExecutionRequest.scenario(projectKey, contextKey, props.getProperty("scenario"));
+                        request = ExecutionRequest.scenario(projectKey, context, props.getProperty("scenario"));
                     } else if (type == ExecutionType.EXAMPLE) {
-                        request = ExecutionRequest.example(projectKey, contextKey, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
+                        request = ExecutionRequest.example(projectKey, context, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
                     } else if (type == ExecutionType.GHERKIN) {
-                        request = ExecutionRequest.gherkin(projectKey, contextKey, props.getProperty("gherkin"));
+                        request = ExecutionRequest.gherkin(projectKey, context, props.getProperty("gherkin"));
                     }
 
                     Execution execution = new Execution(request, project.getRoot(), executionNumber);
@@ -287,7 +293,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
         try {
-            String command = project.getContexts().get(execution.getContextKey()).getCommand();
+            String command = execution.getContext().getCommand();
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(command));
             argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
             final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), project.getFiles(), argsList);
@@ -345,7 +351,10 @@ public class ProcessExecutor implements ScenarioExecutor {
         props.setProperty("line", Integer.toString(execution.getExampleLine()));
         props.setProperty("gherkin", String.valueOf(execution.getGherkin()));
 
-        props.setProperty("contextKey", execution.getContextKey());
+        props.setProperty("context.key", execution.getContext().getKey());
+        props.setProperty("context.name", execution.getContext().getName());
+        props.setProperty("context.command", execution.getContext().getCommand());
+
         props.setProperty("command", execution.getCommand());
         props.setProperty("end", Long.toString(execution.getEnd()));
         props.setProperty("start", Long.toString(execution.getStart()));
