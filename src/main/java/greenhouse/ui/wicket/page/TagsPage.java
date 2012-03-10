@@ -102,7 +102,7 @@ public class TagsPage extends BaseProjectPage {
         }
     }
 
-    private static class ExecuteTagLink extends ExecutingLink {
+    public static class ExecuteTagLink extends ExecutingLink {
 
         private final String tag;
 

@@ -5,6 +5,7 @@ import greenhouse.execute.ExecutionRequest;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
+import greenhouse.ui.wicket.page.TagsPage.ExecuteTagLink;
 import greenhouse.util.Utils;
 
 import java.util.Collections;
@@ -46,6 +47,9 @@ public class FeaturesPage extends BaseProjectPage {
     public FeaturesPage(PageParameters params) {
         super(params);
         projectKey = getProjectKey();
+
+        add(new ExecuteTagLink("executeAll", projectKey, "~@ignore"));
+
         ImmutableList<IndexedFeature> features = index().features();
         List<String> names = Lists.newArrayList();
         for (IndexedFeature feature : features) {
