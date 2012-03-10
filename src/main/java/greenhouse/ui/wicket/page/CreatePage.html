@@ -12,7 +12,7 @@
 	</div>
 	
 	<div class='row'>
-		<div class='span10'>
+		<div class='span11'>
 			<textarea wicket:id='scenario' rows="10" cols="80" style="width: 800px; font-family: monospace;"></textarea>
 
 			<form wicket:id='form' class='form-stacked' style="padding-left: 0;" >
@@ -23,7 +23,7 @@
 							<input wicket:id='step' type="text" size="80" style="width: 800px">
 						</div>
 					</div>
-					<input wicket:id='add' class='btn info' type="submit" value="Add">
+					<input wicket:id='add' class='btn btn-info' type="submit" value="Add">
 				</fieldset>
 		
 				<div wicket:id='inputs' class='inputs'>
@@ -39,14 +39,14 @@
 								</div>
 						</wicket:fragment>
 						<wicket:fragment wicket:id='select'><select wicket:id='input'></select></wicket:fragment>
-						<input wicket:id='substitute' class='btn info' type="submit" value="Substitute">
+						<input wicket:id='substitute' class='btn btn-info' type="submit" value="Substitute">
 					</div>
 				</div>		
 			</form>
 		</div>
 		
-		<div class='span6'>
-			<a wicket:id='execute' target='_blank' class='btn danger' style='float:right;'>Execute</a>
+		<div class='span1'>
+			<a wicket:id='execute' target='_blank' class='btn btn-danger' style='float:right;'>Execute</a>
 		</div>
 	</div>
 		

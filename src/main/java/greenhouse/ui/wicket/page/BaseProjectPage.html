@@ -2,27 +2,29 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 <wicket:extend>
+
 <wicket:container wicket:id='base'>
-	<div class="topbar" data-dropdown="dropdown">
-		<div class="topbar-inner">
-			<div class="container">
-				<h3><a wicket:id='project'><wicket:container wicket:id='name'>Projects</wicket:container></a></h3>
-				<ul class="nav">
-					<li wicket:id='pages'><a wicket:id='link'><wicket:container wicket:id='name'>[Name]</wicket:container></a></li>
-				</ul>
-				<ul class="nav secondary-nav">
-					<li class="dropdown">
-						<a class="dropdown-toggle" href='#'><wicket:container wicket:id='currentContext'>[Context]</wicket:container></a>
-						<ul class="dropdown-menu">
-							<li wicket:id='contexts'><a wicket:id='link'><wicket:container wicket:id='name'>[Context name]</wicket:container></a></li>
-						</ul>
-					</li>
-				</ul>
+	<div class="navbar">
+		<div class="navbar-inner">
+            <div class="container">
+                <a wicket:id='project' class='brand'><wicket:container wicket:id='name' style="color: white;">[Project Name]</wicket:container></a>
+                <ul class="nav">
+                    <li wicket:id='pages'><a wicket:id='link'><wicket:container wicket:id='name'>[Name]</wicket:container></a></li>
+                </ul>
+                <ul class="nav pull-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle='dropdown' href='#'><wicket:container wicket:id='currentContext'>[Context]</wicket:container><b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li wicket:id='contexts'><a wicket:id='link'><wicket:container wicket:id='name'>[Context name]</wicket:container></a></li>
+                        </ul>
+                    </li>
+                </ul>
 			</div>
 		</div>
 	</div>
 </wicket:container>
 
+<script>$('.dropdown-toggle').dropdown()</script>
 <div class="container main"><wicket:child/></div>
 
 </wicket:extend>

@@ -13,13 +13,13 @@
 	<div id='feature'>
 	    <h3>Feature</h3>
 		<div wicket:id='feature'>
-            <a wicket:id='edit' class='btn info'>Edit</a>
+            <a wicket:id='edit' class='btn btn-info'>Edit</a>
 		    <wicket:container wicket:id='lines'><pre wicket:id='pre'><wicket:container wicket:id='context'>plain | scenario | example</wicket:container></pre></wicket:container>
 		</div>
 		<form wicket:id='editForm'>
 		  <div>
-            <a wicket:id='cancel' class='btn info' style='float:left;'>Cancel</a>
-            <a wicket:id='run' class='btn danger' style='float:right;'>Run</a>
+            <a wicket:id='cancel' class='btn btn-info' style='float:left;'>Cancel</a>
+            <a wicket:id='run' class='btn btn-danger' style='float:right;'>Run</a>
           </div>
 		  <textarea wicket:id='gherkin' rows="25" cols="80" style="width: 930px; font-family: monospace;"></textarea>
 		</form>
