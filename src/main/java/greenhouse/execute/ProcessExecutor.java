@@ -127,6 +127,8 @@ public class ProcessExecutor implements ScenarioExecutor {
                     request = ExecutionRequest.scenario(projectKey, context, props.getProperty("scenario"));
                 } else if (type == ExecutionType.EXAMPLE) {
                     request = ExecutionRequest.example(projectKey, context, props.getProperty("scenario"), Integer.valueOf(props.getProperty("line")));
+                } else if (type == ExecutionType.TAG) {
+                    request = ExecutionRequest.tag(projectKey, context, props.getProperty("tag"));
                 } else if (type == ExecutionType.GHERKIN) {
                     request = ExecutionRequest.gherkin(projectKey, context, props.getProperty("gherkin"));
                 }
@@ -182,6 +184,11 @@ public class ProcessExecutor implements ScenarioExecutor {
 
             LOGGER.info("Executing " + project.getKey() + " raw gherkin");
             return execute(request, project, false);
+
+        } else if (ExecutionType.TAG == type) {
+
+            LOGGER.info("Executing " + project.getKey() + " tag " + request.getTag());
+            return executeScenarios(project, nextExecution(request, project));
 
         } else if (ExecutionType.SCENARIO == type) {
 
@@ -294,8 +301,9 @@ public class ProcessExecutor implements ScenarioExecutor {
     }
 
     private ExecutionKey executeScenarios(Project project, final Execution execution) {
-        String features = "-Dcucumber.features=\"" + execution.getExecutionDirectory().getAbsolutePath() + "\"";
-        String tags = "-Dcucumber.tagsArg=\"--tags=@greenhouse\"";
+        String tag = execution.getTag();
+        String features = tag == null ? "-Dcucumber.features=\"" + execution.getExecutionDirectory().getAbsolutePath() + "\"" : "";
+        String tags = "-Dcucumber.tagsArg=\"--tags=" + (tag == null ? "@greenhouse" : tag) + "\"";
         String format = "-Dcucumber.format=html";
         String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
@@ -356,6 +364,7 @@ public class ProcessExecutor implements ScenarioExecutor {
         props.setProperty("feature", String.valueOf(execution.getFeatureName()));
         props.setProperty("scenario", String.valueOf(execution.getScenarioName()));
         props.setProperty("line", Integer.toString(execution.getExampleLine()));
+        props.setProperty("tag", String.valueOf(execution.getTag()));
         props.setProperty("gherkin", String.valueOf(execution.getGherkin()));
 
         props.setProperty("context.key", execution.getContext().getKey());

@@ -106,6 +106,21 @@ public class ProcessExecutorTest {
     }
 
     @Test
+    public void executes_tag() {
+        ImmutableSet<IndexedScenario> scenarios = index.findByTag("@hello");
+        assertThat(scenarios.size(), is(1));
+
+        ExecutionRequest request = ExecutionRequest.tag(project.getKey(), context, "@hello");
+        ExecutionKey executionKey = executor.execute(request);
+        String output = executor.getExecution(executionKey).getCompletedOutput();
+
+        assertTrue(output.contains("@hello"));
+        assertFalse(output.contains("@greenhouse"));
+        assertTrue(output.contains("1 scenario (1 passed)"));
+        assertTrue(output.contains("BUILD SUCCESS"));
+    }
+
+    @Test
     public void executes_gherkin() {
         ExecutionRequest request = ExecutionRequest.gherkin(project.getKey(), context, "Feature: Hello World\n" + "\tScenario: Hello World Scenario\n"
                 + "\t\tGiven the Action is Hello\n" + "\t\tWhen the Subject is World\n" + "\t\tThen the Greeting is Hello, World\n");

@@ -1,5 +1,7 @@
 package greenhouse.ui.wicket.page;
 
+import greenhouse.execute.ExecutionKey;
+import greenhouse.execute.ExecutionRequest;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
@@ -83,6 +85,7 @@ public class TagsPage extends BaseProjectPage {
 
                     }
                 };
+                item.add(new ExecuteTagLink("execute", getProjectKey(), tag.name));
                 item.add(link.add(new Label("tag", tag.name)));
                 item.add(new Label("count", Model.of(tag.count)));
             }
@@ -96,6 +99,21 @@ public class TagsPage extends BaseProjectPage {
         public CountedTag(String name, int count) {
             this.name = name;
             this.count = count;
+        }
+    }
+
+    private static class ExecuteTagLink extends ExecutingLink {
+
+        private final String tag;
+
+        public ExecuteTagLink(String id, String projectKey, String tag) {
+            super(id, projectKey);
+            this.tag = tag;
+        }
+
+        @Override
+        protected ExecutionKey execute() {
+            return executor.execute(ExecutionRequest.tag(projectKey, context(), tag));
         }
 
     }

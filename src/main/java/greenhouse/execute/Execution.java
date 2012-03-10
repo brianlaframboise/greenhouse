@@ -140,6 +140,10 @@ public class Execution {
         return request.getLine();
     }
 
+    public String getTag() {
+        return request.getTag();
+    }
+
     public String getGherkin() {
         return request.getGherkin();
     }
