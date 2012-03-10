@@ -38,7 +38,6 @@ public class FeaturesPage extends BaseProjectPage {
 
     private final String projectKey;
 
-    private final OutputDialog dialog;
     private final WebMarkupContainer feature;
 
     private final Form<Void> editForm;
@@ -53,8 +52,6 @@ public class FeaturesPage extends BaseProjectPage {
             names.add(feature.getName());
         }
         Collections.sort(names);
-
-        add(dialog = new OutputDialog("dialog"));
 
         editForm = new Form<Void>("editForm");
         add(editForm.setVisible(false).setOutputMarkupPlaceholderTag(true));
@@ -72,7 +69,7 @@ public class FeaturesPage extends BaseProjectPage {
         feature.add(new WebMarkupContainer("edit"));
 
         editForm.add(gherkinArea);
-        editForm.add(new ExecuteGherkinLink("run", projectKey, dialog, gherkinArea.getModel()));
+        editForm.add(new ExecuteGherkinLink("run", projectKey, gherkinArea.getModel()));
         editForm.add(new AjaxFallbackLink<Void>("cancel") {
             @Override
             public void onClick(AjaxRequestTarget target) {
@@ -133,7 +130,7 @@ public class FeaturesPage extends BaseProjectPage {
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
                     String featureName = line.substring(colonIndex + 2).trim();
 
-                    ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", projectKey, dialog, featureName);
+                    ExecuteFeatureLink executeFeatureLink = new ExecuteFeatureLink("execute", projectKey, featureName);
                     executeFeatureLink.add(new Label("name", featureName));
 
                     context.add(pretext, executeFeatureLink);
@@ -145,7 +142,7 @@ public class FeaturesPage extends BaseProjectPage {
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
                     String scenarioName = line.substring(colonIndex + 2).trim();
 
-                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", projectKey, dialog, scenarioName);
+                    ExecuteScenarioLink executeScenarioLink = new ExecuteScenarioLink("execute", projectKey, scenarioName);
                     executeScenarioLink.add(new Label("name", scenarioName));
 
                     context.add(pretext, executeScenarioLink);
@@ -159,7 +156,7 @@ public class FeaturesPage extends BaseProjectPage {
                     Index index = index();
                     IndexedFeature feature = index.featureByName(name);
                     IndexedScenario indexedScenario = index.scenarioByLine(feature, lineNumber);
-                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", projectKey, dialog, indexedScenario.getName(), lineNumber);
+                    ExecuteExampleLink executeExampleLink = new ExecuteExampleLink("execute", projectKey, indexedScenario.getName(), lineNumber);
                     executeExampleLink.add(new Label("text", line.substring(pipeIndex)));
 
                     context.add(pretext, executeExampleLink);
@@ -212,8 +209,8 @@ public class FeaturesPage extends BaseProjectPage {
 
         private final String name;
 
-        public ExecuteFeatureLink(String id, String projectKey, OutputDialog dialog, String name) {
-            super(id, projectKey, dialog);
+        public ExecuteFeatureLink(String id, String projectKey, String name) {
+            super(id, projectKey);
             this.name = name;
         }
 
@@ -227,8 +224,8 @@ public class FeaturesPage extends BaseProjectPage {
 
         private final String name;
 
-        public ExecuteScenarioLink(String id, String projectKey, OutputDialog dialog, String name) {
-            super(id, projectKey, dialog);
+        public ExecuteScenarioLink(String id, String projectKey, String name) {
+            super(id, projectKey);
             this.name = name;
         }
 
@@ -243,8 +240,8 @@ public class FeaturesPage extends BaseProjectPage {
         private final String name;
         private final int line;
 
-        public ExecuteExampleLink(String id, String projectKey, OutputDialog dialog, String name, int line) {
-            super(id, projectKey, dialog);
+        public ExecuteExampleLink(String id, String projectKey, String name, int line) {
+            super(id, projectKey);
             this.name = name;
             this.line = line;
         }

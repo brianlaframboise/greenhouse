@@ -11,15 +11,12 @@ import java.util.Locale;
 
 import org.apache.wicket.IConverterLocator;
 import org.apache.wicket.Page;
-import org.apache.wicket.markup.html.JavascriptPackageResource;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.apache.wicket.util.convert.ConverterLocator;
 import org.apache.wicket.util.convert.IConverter;
 import org.springframework.util.StringUtils;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
-
-import com.jquery.JQueryResourceReference;
 
 public class GreenhouseApplication extends WebApplication {
 
@@ -30,7 +27,6 @@ public class GreenhouseApplication extends WebApplication {
         addComponentInstantiationListener(new SpringComponentInjector(this));
         new AnnotatedMountScanner().scanPackage(FeaturesPage.class.getPackage().getName()).mount(this);
         getMarkupSettings().setStripWicketTags(true);
-        addRenderHeadListener(JavascriptPackageResource.getHeaderContribution(new JQueryResourceReference()));
     }
 
     @Override

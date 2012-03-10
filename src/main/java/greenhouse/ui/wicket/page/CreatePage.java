@@ -68,7 +68,7 @@ public class CreatePage extends BaseProjectPage {
     }
 
     public static class AppendingGherkinModel extends Model<String> {
-        private List<String> steps = Lists.newArrayList();
+        private final List<String> steps = Lists.newArrayList();
 
         public AppendingGherkinModel(String value) {
             super.setObject(value);
@@ -107,9 +107,6 @@ public class CreatePage extends BaseProjectPage {
     public CreatePage(PageParameters params) {
         super(params);
 
-        OutputDialog dialog = new OutputDialog("dialog");
-        add(dialog);
-
         final AppendingGherkinModel gherkinModel = new AppendingGherkinModel("");
         IModel<String> previewModel = new AbstractReadOnlyModel<String>() {
             @Override
@@ -128,7 +125,7 @@ public class CreatePage extends BaseProjectPage {
         });
         add(scenario.setOutputMarkupId(true));
 
-        add(new ExecuteGherkinLink("execute", project().getKey(), dialog, previewModel));
+        add(new ExecuteGherkinLink("execute", project().getKey(), previewModel));
 
         add(preview.setOutputMarkupId(true));
 

@@ -3,7 +3,9 @@
 <body>
 <wicket:extend>
 
-<div>
+<div wicket:id='body'></div>
+
+<wicket:fragment wicket:id='table'>
     <table class='bordered-table zebra-striped'>
         <thead>
             <tr>
@@ -19,7 +21,7 @@
         </thead>
         <tbody>
             <tr wicket:id='history'>
-                <td wicket:id='number'>[1]</td>
+                <td><a wicket:id='detailsLink'><span wicket:id='number'>[1]</span></a></td>
                 <td wicket:id='state'>[RUNNING]</td>
                 <td wicket:id='start'>[Start time]</td>
                 <td wicket:id='end'>[End time]</td>
@@ -33,7 +35,13 @@
             </tr>
         </tbody>
     </table>
-</div>
+</wicket:fragment>
+
+<wicket:fragment wicket:id='details'>
+    <h3>Details</h3>
+    <h4>Logs</h4>
+    <pre wicket:id='output'></pre>
+</wicket:fragment>
 
 </wicket:extend>
 </body>

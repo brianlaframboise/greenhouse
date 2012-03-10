@@ -9,12 +9,12 @@ import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxFallbackLink;
+import org.apache.wicket.PageParameters;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
+abstract class ExecutingLink extends Link<Void> {
 
     @SpringBean
     protected ProjectRepository repo;
@@ -26,17 +26,20 @@ abstract class ExecutingLink extends IndicatingAjaxFallbackLink<Void> {
     protected IndexRepository indices;
 
     protected final String projectKey;
-    private final OutputDialog dialog;
 
-    public ExecutingLink(String id, String projectKey, OutputDialog dialog) {
+    public ExecutingLink(String id, String projectKey) {
         super(id);
-        this.dialog = dialog;
         this.projectKey = projectKey;
     }
 
     @Override
-    public void onClick(AjaxRequestTarget target) {
-        dialog.begin(execute(), target);
+    public void onClick() {
+        ExecutionKey key = execute();
+        PageParameters params = new PageParameters();
+        params.add("0", projectKey);
+        params.add("1", BaseProjectPage.simpleName(HistoryPage.class));
+        params.add("2", Integer.toString(key.getNumber()));
+        setResponsePage(ProjectsPage.class, params);
     }
 
     protected Index index() {

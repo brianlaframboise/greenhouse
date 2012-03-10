@@ -78,6 +78,16 @@ abstract class BaseProjectPage extends GreenhousePage {
         get("home").setVisible(false);
     }
 
+    protected BookmarkablePageLink<Void> pageLink(String id, Class<? extends BaseProjectPage> clazz, Object... params) {
+        PageParameters pageParams = new PageParameters();
+        pageParams.add("0", getProjectKey());
+        pageParams.add("1", simpleName(clazz));
+        for (int i = 0; i < params.length; i++) {
+            pageParams.add(Integer.toString(i + 2), params[i].toString());
+        }
+        return new BookmarkablePageLink<Void>(id, ProjectsPage.class, pageParams);
+    }
+
     private Context getCurrentContext(Project project) {
         String contextKey = WicketUtils.getContextKey((WebRequest) getRequest(), project);
         ImmutableMap<String, Context> contexts = project.getContexts();
@@ -98,7 +108,7 @@ abstract class BaseProjectPage extends GreenhousePage {
         return link;
     }
 
-    private static String simpleName(Class<? extends GreenhousePage> clazz) {
+    public static String simpleName(Class<? extends GreenhousePage> clazz) {
         String simpleName = clazz.getSimpleName();
         return simpleName.substring(0, simpleName.indexOf("Page")).toLowerCase(Locale.ENGLISH);
     }

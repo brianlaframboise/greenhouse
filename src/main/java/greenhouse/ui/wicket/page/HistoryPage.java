@@ -13,14 +13,19 @@ import java.util.List;
 
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.time.Duration;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.HtmlUtils;
 import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
@@ -39,19 +44,57 @@ public class HistoryPage extends BaseProjectPage {
         int executionNumber = params.getAsInteger("2", 0);
         String format = params.getString("3", "");
 
+        final Fragment body;
         if (executionNumber > 0) {
-            ExecutionKey executionKey = new ExecutionKey(projectKey, executionNumber);
-            Execution execution = executor.getExecution(executionKey);
-            String content;
-            if ("report".equals(format)) {
-                content = execution.getReportHtml();
+            if ("".equals(format)) {
+                body = details(projectKey, executionNumber);
             } else {
-                content = "<pre>" + HtmlUtils.htmlEscape(execution.getOutput()) + "</pre>";
-            }
+                ExecutionKey executionKey = new ExecutionKey(projectKey, executionNumber);
+                Execution execution = executor.getExecution(executionKey);
+                String content;
+                if ("report".equals(format)) {
+                    content = execution.getReportHtml();
+                } else {
+                    content = "<pre>" + HtmlUtils.htmlEscape(execution.getOutput()) + "</pre>";
+                }
 
-            throw new RestartResponseException(new HtmlPage(content));
+                throw new RestartResponseException(new HtmlPage(content));
+            }
+        } else {
+            body = table(projectKey);
+        }
+        add(body);
+    }
+
+    private Fragment details(String projectKey, int executionNumber) {
+        Fragment body = new Fragment("body", "details", this);
+        final ExecutionKey executionKey = new ExecutionKey(projectKey, executionNumber);
+        Execution execution = executor.getExecution(executionKey);
+
+        final Label output = new Label("output", new FilteringModel());
+        output.setOutputMarkupId(true);
+        output.setDefaultModelObject(execution.getOutput());
+
+        if (execution.getState() != ExecutionState.COMPLETE) {
+            output.add(new AbstractAjaxTimerBehavior(Duration.seconds(1)) {
+                @Override
+                protected void onTimer(AjaxRequestTarget target) {
+                    Execution execution = executor.getExecution(executionKey);
+                    output.setDefaultModelObject(execution.getOutput());
+                    if (execution.getState() == ExecutionState.COMPLETE) {
+                        stop();
+                    }
+                    WicketUtils.addComponents(target, output);
+                }
+            });
         }
 
+        body.add(output);
+
+        return body;
+    }
+
+    private Fragment table(final String projectKey) {
         IModel<List<Execution>> model = new LoadableDetachableModel<List<Execution>>() {
             @Override
             protected List<Execution> load() {
@@ -73,13 +116,17 @@ public class HistoryPage extends BaseProjectPage {
             }
         };
 
-        add(new ListView<Execution>("history", model) {
+        Fragment body = new Fragment("body", "table", this);
+        body.add(new ListView<Execution>("history", model) {
             @Override
             protected void populateItem(ListItem<Execution> item) {
                 Execution execution = item.getModelObject();
                 int number = execution.getKey().getNumber();
                 ExecutionState state = execution.getState();
-                item.add(new Label("number", Integer.toString(number)));
+
+                BookmarkablePageLink<Void> detailsLink = pageLink("detailsLink", HistoryPage.class, number);
+                detailsLink.add(new Label("number", Integer.toString(number)));
+                item.add(detailsLink);
 
                 item.add(new Label("state", Model.of(state)));
                 item.add(new Label("start", Model.of(new Date(execution.getStart()))));
@@ -94,6 +141,42 @@ public class HistoryPage extends BaseProjectPage {
                         .setEnabled(state == ExecutionState.COMPLETE));
             }
         });
+        return body;
+    }
+
+    private static class FilteringModel extends Model<String> {
+        private String text = "";
+
+        public FilteringModel() {
+            reset();
+        }
+
+        @Override
+        public void setObject(final String object) {
+            String filtered = object;
+            String remove = "--- cuke4duke-maven-plugin";
+            int index = filtered.lastIndexOf(remove);
+            if (index == -1) {
+                text += ".";
+            } else {
+                filtered = filtered.substring(filtered.indexOf('\n', index));
+                filtered = filtered.replaceAll("\\[INFO\\] ", "");
+                if ("".equals(StringUtils.trimWhitespace(filtered))) {
+                    text += ".";
+                } else {
+                    text = filtered;
+                }
+            }
+        }
+
+        @Override
+        public String getObject() {
+            return text;
+        }
+
+        public void reset() {
+            text = "Loading Maven and Cucumber.";
+        }
     }
 
 }
