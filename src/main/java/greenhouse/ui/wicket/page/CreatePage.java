@@ -170,8 +170,19 @@ public class CreatePage extends BaseProjectPage {
                     }
                     if (all) {
                         // Trim ^regex$ to regex
-                        String trimmed = regex.substring(1, regex.length() - 1);
+                        String trimmed = regex;
+                        if (trimmed.charAt(0) == '^') {
+                            trimmed = trimmed.substring(1);
+                        }
+                        if (trimmed.charAt(trimmed.length() - 1) == '$') {
+                            trimmed = trimmed.substring(0, trimmed.length() - 1);
+                        }
+                        
+                        // Replace escaped braces \( and \) with symbolic placeholders
                         ImmutableList<String> types = step.getTypes();
+                        trimmed = trimmed.replaceAll("\\\\\\(", "\\{\\{\\{");
+                        trimmed = trimmed.replaceAll("\\\\\\)", "\\}\\}\\}");
+
                         int i = 0;
                         while (trimmed.contains("(")) {
                             int indexOf = trimmed.indexOf('(');
@@ -181,6 +192,10 @@ public class CreatePage extends BaseProjectPage {
                             trimmed = newTrimmed + trimmed.substring(trimmed.indexOf(')') + 1);
                             i++;
                         }
+
+                        trimmed = trimmed.replaceAll("\\{\\{\\{", "(");
+                        trimmed = trimmed.replaceAll("\\}\\}\\}", ")");
+
                         choices.add(prep + trimmed);
                     }
                 }
@@ -264,6 +279,8 @@ public class CreatePage extends BaseProjectPage {
                     substitute.setVisible(true);
                     target.addComponent(form);
                 } else {
+                    text = text.replaceAll("\\\\\\(", "(");
+                    text = text.replaceAll("\\\\\\)", ")");
                     gherkinModel.append(text);
                     WicketUtils.addComponents(target, scenario, preview, form);
                 }

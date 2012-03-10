@@ -5,12 +5,15 @@ import gherkin.formatter.model.Scenario;
 import gherkin.formatter.model.ScenarioOutline;
 import gherkin.formatter.model.TagStatement;
 import gherkin.parser.Parser;
+import gherkin.util.FixJava;
 import greenhouse.config.GreenhouseSettings;
 import greenhouse.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -110,7 +113,13 @@ public class Indexer {
                 }
             }.start();
             process.waitFor();
-            return Utils.load(Utils.file(projectRoot.getAbsolutePath(), "target"), "greenhouse-step-index.properties");
+
+            // Escape backslashes so they aren't dropped by Properties.load()
+            Properties props = new Properties();
+            FileReader reader = new FileReader(Utils.file(projectRoot.getAbsolutePath(), "target", "greenhouse-step-index.properties"));
+            props.load(new StringReader(FixJava.readReader(reader).replace("\\", "\\\\")));
+            reader.close();
+            return props;
         } catch (Exception e) {
             throw new RuntimeException("Unable to load index properties file", e);
         }
