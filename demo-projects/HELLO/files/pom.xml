@@ -10,75 +10,19 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<cucumber.tagsArg>--tags=~@ignore</cucumber.tagsArg>
-		<cucumber.format>junit</cucumber.format>
-		<cucumber.out>${project.build.directory}/cucumber-reports</cucumber.out>
 	</properties>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>cuke4duke</groupId>
-				<artifactId>cuke4duke-maven-plugin</artifactId>
-				<version>0.4.4</version>
-				<configuration>
-					<jvmArgs>
-						<jvmArg>
-							-Dcuke4duke.objectFactory=cuke4duke.internal.jvmclass.SpringFactory
-						</jvmArg>
-						<jvmArg>-Dfile.encoding=UTF-8</jvmArg>
-					</jvmArgs>
-					<cucumberArgs>
-						<cucumberArg>--backtrace</cucumberArg>
-						<cucumberArg>--format</cucumberArg>
-						<cucumberArg>pretty</cucumberArg>
-						<cucumberArg>--format</cucumberArg>
-						<cucumberArg>${cucumber.format}</cucumberArg>
-						<cucumberArg>--out</cucumberArg>
-						<cucumberArg>${cucumber.out}</cucumberArg>
-						<cucumberArg>--require</cucumberArg>
-						<cucumberArg>${basedir}/target/test-classes</cucumberArg>
-						<cucumberArg>${cucumber.tagsArg}</cucumberArg>
-					</cucumberArgs>
-					<gems>
-						<gem>install cuke4duke --version 0.4.4</gem>
-					</gems>
-				</configuration>
-				<executions>
-					<execution>
-						<id>run-features</id>
-						<phase>integration-test</phase>
-						<goals>
-							<goal>cucumber</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-	<repositories>
-		<repository>
-			<id>codehaus</id>
-			<url>http://repository.codehaus.org</url>
-		</repository>
-		<repository>
-			<id>cukes</id>
-			<url>http://cukes.info/maven</url>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>cukes</id>
-			<url>http://cukes.info/maven</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<dependencies>
 		<dependency>
-			<groupId>cuke4duke</groupId>
-			<artifactId>cuke4duke</artifactId>
-			<version>0.4.4</version>
+			<groupId>info.cukes</groupId>
+			<artifactId>cucumber-java</artifactId>
+			<version>1.0.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>info.cukes</groupId>
+			<artifactId>cucumber-junit</artifactId>
+			<version>1.0.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -96,7 +40,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
+			<version>4.10</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

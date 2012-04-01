@@ -1,12 +1,10 @@
 package greenhouse.example;
 
 import static junit.framework.Assert.assertEquals;
-import cuke4duke.annotation.I18n.EN.Given;
-import cuke4duke.annotation.I18n.EN.Then;
-import cuke4duke.annotation.I18n.EN.When;
-import cuke4duke.spring.StepDefinitions;
+import cucumber.annotation.en.Given;
+import cucumber.annotation.en.Then;
+import cucumber.annotation.en.When;
 
-@StepDefinitions
 public class HelloWorldFeature {
 
     private String action;
