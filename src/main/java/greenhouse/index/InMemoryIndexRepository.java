@@ -23,7 +23,8 @@ public class InMemoryIndexRepository implements IndexRepository {
     public Index index(Project project) {
         File projectFiles = Utils.file(project.getRoot().getAbsolutePath(), "files");
         String projectKey = project.getKey();
-        InMemoryIndex index = new Indexer(projectKey, projectFiles.getAbsolutePath(), settings).index();
+        String basePackage = project.getBasePackage();
+        InMemoryIndex index = new Indexer(projectKey, projectFiles.getAbsolutePath(), basePackage, settings).index();
         indices.put(projectKey, index);
         return index;
     }

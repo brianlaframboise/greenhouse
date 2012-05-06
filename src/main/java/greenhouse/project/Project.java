@@ -24,18 +24,20 @@ public class Project {
     private final String key;
     private final String name;
     private final File root;
+    private final String basePackage;
     private final FileSource fileSource;
 
     private final Map<String, Context> contexts;
     private String lastUpdateOutput = "";
 
-    public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
+    public Project(String key, String name, File root, String basePackage, ImmutableMap<String, Context> contexts, FileSource fileSource) {
         if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case alphanumeric characters only");
         }
         this.key = key;
         this.name = name;
         this.root = root;
+        this.basePackage = basePackage;
         this.contexts = Maps.newHashMap(contexts);
         this.fileSource = fileSource;
     }
@@ -52,9 +54,10 @@ public class Project {
         Properties projectProps = Utils.load(root, "project.properties");
         FileSource fileSource = loadFileSource(root, projectProps);
         String name = projectProps.getProperty("name");
+        String basePackage = projectProps.getProperty("basePackage");
 
         Map<String, Context> contexts = loadContexts(root);
-        Project project = new Project(root.getName(), name, root, ImmutableMap.copyOf(contexts), fileSource);
+        Project project = new Project(root.getName(), name, root, basePackage, ImmutableMap.copyOf(contexts), fileSource);
         project.update();
         return project;
     }
@@ -120,6 +123,10 @@ public class Project {
 
     public File getRoot() {
         return root;
+    }
+
+    public String getBasePackage() {
+        return basePackage;
     }
 
     public File getFiles() {

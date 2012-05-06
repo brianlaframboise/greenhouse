@@ -1,5 +1,8 @@
 package greenhouse.config;
 
+/**
+ * Global application settings.
+ */
 public class GreenhouseSettings {
 
     private String mvn = System.getProperty("os.name").startsWith("Windows") ? "mvn.bat" : "mvn";

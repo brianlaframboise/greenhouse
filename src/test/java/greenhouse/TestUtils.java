@@ -6,7 +6,7 @@ public final class TestUtils {
     public static final String DEMO_PROJECTS = TestUtils.class.getResource(".").getPath().toString() + "../../../demo-projects";
 
     /** The Greenhouse Hello World demo project root folder. */
-    public static final String HELLO_WORLD_PROJECT = DEMO_PROJECTS + "/HELLO";
+    public static final String HELLO_WORLD_PROJECT = DEMO_PROJECTS + "/CUKE4DUKE";
 
     /** The files directory for the Greenhouse Hello World demo project. */
     public static final String HELLO_WORLD_FILES = HELLO_WORLD_PROJECT + "/files";

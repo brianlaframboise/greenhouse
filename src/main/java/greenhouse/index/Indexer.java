@@ -60,6 +60,7 @@ public class Indexer {
 
     private final String projectKey;
     private final File projectRoot;
+    private final String basePackage;
     private final File featuresRoot;
     private final Set<IndexedFeature> features = new HashSet<IndexedFeature>();
     private final Multimap<String, IndexedScenario> scenariosByTag = ArrayListMultimap.create();
@@ -70,9 +71,10 @@ public class Indexer {
 
     private final GreenhouseSettings settings;
 
-    public Indexer(String projectKey, String projectRoot, GreenhouseSettings settings) {
+    public Indexer(String projectKey, String projectRoot, String basePackage, GreenhouseSettings settings) {
         this.projectKey = projectKey;
         this.projectRoot = new File(projectRoot);
+        this.basePackage = basePackage;
         featuresRoot = Utils.file(projectRoot, "features");
         this.settings = settings;
     }
@@ -93,7 +95,7 @@ public class Indexer {
 
     private Properties loadIndex() {
         final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), projectRoot,
-                ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.1-SNAPSHOT:index"));
+                ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.2-SNAPSHOT:index", "-DbasePackage=" + basePackage));
         builder.redirectErrorStream(true);
         try {
             LOGGER.info(projectKey + " Loading index via: "

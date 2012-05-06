@@ -18,21 +18,16 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.ClassMetadata;
+import org.springframework.core.type.filter.AbstractClassTestingTypeFilter;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import cuke4duke.annotation.I18n.EN.And;
-import cuke4duke.annotation.I18n.EN.But;
-import cuke4duke.annotation.I18n.EN.Given;
-import cuke4duke.annotation.I18n.EN.Then;
-import cuke4duke.annotation.I18n.EN.When;
-import cuke4duke.spring.StepDefinitions;
-
 /**
- * Indexes step definitions for Greenhouse.
+ * Indexes step definitions for Greenhouse. Works for both cuke4duke and
+ * Cucumber-JVM.
  * 
  * @goal index
  * @execute phase=test-compile
@@ -44,11 +39,21 @@ public class IndexMojo extends AbstractMojo {
     private static final List<Class<? extends Annotation>> ANNOTATIONS;
     static {
         List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
-        list.add(Given.class);
-        list.add(When.class);
-        list.add(Then.class);
-        list.add(And.class);
-        list.add(But.class);
+
+        // Cuke4Duke
+        list.add(cuke4duke.annotation.I18n.EN.Given.class);
+        list.add(cuke4duke.annotation.I18n.EN.When.class);
+        list.add(cuke4duke.annotation.I18n.EN.Then.class);
+        list.add(cuke4duke.annotation.I18n.EN.And.class);
+        list.add(cuke4duke.annotation.I18n.EN.But.class);
+
+        // Cucumber-JVM
+        list.add(cucumber.annotation.en.Given.class);
+        list.add(cucumber.annotation.en.When.class);
+        list.add(cucumber.annotation.en.Then.class);
+        list.add(cucumber.annotation.en.And.class);
+        list.add(cucumber.annotation.en.But.class);
+
         ANNOTATIONS = list;
     }
 
@@ -73,6 +78,7 @@ public class IndexMojo extends AbstractMojo {
      * "com.acme.steps")
      * 
      * @parameter expression="${basePackage}" default-value=""
+     * @required
      */
     protected String basePackage;
 
@@ -108,13 +114,20 @@ public class IndexMojo extends AbstractMojo {
     }
 
     private List<Class<?>> loadStepClasses(ClassLoader classLoader) {
-        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-        provider.addIncludeFilter(new AnnotationTypeFilter(StepDefinitions.class));
-        if (basePackage == null) {
-            basePackage = "";
+        if (basePackage == null || "".equals(basePackage)) {
+            throw new IllegalArgumentException("A base package must be specified using the basePackage argument (ex: \"com.acme\")");
         }
-        getLog().info("Scanning package \"" + basePackage + "\" for @StepDefinitions classes...");
+        getLog().info("Scanning basePackage \"" + basePackage + "\" for annotated step methods...");
+
+        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+        provider.addIncludeFilter(new AbstractClassTestingTypeFilter() {
+            @Override
+            protected boolean match(ClassMetadata metadata) {
+                return metadata.getClassName().startsWith(basePackage);
+            }
+        });
         Set<BeanDefinition> definitions = provider.findCandidateComponents(basePackage);
+        getLog().info("Candidate classes found: " + definitions.size());
 
         List<Class<?>> classes = new ArrayList<Class<?>>(definitions.size());
         try {
