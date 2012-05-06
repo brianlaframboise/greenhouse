@@ -15,7 +15,7 @@ import com.google.common.collect.Maps;
 
 public class Project {
 
-    public static final Pattern PROJECT_KEY_PATTERN = Pattern.compile("^[A-Z]+$");
+    public static final Pattern PROJECT_KEY_PATTERN = Pattern.compile("^[A-Z0-9]+$");
 
     public static final Pattern CONTEXT_KEY_PATTERN = Pattern.compile("^[a-z]+$");
 
@@ -31,7 +31,7 @@ public class Project {
 
     public Project(String key, String name, File root, ImmutableMap<String, Context> contexts, FileSource fileSource) {
         if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
-            throw new IllegalArgumentException("Project key " + key + " must be upper case characters only");
+            throw new IllegalArgumentException("Project key " + key + " must be upper case alphanumeric characters only");
         }
         this.key = key;
         this.name = name;
