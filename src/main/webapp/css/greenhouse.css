@@ -67,6 +67,7 @@ pre {
 	line-height: 16px;
 	margin: 0;
 	padding: 0;
+	white-space: pre;
 }
 
 pre a {
@@ -79,6 +80,7 @@ pre a:hover {
 
 table th {
 	text-align: center;
-}align: center;
+}
+ign: center;
 }r;
 }
