@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -300,17 +301,58 @@ public class ProcessExecutor implements ScenarioExecutor {
         }
     }
 
-    private ExecutionKey executeScenarios(Project project, final Execution execution) {
+    private List<String> getCuke4DukeArgs(Execution execution) {
         String tag = execution.getTag();
         String features = tag == null ? "-Dcucumber.features=\"" + execution.getExecutionDirectory().getAbsolutePath() + "\"" : "";
         String tags = "-Dcucumber.tagsArg=\"--tags=" + (tag == null ? "@greenhouse" : tag) + "\"";
         String format = "-Dcucumber.format=html";
         String out = "-Dcucumber.out=" + file(execution.getExecutionDirectory().getAbsolutePath(), "report.html").getAbsolutePath();
 
+        return Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath());
+    }
+
+    private List<String> getCucumberJvmArgs(Execution execution, Project project) {
+        String tag = execution.getTag();
+
+        ArrayList<String> options = Lists.newArrayList();
+
+        options.add("--monochrome");
+
+        options.add("--glue");
+        options.add(project.getBasePackage());
+
+        options.add("--format");
+        options.add("pretty");
+
+        options.add("--format");
+        options.add("html:target/cucumber");
+
+        options.add("--tags");
+        options.add(tag == null ? "@greenhouse" : tag);
+
+        if (tag == null) {
+            options.add(execution.getExecutionDirectory().getAbsolutePath());
+        } else {
+            options.add(Utils.file(project.getFiles().getAbsolutePath(), "src", "test", "resources").getAbsolutePath());
+        }
+
+        ArrayList<String> args = Lists.newArrayList();
+        for (String s : Splitter.on(' ').split("-Dcucumber.options=\"" + Joiner.on(' ').join(options) + "\"")) {
+            args.add(s);
+        }
+        args.add(">");
+        args.add(execution.getOutputFile().getAbsolutePath());
+        return args;
+    }
+
+    private ExecutionKey executeScenarios(Project project, final Execution execution) {
+
+        List<String> args = project.isCucumberJvm() ? getCucumberJvmArgs(execution, project) : getCuke4DukeArgs(execution);
+
         try {
             String command = execution.getContext().getCommand();
             ArrayList<String> argsList = Lists.newArrayList(Splitter.on(' ').split(command));
-            argsList.addAll(Lists.newArrayList(features, tags, format, out, ">", execution.getOutputFile().getAbsolutePath()));
+            argsList.addAll(args);
             final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), project.getFiles(), argsList);
 
             String builderCommand = Joiner.on(' ').join(builder.command());

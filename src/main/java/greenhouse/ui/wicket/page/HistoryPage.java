@@ -154,8 +154,7 @@ public class HistoryPage extends BaseProjectPage {
         @Override
         public void setObject(final String object) {
             String filtered = object;
-            String remove = "--- cuke4duke-maven-plugin";
-            int index = filtered.lastIndexOf(remove);
+            int index = Math.max(filtered.lastIndexOf("--- cuke4duke-maven-plugin"), filtered.lastIndexOf("RunCukesTest"));
             if (index == -1) {
                 text += ".";
             } else {

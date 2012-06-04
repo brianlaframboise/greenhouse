@@ -14,7 +14,7 @@ public class IndexerTest {
 
     @BeforeClass
     public static void build_index() {
-        index = new Indexer("hello-world", TestUtils.HELLO_WORLD_FILES, "greenhouse.example", new GreenhouseSettings()).index();
+        index = new Indexer("hello-world", false, TestUtils.CUKE4DUKE_FILES, "greenhouse.example", new GreenhouseSettings()).index();
     }
 
     @Test

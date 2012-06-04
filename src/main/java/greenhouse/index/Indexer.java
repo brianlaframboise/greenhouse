@@ -71,11 +71,11 @@ public class Indexer {
 
     private final GreenhouseSettings settings;
 
-    public Indexer(String projectKey, String projectRoot, String basePackage, GreenhouseSettings settings) {
+    public Indexer(String projectKey, boolean isCucumberJvm, String projectRoot, String basePackage, GreenhouseSettings settings) {
         this.projectKey = projectKey;
         this.projectRoot = new File(projectRoot);
         this.basePackage = basePackage;
-        featuresRoot = Utils.file(projectRoot, "features");
+        featuresRoot = Utils.file(projectRoot, isCucumberJvm ? "src/test/resources" : "features");
         this.settings = settings;
     }
 

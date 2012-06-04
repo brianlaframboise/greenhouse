@@ -22,11 +22,17 @@ public class PropsProjectRepositoryTest {
         PropsProjectRepository repository = new PropsProjectRepository(new File(TestUtils.DEMO_PROJECTS), indices);
 
         ImmutableList<Project> projects = ImmutableList.copyOf(repository.getAllProjects());
-        assertEquals(1, projects.size());
+        assertEquals(2, projects.size());
 
-        Project project = projects.get(0);
-        assertNotNull(project);
-        assertEquals("Hello World Example Project", project.getName());
-        assertFalse(project.getRoot().getAbsolutePath().equals(""));
+        Project cjvm = projects.get(0);
+        assertNotNull(cjvm);
+        assertEquals("Cucumber-JVM Example Project", cjvm.getName());
+        assertFalse(cjvm.getRoot().getAbsolutePath().equals(""));
+
+        Project cuke4duke = projects.get(1);
+        assertNotNull(cuke4duke);
+        assertEquals("Cuke4Duke Example Project", cuke4duke.getName());
+        assertFalse(cuke4duke.getRoot().getAbsolutePath().equals(""));
+
     }
 }

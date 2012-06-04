@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class ProcessExecutorTest {
+public class ProcessExecutorCucumberJvmTest {
 
     private static Project project;
     private static ScenarioExecutor executor;
@@ -35,8 +35,8 @@ public class ProcessExecutorTest {
         InMemoryIndexRepository indices = new InMemoryIndexRepository(settings);
         PropsProjectRepository repository = new PropsProjectRepository(new File(TestUtils.DEMO_PROJECTS), indices);
         executor = new ProcessExecutor(repository, indices, settings);
-        project = repository.getProject("CUKE4DUKE");
-        index = indices.getIndex("CUKE4DUKE");
+        project = repository.getProject("CJVM");
+        index = indices.getIndex("CJVM");
         context = project.getContexts().get("default");
     }
 
@@ -51,7 +51,7 @@ public class ProcessExecutorTest {
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
-        assertTrue(output.contains("3 scenarios (3 passed)"));
+        assertTrue(output.contains("Tests run: 12, Failures: 0, Errors: 0, Skipped: 0"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 
@@ -81,7 +81,7 @@ public class ProcessExecutorTest {
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
-        assertTrue(output.contains("@goodbye @world @greenhouse"));
+        assertTrue(output.contains("@goodbye @greenhouse @world"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 
@@ -96,13 +96,11 @@ public class ProcessExecutorTest {
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
-        assertTrue(output.contains("@goodbye @world @greenhouse"));
-        assertFalse(output.contains("| Goodbye  | World   |"));
-        // weird formatting bug occasionally adds extra newlines
-        // assertTrue(output.contains("| Aurevoir | Monde   |"));
-        assertTrue(output.contains("Aurevoir | Monde"));
-        assertTrue(output.contains("1 scenario (1 passed)"));
-        assertTrue(output.contains("BUILD SUCCESS"));
+        assertTrue(output.contains("@goodbye @greenhouse @world"));
+        assertTrue(output.contains("Given the Action is Aurevoir"));
+        assertTrue(output.contains("When the Subject is Monde"));
+        assertTrue(output.contains("Then the Greeting is Aurevoir, Monde"));
+        assertTrue(output.contains("Tests run: 4, Failures: 0, Errors: 0, Skipped: 0"));
     }
 
     @Test
@@ -114,9 +112,9 @@ public class ProcessExecutorTest {
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
-        assertTrue(output.contains("@hello"));
+        assertTrue(output.contains("@hello @world"));
         assertFalse(output.contains("@greenhouse"));
-        assertTrue(output.contains("1 scenario (1 passed)"));
+        assertTrue(output.contains("Tests run: 4, Failures: 0, Errors: 0, Skipped: 0"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 
@@ -128,7 +126,7 @@ public class ProcessExecutorTest {
         ExecutionKey executionKey = executor.execute(request);
         String output = executor.getExecution(executionKey).getCompletedOutput();
 
-        assertTrue(output.contains("1 scenario (1 passed)"));
+        assertTrue(output.contains("Tests run: 4, Failures: 0, Errors: 0, Skipped: 0"));
         assertTrue(output.contains("BUILD SUCCESS"));
     }
 }

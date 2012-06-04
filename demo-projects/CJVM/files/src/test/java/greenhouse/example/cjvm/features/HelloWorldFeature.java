@@ -1,4 +1,4 @@
-package greenhouse.example;
+package greenhouse.example.cjvm.features;
 
 import static junit.framework.Assert.assertEquals;
 import cucumber.annotation.en.Given;

@@ -27,10 +27,16 @@ public class Project {
     private final String basePackage;
     private final FileSource fileSource;
 
+    private final boolean cucumberJvm;
+
+    public boolean isCucumberJvm() {
+        return cucumberJvm;
+    }
+
     private final Map<String, Context> contexts;
     private String lastUpdateOutput = "";
 
-    public Project(String key, String name, File root, String basePackage, ImmutableMap<String, Context> contexts, FileSource fileSource) {
+    public Project(String key, String name, File root, String basePackage, ImmutableMap<String, Context> contexts, FileSource fileSource, boolean cucumberJvm) {
         if (!PROJECT_KEY_PATTERN.matcher(key).matches()) {
             throw new IllegalArgumentException("Project key " + key + " must be upper case alphanumeric characters only");
         }
@@ -40,6 +46,7 @@ public class Project {
         this.basePackage = basePackage;
         this.contexts = Maps.newHashMap(contexts);
         this.fileSource = fileSource;
+        this.cucumberJvm = cucumberJvm;
     }
 
     /**
@@ -55,9 +62,10 @@ public class Project {
         FileSource fileSource = loadFileSource(root, projectProps);
         String name = projectProps.getProperty("name");
         String basePackage = projectProps.getProperty("basePackage");
+        boolean isCucumberJvm = Boolean.valueOf(projectProps.getProperty("cucumberJvm", "false"));
 
         Map<String, Context> contexts = loadContexts(root);
-        Project project = new Project(root.getName(), name, root, basePackage, ImmutableMap.copyOf(contexts), fileSource);
+        Project project = new Project(root.getName(), name, root, basePackage, ImmutableMap.copyOf(contexts), fileSource, isCucumberJvm);
         project.update();
         return project;
     }
