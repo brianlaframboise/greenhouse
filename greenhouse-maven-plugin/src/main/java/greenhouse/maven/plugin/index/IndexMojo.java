@@ -48,11 +48,11 @@ public class IndexMojo extends AbstractMojo {
         list.add(cuke4duke.annotation.I18n.EN.But.class);
 
         // Cucumber-JVM
-        list.add(cucumber.annotation.en.Given.class);
-        list.add(cucumber.annotation.en.When.class);
-        list.add(cucumber.annotation.en.Then.class);
-        list.add(cucumber.annotation.en.And.class);
-        list.add(cucumber.annotation.en.But.class);
+        list.add(cucumber.api.java.en.Given.class);
+        list.add(cucumber.api.java.en.When.class);
+        list.add(cucumber.api.java.en.Then.class);
+        list.add(cucumber.api.java.en.And.class);
+        list.add(cucumber.api.java.en.But.class);
 
         ANNOTATIONS = list;
     }
