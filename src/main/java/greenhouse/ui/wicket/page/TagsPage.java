@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -22,7 +21,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.Model;
-import org.wicketstuff.annotation.strategy.MountIndexedParam;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
@@ -30,7 +29,6 @@ import com.google.common.collect.Multiset;
 /**
  * Displays tags and their associated Features and Scenarios.
  */
-@MountIndexedParam
 public class TagsPage extends BaseProjectPage {
 
     public TagsPage(PageParameters params) {
@@ -79,10 +77,7 @@ public class TagsPage extends BaseProjectPage {
                     public void onClick(AjaxRequestTarget target) {
                         ImmutableSet<IndexedScenario> taggedScenarios = TagsPage.this.index().findByTag(tagName);
                         scenarios.setModelObject(taggedScenarios.asList());
-                        if (target != null) {
-                            target.addComponent(matches);
-                        }
-
+                        target.add(matches);
                     }
                 };
                 item.add(new ExecuteTagLink("execute", getProjectKey(), tag.name));

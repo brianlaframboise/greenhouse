@@ -11,8 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -20,8 +19,9 @@ import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +47,7 @@ abstract class BaseProjectPage extends GreenhousePage {
             protected void populateItem(ListItem<Class<? extends GreenhousePage>> item) {
                 Class<? extends GreenhousePage> clazz = item.getModelObject();
                 if (BaseProjectPage.this.getClass().equals(clazz)) {
-                    item.add(new SimpleAttributeModifier("class", "active"));
+                    item.add(AttributeModifier.replace("class", "active"));
                 }
                 String simpleName = simpleName(clazz);
                 BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>("link", ProjectsPage.class, params(projectKey, simpleName));
@@ -67,7 +67,6 @@ abstract class BaseProjectPage extends GreenhousePage {
                     public void onClick() {
                         WicketUtils.setContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), contextKey);
                         setResponsePage(ProjectsPage.class, params(projectKey, simpleName(BaseProjectPage.this.getClass())));
-                        setRedirect(true);
                     }
                 };
                 item.add(link.add(new Label("name", context.getName())));
@@ -103,7 +102,7 @@ abstract class BaseProjectPage extends GreenhousePage {
         String name = simpleName(clazz);
         BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>(name, ProjectsPage.class, params(project.getKey(), name));
         if (getClass().equals(clazz)) {
-            link.add(new SimpleAttributeModifier("class", "active"));
+            link.add(AttributeModifier.replace("class", "active"));
         }
         return link;
     }

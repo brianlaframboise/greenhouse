@@ -95,7 +95,7 @@ public class Indexer {
 
     private Properties loadIndex() {
         final ProcessBuilder builder = Utils.mavenProcess(settings.getMvn(), projectRoot,
-                ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.2-SNAPSHOT:index", "-DbasePackage=" + basePackage));
+                ImmutableList.of("greenhouse:greenhouse-maven-plugin:0.3-SNAPSHOT:index", "-DbasePackage=" + basePackage));
         builder.redirectErrorStream(true);
         try {
             LOGGER.info(projectKey + " Loading index via: "

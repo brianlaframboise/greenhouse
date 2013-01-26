@@ -5,10 +5,10 @@ import greenhouse.index.IndexRepository;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 public class GreenhousePage extends WebPage {
@@ -25,7 +25,7 @@ public class GreenhousePage extends WebPage {
     }
 
     protected String getProjectKey() {
-        String key = getPageParameters().getString("0", "");
+        String key = getPageParameters().get("0").toString("");
         if ("".equals(key)) {
             throw new RestartResponseException(ProjectsPage.class);
         }

@@ -6,7 +6,7 @@ public interface ScenarioExecutor {
      * Creates and schedules an Execution to be performed as soon as possible.
      * 
      * @param request The request from which an Execution can be created, once
-     *            scheduled
+     *        scheduled
      * @return the ExecutionKey that can be used to retrieve and monitor the
      *         Execution
      */

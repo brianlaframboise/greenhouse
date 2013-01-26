@@ -8,6 +8,9 @@ A web UI for searching and executing scenarios in maven-powered cuke4duke projec
 
 TODO: Document greenhouse-maven-plugin installation
 
+- Execute ```mvn install``` in /greenhouse-maven-plugin
+- Execute ```mvn jetty:run -Dgreenhouse.projects=/path/to/projects``` (ex: ./demo-projects)
+
 ### Integration With Your Project
 
 Your properties:

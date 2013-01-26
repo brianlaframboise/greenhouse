@@ -10,10 +10,10 @@ import java.util.Set;
 import javax.servlet.http.Cookie;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.string.Strings;
 
 import com.google.common.base.Joiner;
@@ -40,11 +40,11 @@ public final class WicketUtils {
      * @return a new PageParameters
      */
     public static PageParameters indexed(Object... args) {
-        Map<String, String> params = Maps.newHashMap();
+        PageParameters params = new PageParameters();
         for (int i = 0; i < args.length; i++) {
-            params.put(Integer.toString(i), Strings.toString(args[i]));
+            params.add(Integer.toString(i), Strings.toString(args[i]));
         }
-        return new PageParameters(params);
+        return params;
     }
 
     /**
@@ -53,12 +53,12 @@ public final class WicketUtils {
      * 
      * @param target An AjaxRequestTarget, or null
      * @param components The components to add to the AjaxRequestTarget, if
-     *            available
+     *        available
      */
     public static void addComponents(AjaxRequestTarget target, Component... components) {
         if (target != null) {
             for (Component component : components) {
-                target.addComponent(component);
+                target.add(component);
             }
         }
     }
@@ -106,7 +106,7 @@ public final class WicketUtils {
     }
 
     private static Cookie getContextCookie(WebRequest request) {
-        Cookie[] cookies = request.getCookies();
+        List<Cookie> cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (CONTEXTS_COOKIE.equals(cookie.getName())) {

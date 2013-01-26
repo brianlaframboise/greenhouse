@@ -5,20 +5,18 @@ import greenhouse.ui.wicket.WicketUtils;
 
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.AbstractReadOnlyModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.annotation.mount.MountPath;
-import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.collect.ImmutableList;
 
-@MountPath(path = "/projects")
-@MountIndexedParam
+@MountPath("/projects")
 public class ProjectsPage extends GreenhousePage {
 
     private final class ProjectsListModel extends AbstractReadOnlyModel<List<Project>> {
@@ -31,10 +29,10 @@ public class ProjectsPage extends GreenhousePage {
     public ProjectsPage(PageParameters params) {
         super(params);
         if (params != null) {
-            String key = params.getString("0", "");
+            String key = params.get("0").toString("");
             Project project = repo.getProject(key);
             if (project != null) {
-                String page = params.getString("1", "");
+                String page = params.get("1").toString("");
                 if (page.equals("features")) {
                     setResponsePage(FeaturesPage.class, params);
                 } else if (page.equals("tags")) {
@@ -52,7 +50,6 @@ public class ProjectsPage extends GreenhousePage {
                 }
             } else if (!"".equals(key)) {
                 setResponsePage(ProjectsPage.class, null);
-                setRedirect(true);
             }
         }
         add(new ListView<Project>("projects", new ProjectsListModel()) {

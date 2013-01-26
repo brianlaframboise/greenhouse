@@ -59,8 +59,18 @@ public class DelegatingFormatter implements Formatter {
     }
 
     @Override
-    public void syntaxError(String state, String event, List<String> legalEvents, String uri, int line) {
+    public void syntaxError(String state, String event, List<String> legalEvents, String uri, Integer line) {
         delegate.syntaxError(state, event, legalEvents, uri, line);
+    }
+
+    @Override
+    public void done() {
+        delegate.done();
+    }
+
+    @Override
+    public void close() {
+        delegate.close();
     }
 
 }

@@ -2,8 +2,8 @@ package greenhouse.ui.wicket.page;
 
 import greenhouse.project.Project;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

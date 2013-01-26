@@ -11,7 +11,6 @@ import greenhouse.util.Utils;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxFallbackLink;
@@ -24,8 +23,8 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.util.StringUtils;
-import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +33,6 @@ import com.google.common.collect.Lists;
 /**
  * Displays and executes Features, Scenarios, and Examples.
  */
-@MountIndexedParam
 public class FeaturesPage extends BaseProjectPage {
 
     private final String projectKey;
@@ -77,12 +75,11 @@ public class FeaturesPage extends BaseProjectPage {
         editForm.add(new AjaxFallbackLink<Void>("cancel") {
             @Override
             public void onClick(AjaxRequestTarget target) {
-                target.addComponent(editForm.setVisible(false));
-                target.addComponent(feature.setVisible(true));
+                target.add(editForm.setVisible(false), feature.setVisible(true));
             }
         });
 
-        String featureNameArg = params.getString("2", "");
+        String featureNameArg = params.get("2").toString("");
         if (names.contains(featureNameArg)) {
             showFeature(featureNameArg, null);
         }
@@ -110,8 +107,7 @@ public class FeaturesPage extends BaseProjectPage {
         feature.replace(new AjaxFallbackLink<Void>("edit") {
             @Override
             public void onClick(AjaxRequestTarget target) {
-                target.addComponent(feature.setVisible(false));
-                target.addComponent(editForm.setVisible(true));
+                target.add(feature.setVisible(false), editForm.setVisible(true));
                 gherkinArea.setDefaultModelObject(gherkin);
             }
         });
@@ -194,7 +190,6 @@ public class FeaturesPage extends BaseProjectPage {
                         if (!preceeding.startsWith("|")) {
                             return preceeding.startsWith("Examples");
                         }
-
                     }
                 }
                 return false;
@@ -204,8 +199,7 @@ public class FeaturesPage extends BaseProjectPage {
         feature.setVisible(true);
         editForm.setVisible(false);
         if (target != null) {
-            target.addComponent(feature);
-            target.addComponent(editForm);
+            target.add(feature, editForm);
         }
     }
 

@@ -23,7 +23,14 @@ import org.springframework.core.type.filter.AbstractClassTestingTypeFilter;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+
+import cucumber.api.java.en.And;
+import cucumber.api.java.en.But;
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
 
 /**
  * Indexes step definitions for Greenhouse. Works for both cuke4duke and
@@ -36,26 +43,7 @@ import com.google.common.collect.Multimap;
  */
 public class IndexMojo extends AbstractMojo {
 
-    private static final List<Class<? extends Annotation>> ANNOTATIONS;
-    static {
-        List<Class<? extends Annotation>> list = new ArrayList<Class<? extends Annotation>>();
-
-        // Cuke4Duke
-        list.add(cuke4duke.annotation.I18n.EN.Given.class);
-        list.add(cuke4duke.annotation.I18n.EN.When.class);
-        list.add(cuke4duke.annotation.I18n.EN.Then.class);
-        list.add(cuke4duke.annotation.I18n.EN.And.class);
-        list.add(cuke4duke.annotation.I18n.EN.But.class);
-
-        // Cucumber-JVM
-        list.add(cucumber.api.java.en.Given.class);
-        list.add(cucumber.api.java.en.When.class);
-        list.add(cucumber.api.java.en.Then.class);
-        list.add(cucumber.api.java.en.And.class);
-        list.add(cucumber.api.java.en.But.class);
-
-        ANNOTATIONS = list;
-    }
+    private static final List<Class<? extends Annotation>> ANNOTATIONS = ImmutableList.of(Given.class, When.class, Then.class, And.class, But.class);
 
     /**
      * Output directory into whick greenhouse-step-index.properties is written.

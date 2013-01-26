@@ -28,7 +28,7 @@ public class SvnFileSource implements FileSource {
      * 
      * @param projectRoot The Greenhouse root project directory
      * @param files The files directory into which the project's files will be
-     *            checked out
+     *        checked out
      * @param url The url at which the project can be checked out
      * @param username The subversion username used to check out the project
      * @param password The subversion password used to check out the project

@@ -9,9 +9,9 @@ import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.link.Link;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 abstract class ExecutingLink extends Link<Void> {

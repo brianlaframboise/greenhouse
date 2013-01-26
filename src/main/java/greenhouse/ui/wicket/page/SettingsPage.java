@@ -4,7 +4,6 @@ import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.ui.wicket.WicketUtils;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxLink;
 import org.apache.wicket.markup.html.basic.Label;
@@ -18,6 +17,9 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.validation.validator.PatternValidator;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +30,7 @@ public class SettingsPage extends BaseProjectPage {
         super(params);
 
         ImmutableList<Context> contexts = ImmutableList.copyOf(project().getContexts().values());
-        final String activeContextKey = WicketUtils.getContextKey(getWebRequestCycle().getWebRequest(), project());
+        final String activeContextKey = WicketUtils.getContextKey((WebRequest) RequestCycle.get().getRequest(), project());
         add(new ListView<Context>("contexts", contexts) {
             @Override
             protected void populateItem(ListItem<Context> item) {
@@ -43,7 +45,6 @@ public class SettingsPage extends BaseProjectPage {
                         Project project = project();
                         project.removeContext(key);
                         setResponsePage(ProjectsPage.class, params);
-                        setRedirect(true);
                     }
                 }.setVisible(!key.equals(activeContextKey)));
             }
@@ -67,7 +68,6 @@ public class SettingsPage extends BaseProjectPage {
                 Context context = new Context(key, addNameModel.getObject(), addCommandModel.getObject());
                 project().addContext(key, context);
                 setResponsePage(ProjectsPage.class, params);
-                setRedirect(true);
             }
         });
         form.add(new FeedbackPanel("feedback"));

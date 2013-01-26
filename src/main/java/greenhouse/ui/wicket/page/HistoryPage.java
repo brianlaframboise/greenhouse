@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -23,15 +22,14 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.HtmlUtils;
-import org.wicketstuff.annotation.strategy.MountIndexedParam;
 
 import com.google.common.collect.Lists;
 
-@MountIndexedParam
 public class HistoryPage extends BaseProjectPage {
 
     @SpringBean
@@ -41,8 +39,8 @@ public class HistoryPage extends BaseProjectPage {
         super(params);
         final String projectKey = getProjectKey();
 
-        int executionNumber = params.getAsInteger("2", 0);
-        String format = params.getString("3", "");
+        int executionNumber = params.get("2").toInt(0);
+        String format = params.get("3").toString("");
 
         final Fragment body;
         if (executionNumber > 0) {
@@ -82,7 +80,7 @@ public class HistoryPage extends BaseProjectPage {
                     Execution execution = executor.getExecution(executionKey);
                     output.setDefaultModelObject(execution.getOutput());
                     if (execution.getState() == ExecutionState.COMPLETE) {
-                        stop();
+                        stop(target);
                     }
                     WicketUtils.addComponents(target, output);
                 }

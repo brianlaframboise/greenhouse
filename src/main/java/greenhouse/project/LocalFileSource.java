@@ -23,7 +23,7 @@ public class LocalFileSource implements FileSource {
      * Creates a new LocalFileSource.
      * 
      * @param source A project root directory that exists on the local file
-     *            system.
+     *        system.
      * @param files The greenhouse project files directory
      */
     public LocalFileSource(String source, File files) {

@@ -10,15 +10,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTextField;
-import org.apache.wicket.extensions.ajax.markup.html.autocomplete.DefaultCssAutocompleteTextField;
-import org.apache.wicket.markup.html.CSSPackageResource;
+import org.apache.wicket.extensions.ajax.markup.html.autocomplete.DefaultCssAutoCompleteTextField;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -32,9 +31,13 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.util.string.Strings;
+import org.apache.wicket.util.visit.IVisit;
+import org.apache.wicket.util.visit.IVisitor;
 import org.springframework.util.StringUtils;
-import org.wicketstuff.annotation.strategy.MountIndexedParam;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -43,7 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-@MountIndexedParam
+@MountPath
 public class CreatePage extends BaseProjectPage {
 
     /**
@@ -104,6 +107,12 @@ public class CreatePage extends BaseProjectPage {
 
     }
 
+    @Override
+    public void renderHead(IHeaderResponse response) {
+        // TODO: verify
+        response.render(CssHeaderItem.forReference(new CssResourceReference(DefaultCssAutoCompleteTextField.class, "DefaultCssAutoCompleteTextField.css")));
+    }
+
     public CreatePage(PageParameters params) {
         super(params);
 
@@ -143,7 +152,6 @@ public class CreatePage extends BaseProjectPage {
         settings.setThrottleDelay(100);
         settings.setShowListOnFocusGain(true);
         settings.setAdjustInputWidth(true);
-        add(CSSPackageResource.getHeaderContribution(DefaultCssAutocompleteTextField.class, "DefaultCssAutocompleteTextField.css"));
         final AutoCompleteTextField<String> stepField = new AutoCompleteTextField<String>("step", stepModel, String.class, settings) {
 
             @Override
@@ -177,7 +185,7 @@ public class CreatePage extends BaseProjectPage {
                         if (trimmed.charAt(trimmed.length() - 1) == '$') {
                             trimmed = trimmed.substring(0, trimmed.length() - 1);
                         }
-                        
+
                         // Replace escaped braces \( and \) with symbolic placeholders
                         ImmutableList<String> types = step.getTypes();
                         trimmed = trimmed.replaceAll("\\\\\\(", "\\{\\{\\{");
@@ -210,15 +218,14 @@ public class CreatePage extends BaseProjectPage {
             @Override
             protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
                 final List<String> values = Lists.newArrayList();
-                form.visitChildren(FormComponent.class, new Component.IVisitor<FormComponent>() {
-                    @Override
+                form.visitChildren(FormComponent.class, new IVisitor<FormComponent, Void>() {
                     @SuppressWarnings("unchecked")
-                    public Object component(FormComponent component) {
+                    @Override
+                    public void component(FormComponent component, IVisit<Void> visit) {
                         if ((component instanceof TextField) || (component instanceof DropDownChoice)) {
                             values.add(((FormComponent<String>) component).getModelObject());
                         }
-                        return Component.IVisitor.CONTINUE_TRAVERSAL;
-                    };
+                    }
                 });
                 List<Token> tokens = tokenize(stepModel.getObject());
                 int i = 0;
@@ -277,7 +284,7 @@ public class CreatePage extends BaseProjectPage {
                     setVisible(false);
                     inputs.setVisible(true);
                     substitute.setVisible(true);
-                    target.addComponent(form);
+                    target.add(form);
                 } else {
                     text = text.replaceAll("\\\\\\(", "(");
                     text = text.replaceAll("\\\\\\)", ")");
