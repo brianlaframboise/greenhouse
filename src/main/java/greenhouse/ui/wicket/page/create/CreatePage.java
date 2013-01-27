@@ -269,15 +269,15 @@ public class CreatePage extends BaseProjectPage {
                                     }
                                 }
                                 if (values == null) {
-                                    part = new Fragment("part", "text", this);
+                                    part = new Fragment("part", "text", inputs);
                                     part.add(new Label("addOn", type));
                                     part.add(new TextField<String>("input", Model.of("")).setRequired(true));
                                 } else {
-                                    part = new Fragment("part", "select", this);
+                                    part = new Fragment("part", "select", inputs);
                                     part.add(new DropDownChoice<String>("input", Model.of(""), values));
                                 }
                             } else {
-                                part = new Fragment("part", "label", this);
+                                part = new Fragment("part", "label", inputs);
                                 part.add(new Label("text", token.text));
                             }
                             item.add(part);
