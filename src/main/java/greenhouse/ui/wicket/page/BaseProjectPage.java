@@ -43,7 +43,7 @@ public abstract class BaseProjectPage extends GreenhousePage {
         WebMarkupContainer base = new WebMarkupContainer("base");
         Project project = project();
         final String projectKey = getProjectKey();
-        Link<Void> projectLink = new BookmarkablePageLink<Void>("project", ProjectsPage.class, WicketUtils.indexed(projectKey));
+        Link<Void> projectLink = new BookmarkablePageLink<Void>("project", ProjectPage.class, new PageParameters().add("project", projectKey));
         base.add(projectLink.add(new Label("name", project.getName())));
 
         base.add(new ListView<Class<? extends GreenhousePage>>("pages", Arrays.asList(FeaturesPage.class, TagsPage.class, CreatePage.class, HistoryPage.class,
