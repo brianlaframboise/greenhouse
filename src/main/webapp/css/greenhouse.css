@@ -1,55 +1,7 @@
-/* Top-most header */
-#header {
-	background: none repeat scroll 0 0 #164b2b;
-	clear: both;
-	color: #164b2b;
-	display: block;
-	padding-bottom: 0;
-	text-align: center;
-	text-decoration: none;
-	width: 100%;
-}
-
-#header a {
-	color: #ffffff;
-	font-variant: small-caps;
-	text-decoration: none;
-}
-
-/* Overridding Bootstrap navbar*/
-.navbar {
-	position: absolute; top : inherit;
-	z-index: inherit;
-	top: inherit;
-}
-
-.navbar-inner,.topbar .fill {
-	background-color: #164b2b;
-	background-image: -moz-linear-gradient(center top, #164b2b, #164b2b);
-	box-shadow: none;
-}
-
-.navbar .nav .active > a, .navbar .nav .active > a:hover {
-	background-color: #164b2b;
-}
-
-title {
-	font-variant: small-caps;
-}
-
-.dropdown-menu li > a:hover {
-	background-color: #164b2b;
-}	
-
 /* Greenhouse custom styles */
 body {
-	background-color: #ebffb4;
+	background-color: #f1ffcc;
 	font-family: Helvetica;
-}
-
-.main {
-	padding-top: 40px;
-	margin-top: 1em;
 }
 
 a {
@@ -80,7 +32,4 @@ pre a:hover {
 
 table th {
 	text-align: center;
-}
-ign: center;
-}r;
 }
