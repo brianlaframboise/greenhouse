@@ -4,18 +4,25 @@
 <body>
 <wicket:extend>
 
-<table class='table table-bordered table-striped'>
-	<tr>
-        <th></th>
-		<th style='text-align: center;'>#</th>
-        <th>Name</th>
-	</tr>
-	<tr wicket:id='tags'>
-        <td style='width:10%; text-align:center;'><a wicket:id='execute' target='_blank' class='btn btn-danger'>Execute</a></td>
-        <td wicket:id='count' style='width:5%; text-align:center;'>[123]</td>
-        <td><a wicket:id='link'><span wicket:id='tag'>[@tag]</span></a></td>
-	</tr>
+<table id='tagsTable' class='table table-bordered table-striped tablesorter-bootstrap'>
+	<thead>
+		<tr>
+	        <th></th>
+			<th style='text-align: center;'>#</th>
+	        <th>Name</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr wicket:id='tags'>
+	        <td style='width:10%; text-align:center;'><a wicket:id='execute' target='_blank' class='btn btn-danger'>Execute</a></td>
+	        <td wicket:id='count' style='width:5%; text-align:center;'>[123]</td>
+	        <td><a wicket:id='link'><span wicket:id='tag'>[@tag]</span></a></td>
+		</tr>
+	</tbody>
 </table>
+<script>$(function(){ 
+  $("#tagsTable").tablesorter(); 
+});</script>
 
 <div wicket:id='matches'>
 	<ol>

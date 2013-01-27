@@ -48,11 +48,7 @@ public class TagsPage extends BaseProjectPage {
         Collections.sort(countedTags, new Comparator<CountedTag>() {
             @Override
             public int compare(CountedTag first, CountedTag second) {
-                int result = second.count.compareTo(first.count);
-                if (result == 0) {
-                    result = first.name.compareTo(second.name);
-                }
-                return result;
+                return first.name.compareTo(second.name);
             }
         });
 
