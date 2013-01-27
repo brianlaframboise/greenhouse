@@ -1,8 +1,9 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.settings;
 
 import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.page.BaseProjectPage;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxLink;
@@ -21,9 +22,11 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.validation.validator.PatternValidator;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import com.google.common.collect.ImmutableList;
 
+@MountPath("/projects/${project}/settings")
 public class SettingsPage extends BaseProjectPage {
 
     public SettingsPage(final PageParameters params) {
@@ -44,7 +47,7 @@ public class SettingsPage extends BaseProjectPage {
                     public void onClick() {
                         Project project = project();
                         project.removeContext(key);
-                        setResponsePage(ProjectsPage.class, params);
+                        setResponsePage(SettingsPage.class, params);
                     }
                 }.setVisible(!key.equals(activeContextKey)));
             }
@@ -67,7 +70,7 @@ public class SettingsPage extends BaseProjectPage {
                 String key = addKeyModel.getObject();
                 Context context = new Context(key, addNameModel.getObject(), addCommandModel.getObject());
                 project().addContext(key, context);
-                setResponsePage(ProjectsPage.class, params);
+                setResponsePage(SettingsPage.class, params);
             }
         });
         form.add(new FeedbackPanel("feedback"));

@@ -1,7 +1,9 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.create;
 
 import greenhouse.index.StepMethod;
 import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.link.ExecuteGherkinLink;
+import greenhouse.ui.wicket.page.BaseProjectPage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-@MountPath
+@MountPath("/projects/${project}/create")
 public class CreatePage extends BaseProjectPage {
 
     /**

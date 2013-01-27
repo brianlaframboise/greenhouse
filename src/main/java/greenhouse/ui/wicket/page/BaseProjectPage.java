@@ -4,6 +4,11 @@ import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.page.create.CreatePage;
+import greenhouse.ui.wicket.page.features.FeaturesPage;
+import greenhouse.ui.wicket.page.history.HistoryPage;
+import greenhouse.ui.wicket.page.settings.SettingsPage;
+import greenhouse.ui.wicket.page.tags.TagsPage;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +35,7 @@ import com.google.common.collect.Lists;
 /**
  * Provides common layout for all Project-specific pages.
  */
-abstract class BaseProjectPage extends GreenhousePage {
+public abstract class BaseProjectPage extends GreenhousePage {
 
     @SuppressWarnings("unchecked")
     public BaseProjectPage(PageParameters params) {
@@ -50,7 +55,7 @@ abstract class BaseProjectPage extends GreenhousePage {
                     item.add(AttributeModifier.replace("class", "active"));
                 }
                 String simpleName = simpleName(clazz);
-                BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>("link", ProjectsPage.class, params(projectKey, simpleName));
+                BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>("link", clazz, new PageParameters().add("project", projectKey));
                 link.add(new Label("name", StringUtils.capitalize(simpleName)));
                 item.add(link);
             }
@@ -66,7 +71,7 @@ abstract class BaseProjectPage extends GreenhousePage {
                     @Override
                     public void onClick() {
                         WicketUtils.setContextKey(getWebRequest(), (WebResponse) getResponse(), repo.getProject(projectKey), contextKey);
-                        setResponsePage(ProjectsPage.class, params(projectKey, simpleName(BaseProjectPage.this.getClass())));
+                        setResponsePage(BaseProjectPage.this.getClass(), new PageParameters().add("project", projectKey));
                     }
                 };
                 item.add(link.add(new Label("name", context.getName())));
@@ -75,16 +80,6 @@ abstract class BaseProjectPage extends GreenhousePage {
         add(base);
 
         get("home").setVisible(false);
-    }
-
-    protected BookmarkablePageLink<Void> pageLink(String id, Class<? extends BaseProjectPage> clazz, Object... params) {
-        PageParameters pageParams = new PageParameters();
-        pageParams.add("0", getProjectKey());
-        pageParams.add("1", simpleName(clazz));
-        for (int i = 0; i < params.length; i++) {
-            pageParams.add(Integer.toString(i + 2), params[i].toString());
-        }
-        return new BookmarkablePageLink<Void>(id, ProjectsPage.class, pageParams);
     }
 
     private Context getCurrentContext(Project project) {
@@ -98,23 +93,9 @@ abstract class BaseProjectPage extends GreenhousePage {
         return context;
     }
 
-    public BookmarkablePageLink<Void> newPageLink(Project project, Class<? extends GreenhousePage> clazz) {
-        String name = simpleName(clazz);
-        BookmarkablePageLink<Void> link = new BookmarkablePageLink<Void>(name, ProjectsPage.class, params(project.getKey(), name));
-        if (getClass().equals(clazz)) {
-            link.add(AttributeModifier.replace("class", "active"));
-        }
-        return link;
-    }
-
     public static String simpleName(Class<? extends GreenhousePage> clazz) {
         String simpleName = clazz.getSimpleName();
         return simpleName.substring(0, simpleName.indexOf("Page")).toLowerCase(Locale.ENGLISH);
-    }
-
-    private static PageParameters params(String projectKey, String simpleClassName) {
-        return WicketUtils.indexed(projectKey, simpleClassName);
-
     }
 
     private static class ContextsModel extends LoadableDetachableModel<List<Context>> {

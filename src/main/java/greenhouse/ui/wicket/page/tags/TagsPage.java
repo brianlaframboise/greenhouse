@@ -1,11 +1,13 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.tags;
 
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionRequest;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
-import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.link.ExecutingLink;
+import greenhouse.ui.wicket.page.BaseProjectPage;
+import greenhouse.ui.wicket.page.features.FeaturesPage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
@@ -29,6 +32,7 @@ import com.google.common.collect.Multiset;
 /**
  * Displays tags and their associated Features and Scenarios.
  */
+@MountPath("/projects/${project}/tags")
 public class TagsPage extends BaseProjectPage {
 
     public TagsPage(PageParameters params) {
@@ -59,8 +63,8 @@ public class TagsPage extends BaseProjectPage {
             protected void populateItem(ListItem<IndexedScenario> item) {
                 IndexedScenario scenario = item.getModelObject();
                 IndexedFeature feature = index().findByScenario(scenario);
-                BookmarkablePageLink<Void> view = new BookmarkablePageLink<Void>("view", ProjectsPage.class, WicketUtils.indexed(getProjectKey(), "features",
-                        feature.getName()));
+                PageParameters featureParams = new PageParameters().add("project", getProjectKey()).add("feature", feature.getName());
+                BookmarkablePageLink<Void> view = new BookmarkablePageLink<Void>("view", FeaturesPage.class, featureParams);
                 view.add(new Label("featureScenario", feature.getName() + " > " + scenario.getName()));
                 item.add(view);
             }

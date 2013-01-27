@@ -1,4 +1,4 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.history;
 
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;

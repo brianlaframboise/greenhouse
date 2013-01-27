@@ -1,11 +1,14 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.features;
 
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionRequest;
 import greenhouse.index.Index;
 import greenhouse.index.IndexedFeature;
 import greenhouse.index.IndexedScenario;
-import greenhouse.ui.wicket.page.TagsPage.ExecuteTagLink;
+import greenhouse.ui.wicket.link.ExecuteGherkinLink;
+import greenhouse.ui.wicket.link.ExecutingLink;
+import greenhouse.ui.wicket.page.BaseProjectPage;
+import greenhouse.ui.wicket.page.tags.TagsPage.ExecuteTagLink;
 import greenhouse.util.Utils;
 
 import java.util.Collections;
@@ -25,6 +28,7 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.util.StringUtils;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -33,6 +37,7 @@ import com.google.common.collect.Lists;
 /**
  * Displays and executes Features, Scenarios, and Examples.
  */
+@MountPath("/projects/${project}/features/#{feature}")
 public class FeaturesPage extends BaseProjectPage {
 
     private final String projectKey;
@@ -79,7 +84,7 @@ public class FeaturesPage extends BaseProjectPage {
             }
         });
 
-        String featureNameArg = params.get("2").toString("");
+        String featureNameArg = params.get("feature").toString("");
         if (names.contains(featureNameArg)) {
             showFeature(featureNameArg, null);
         }
@@ -124,7 +129,7 @@ public class FeaturesPage extends BaseProjectPage {
 
                 Fragment context;
                 if (line.startsWith("Feature")) {
-                    context = new Fragment("context", "featureFragment", this);
+                    context = new Fragment("context", "featureFragment", FeaturesPage.this);
 
                     int colonIndex = line.indexOf(": ");
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
@@ -136,7 +141,7 @@ public class FeaturesPage extends BaseProjectPage {
                     context.add(pretext, executeFeatureLink);
                 } else if (line.contains("Scenario")) {
                     // Scenario or Scenario Outline
-                    context = new Fragment("context", "scenario", this);
+                    context = new Fragment("context", "scenario", FeaturesPage.this);
 
                     int colonIndex = line.indexOf(": ");
                     Label pretext = new Label("pretext", line.substring(0, colonIndex + 2));
@@ -148,7 +153,7 @@ public class FeaturesPage extends BaseProjectPage {
                     context.add(pretext, executeScenarioLink);
                 } else if (isExample(line, item.getIndex(), getModelObject())) {
                     // Example
-                    context = new Fragment("context", "example", this);
+                    context = new Fragment("context", "example", FeaturesPage.this);
 
                     int pipeIndex = line.indexOf('|');
                     Label pretext = new Label("pretext", line.substring(0, pipeIndex));
@@ -161,7 +166,7 @@ public class FeaturesPage extends BaseProjectPage {
 
                     context.add(pretext, executeExampleLink);
                 } else {
-                    context = new Fragment("context", "plain", this);
+                    context = new Fragment("context", "plain", FeaturesPage.this);
                     context.add(text);
                 }
                 item.add(new WebMarkupContainer("pre").add(context));

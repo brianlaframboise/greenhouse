@@ -1,4 +1,4 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.link;
 
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ScenarioExecutor;
@@ -8,13 +8,13 @@ import greenhouse.project.Context;
 import greenhouse.project.Project;
 import greenhouse.project.ProjectRepository;
 import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.page.history.HistoryPage;
 
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.request.http.WebResponse;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-abstract class ExecutingLink extends Link<Void> {
+public abstract class ExecutingLink extends Link<Void> {
 
     @SpringBean
     protected ProjectRepository repo;
@@ -35,11 +35,7 @@ abstract class ExecutingLink extends Link<Void> {
     @Override
     public void onClick() {
         ExecutionKey key = execute();
-        PageParameters params = new PageParameters();
-        params.add("0", projectKey);
-        params.add("1", BaseProjectPage.simpleName(HistoryPage.class));
-        params.add("2", Integer.toString(key.getNumber()));
-        setResponsePage(ProjectsPage.class, params);
+        setResponsePage(HistoryPage.class, HistoryPage.paramsFor(projectKey, key.getNumber()));
     }
 
     protected Index index() {

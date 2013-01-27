@@ -1,10 +1,11 @@
-package greenhouse.ui.wicket.page;
+package greenhouse.ui.wicket.page.history;
 
 import greenhouse.execute.Execution;
 import greenhouse.execute.ExecutionKey;
 import greenhouse.execute.ExecutionState;
 import greenhouse.execute.ScenarioExecutor;
 import greenhouse.ui.wicket.WicketUtils;
+import greenhouse.ui.wicket.page.BaseProjectPage;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,20 +28,30 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.HtmlUtils;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import com.google.common.collect.Lists;
 
+@MountPath("/projects/${project}/history/#{execution}/#{format}")
 public class HistoryPage extends BaseProjectPage {
 
     @SpringBean
     private ScenarioExecutor executor;
 
+    public static PageParameters paramsFor(String projectKey, int execution) {
+        return new PageParameters().add("project", projectKey).add("execution", execution);
+    }
+
+    public static PageParameters paramsFor(String projectKey, int execution, String format) {
+        return new PageParameters().add("project", projectKey).add("execution", execution).add("format", format);
+    }
+
     public HistoryPage(PageParameters params) {
         super(params);
         final String projectKey = getProjectKey();
 
-        int executionNumber = params.get("2").toInt(0);
-        String format = params.get("3").toString("");
+        int executionNumber = params.get("execution").toInt(0);
+        String format = params.get("format").toString("");
 
         final Fragment body;
         if (executionNumber > 0) {
@@ -122,7 +133,7 @@ public class HistoryPage extends BaseProjectPage {
                 int number = execution.getKey().getNumber();
                 ExecutionState state = execution.getState();
 
-                BookmarkablePageLink<Void> detailsLink = pageLink("detailsLink", HistoryPage.class, number);
+                BookmarkablePageLink<Void> detailsLink = new BookmarkablePageLink<Void>("detailsLink", HistoryPage.class, paramsFor(projectKey, number));
                 detailsLink.add(new Label("number", Integer.toString(number)));
                 item.add(detailsLink);
 
@@ -134,8 +145,8 @@ public class HistoryPage extends BaseProjectPage {
                 item.add(new Label("environment", execution.getContext().getName()));
                 item.add(new Label("type", Model.of(execution.getType())));
                 item.add(new Label("details", execution.getDescription()));
-                item.add(new BookmarkablePageLink<Void>("output", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "output")));
-                item.add(new BookmarkablePageLink<Void>("report", ProjectsPage.class, WicketUtils.indexed(projectKey, "history", number, "report"))
+                item.add(new BookmarkablePageLink<Void>("output", HistoryPage.class, paramsFor(projectKey, number, "output")));
+                item.add(new BookmarkablePageLink<Void>("report", HistoryPage.class, paramsFor(projectKey, number, "report"))
                         .setEnabled(state == ExecutionState.COMPLETE));
             }
         });

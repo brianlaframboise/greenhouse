@@ -2,7 +2,7 @@ package greenhouse.ui.wicket;
 
 import greenhouse.execute.ExecutionState;
 import greenhouse.execute.ExecutionType;
-import greenhouse.ui.wicket.page.FeaturesPage;
+import greenhouse.ui.wicket.page.GreenhousePage;
 import greenhouse.ui.wicket.page.ProjectsPage;
 
 import java.text.SimpleDateFormat;
@@ -25,7 +25,7 @@ public class GreenhouseApplication extends WebApplication {
     @Override
     protected void init() {
         getComponentInstantiationListeners().add(new SpringComponentInjector(this));
-        new AnnotatedMountScanner().scanPackage(FeaturesPage.class.getPackage().getName()).mount(this);
+        new AnnotatedMountScanner().scanPackage(GreenhousePage.class.getPackage().getName()).mount(this);
         getMarkupSettings().setStripWicketTags(true);
     }
 
@@ -39,7 +39,7 @@ public class GreenhouseApplication extends WebApplication {
         ConverterLocator locator = (ConverterLocator) super.newConverterLocator();
         locator.set(Date.class, new StringConverter() {
             @Override
-            public String convertToString(Date value, Locale locale) {
+            public String convertToString(Object value, Locale locale) {
                 return new SimpleDateFormat(DATE_FORMAT).format((Date) value);
             }
         });
@@ -50,12 +50,12 @@ public class GreenhouseApplication extends WebApplication {
 
     private static class ToStringCapitalizer extends StringConverter {
         @Override
-        public String convertToString(Date value, Locale locale) {
+        public String convertToString(Object value, Locale locale) {
             return StringUtils.capitalize(value.toString().toLowerCase(Locale.ENGLISH));
         }
     }
 
-    private static abstract class StringConverter implements IConverter<Date> {
+    private static abstract class StringConverter implements IConverter<Object> {
         @Override
         public Date convertToObject(String value, Locale locale) {
             throw new UnsupportedOperationException();

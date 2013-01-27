@@ -25,7 +25,7 @@ public class GreenhousePage extends WebPage {
     }
 
     protected String getProjectKey() {
-        String key = getPageParameters().get("0").toString("");
+        String key = getPageParameters().get("project").toString("");
         if ("".equals(key)) {
             throw new RestartResponseException(ProjectsPage.class);
         }
